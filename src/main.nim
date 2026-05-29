@@ -10862,9 +10862,7 @@ proc initApp(configFile: Option[string], mapFile: Option[string],
 
   a.ui.toolbarDrawParams = newDrawLevelParams()
 
-  # TODO: Re-enable the separate splash surface after Koi's GLFW/wgpu helper
-  # supports multi-window Wayland surface capability negotiation reliably.
-  a.splash.show = false
+  a.splash.show = not hideSplash and a.prefs.showSplash
   a.splash.t0 = getMonoTime()
 
   updateUIScaleFactor(a)
