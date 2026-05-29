@@ -28,6 +28,7 @@ import glfw
 import koi
 import koi/backends/glfw_wgpu
 import koi/backends/wgpu_renderer
+from koi/rect import rect
 from koi/utils import lerp, invLerp, remap
 
 import nanovg
@@ -5531,7 +5532,7 @@ proc editLabelDialog(dlg: var EditLabelDialogParams; a) =
 
   y += 108
 
-  let NumIndexColors = lt.noteIndexBackgroundColor.len
+  let NumLabelColors = lt.labelTextColor.len
 
   koi.label(x, y, LabelWidth, h, "Color", style=a.theme.labelStyle)
   koi.radioButtons(
@@ -5594,7 +5595,7 @@ proc editLabelDialog(dlg: var EditLabelDialogParams; a) =
     var eventHandled = true
 
     dlg.color = handleGridRadioButton(
-      ke, dlg.color, NumIndexColors, buttonsPerRow=NumIndexColors
+      ke, dlg.color, NumLabelColors, buttonsPerRow=NumLabelColors
     )
 
     if ke.isShortcutDown(scNextTextField, a):
@@ -8855,23 +8856,30 @@ proc noteButton(id: ItemId; textX, textY, textW, markerX: float;
   koi.autoLayoutPre()
 
   let
-    (x, y) = addDrawOffset(x=koi.autoLayoutNextX(),
-                           y=koi.autoLayoutNextY())
-
+    (x, y) = addDrawOffset(x = koi.autoLayoutNextX(),
+                           y = koi.autoLayoutNextY())
     w = koi.autoLayoutNextItemWidth()
     h = koi.autoLayoutNextItemHeight()
+    slot = koi.layoutSlot(id, rect(x, y, w, h))
+    hitBounds = slot.previousBounds
 
   # Hit testing
   const ScrollBarWidth = 12
 
-  if isHit(x, y, w-ScrollBarWidth, h):
-    setHot(id)
-    if koi.mbLeftDown() or koi.shiftDown():
-      setActive(id)
-      result = true
+  if koi.isHit(hitBounds.x, hitBounds.y,
+               max(0.0, hitBounds.w - ScrollBarWidth), hitBounds.h):
+    koi.setHot(id)
+    if koi.mbLeftDown() and koi.hasNoActiveItem():
+      koi.setActive(id)
 
-  addDrawLayer(koi.currentLayer(), vg):
+  result = not koi.mbLeftDown() and koi.isHot(id) and koi.isActive(id)
+
+  koi.addLayoutDrawLayer(koi.currentLayer(), slot.nodeId, vg, bounds):
     let
+      x = bounds.x
+      y = bounds.y
+      w = bounds.w
+      h = bounds.h
       state = if koi.isHot(id) and koi.isActive(id):        wsDown
               elif koi.isHot(id) and koi.hasNoActiveItem(): wsHover
               else:                                         wsNormal
@@ -9769,16 +9777,7 @@ proc renderThemeEditorPane(x, y, w, h: float; a) =
                 disabled=not a.currThemeName.userTheme or buttonsDisabled):
     openDeleteThemeDialog(a)
 
-  # Scroll view with properties
-
-  # XXX hack to enable theme editing while a dialog is open
-  let fc = koi.focusCaptured()
-  koi.setFocusCaptured(a.themeEditor.focusCaptured)
-
   renderThemeEditorProps(x+1, y+topSectionHeight, w-2, h=propsHeight, a)
-
-  a.themeEditor.focusCaptured = koi.focusCaptured()
-  koi.setFocusCaptured(fc)
 
   a.theme.updateTheme = true
 
@@ -10228,6 +10227,7 @@ proc renderUI(a) =
       h = mainPane.h
 
     renderThemeEditorPane(x, y, w, h, a)
+    a.themeEditor.focusCaptured = koi.focusCaptured()
 
   renderDialogs(a)
 
@@ -10418,8 +10418,15 @@ proc renderFrameCb(a) =
 
   # XXX HACK: If the theme pane is shown, widgets are handled first, then
   # the global shortcuts, so widget-specific shorcuts can take precedence
+  let
+    themeEditorShown = a.layout.showThemeEditor
+    savedFocusCaptured = koi.focusCaptured()
+
+  if themeEditorShown:
+    koi.setFocusCaptured(a.themeEditor.focusCaptured)
+
   var uiRendered = false
-  if a.layout.showThemeEditor:
+  if themeEditorShown:
     renderUI(a)
     uiRendered = true
 
@@ -10433,11 +10440,11 @@ proc renderFrameCb(a) =
     else:                         handleGlobalKeyEvents_NoLevels(a)
 
   else:
-    if not a.layout.showThemeEditor and a.win.glfwWin.focused:
+    if not themeEditorShown and a.win.glfwWin.focused:
       closeSplash(a)
       a.win.focus
 
-  if not a.layout.showThemeEditor or not uiRendered:
+  if not themeEditorShown or not uiRendered:
     renderUI(a)
 
   if a.useMainWindowSplash():
@@ -10446,6 +10453,9 @@ proc renderFrameCb(a) =
   if a.win.shouldClose:
     a.win.shouldClose = false
     handleWindowClose(a)
+
+  if themeEditorShown:
+    koi.setFocusCaptured(savedFocusCaptured)
 
 # }}}
 # {{{ renderFrameSplash()
