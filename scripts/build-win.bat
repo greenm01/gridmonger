@@ -1,4 +1,4 @@
-nim -f release
-nim packageWinInstaller
-nim packageWinPortable
-nim publishPackageWin
+nimble release
+nimble packageWinInstaller
+nimble packageWinPortable
+nimble publishPackageWin

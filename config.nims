@@ -6,10 +6,10 @@ import strutils
 
 
 var exeName = "gridmonger".toExe
-var exeNameWayland = "gridmonger-wayland".toExe
-var exeNameX11 = "gridmonger-x11".toExe
-var exeNameMac = "gridmonger-macos".toExe
-var exeNameWin = "gridmonger-windows".toExe
+var exeNameWayland = exeName
+var exeNameX11 = exeName
+var exeNameMac = exeName
+var exeNameWin = exeName
 var exeNameMacArm64 = "gridmonger-macos-arm64".toExe
 var exeNameMacX64 = "gridmonger-macos-x64".toExe
 
@@ -61,7 +61,7 @@ const sphinxDocsDir = "sphinx-docs"
 
 
 proc setCommonCompileParams(useWayland = false) =
-  --gc:orc
+  --mm:orc
   --threads:on
   --deepcopy:on
   --d:ssl
@@ -93,6 +93,20 @@ proc setCommonCompileParams(useWayland = false) =
   switch "out", exeName
   setCommand "c", "src/main"
 
+proc detectLinuxWayland(): bool =
+  let requested = getEnv("GRIDMONGER_BACKEND").toLowerAscii
+  if requested == "wayland":
+    return true
+  if requested == "x11":
+    return false
+
+  if getEnv("WAYLAND_DISPLAY").len > 0:
+    return true
+  if getEnv("DISPLAY").len > 0:
+    return false
+
+  true
+
 proc createZip(zipName, srcPath: string, extraArgs = "") =
   exec fmt"zip -q -9 -r ""{zipName}"" ""{srcPath}"" {extraArgs}"
 
@@ -110,21 +124,18 @@ task versionAndGitHash, "get version and Git hash":
 task debug, "debug build":
   --d:debug
   when hostOS == "linux":
-    exeName = exeNameWayland
-    setCommonCompileParams(useWayland = true)
+    setCommonCompileParams(useWayland = detectLinuxWayland())
   else:
     setCommonCompileParams()
 
 
 task debugWayland, "debug build (Linux Wayland)":
   --d:debug
-  exeName = exeNameWayland
   setCommonCompileParams(useWayland = true)
 
 
 task debugX11, "debug build (Linux X11)":
   --d:debug
-  exeName = exeNameX11
   setCommonCompileParams()
 
 
@@ -132,8 +143,7 @@ task releaseNoStacktrace, "release build (no stacktrace)":
   --d:release
   --app:gui
   when hostOS == "linux":
-    exeName = exeNameWayland
-    setCommonCompileParams(useWayland = true)
+    setCommonCompileParams(useWayland = detectLinuxWayland())
   else:
     setCommonCompileParams()
 
@@ -141,14 +151,12 @@ task releaseNoStacktrace, "release build (no stacktrace)":
 task releaseWayland, "release build (Linux Wayland)":
   --d:release
   --app:gui
-  exeName = exeNameWayland
   setCommonCompileParams(useWayland = true)
 
 
 task releaseX11, "release build (Linux X11)":
   --d:release
   --app:gui
-  exeName = exeNameX11
   setCommonCompileParams()
 
 
@@ -159,12 +167,10 @@ task release, "release build":
 
 
 task releaseMac, "release build (macOS host)":
-  exeName = exeNameMac
   releaseTask()
 
 
 task releaseWin, "release build (Windows host)":
-  exeName = exeNameWin
   releaseTask()
 
 

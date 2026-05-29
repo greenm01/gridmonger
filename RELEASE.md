@@ -43,7 +43,7 @@ commit and push the changes.
 they include the manual.*
 
 ```
-nim manual
+nimble manual
 ```
 
 
@@ -54,10 +54,10 @@ nim manual
 #### Windows
 
 ```
-nim -f release
-nim packageWinInstaller
-nim packageWinPortable
-nim publishPackageWin
+nimble release
+nimble packageWinInstaller
+nimble packageWinPortable
+nimble publishPackageWin
 ```
 
 (Or execute `scripts/build-win.bat`)
@@ -68,11 +68,11 @@ Commit and push the changes in `docs/`.
 #### macOS
 
 ```
-nim -f releaseMacX64
-nim -f releaseMacArm64
-nim mergeMacUniversal
-nim packageMac
-nim publishPackageMac
+nimble releaseMacX64
+nimble releaseMacArm64
+nimble mergeMacUniversal
+nimble packageMac
+nimble publishPackageMac
 ```
 
 (Or execute `scripts/build-mac.sh`)
@@ -83,9 +83,9 @@ Commit and push the changes in `docs/`.
 ### 4. Package and publish extras
 
 ```
-nim packageManual
-nim packageExampleMaps
-nim publishExtras
+nimble packageManual
+nimble packageExampleMaps
+nimble publishExtras
 ```
 
 (Or execute `scripts/build-extras.sh` or `scripts/build-extras.bat`)
@@ -96,7 +96,7 @@ Commit and push the changes in `docs/`.
 ### 5. Build and publish the website
 
 ```
-nim website
+nimble website
 ```
 
 Commit and push the changes in `docs/`.
@@ -115,4 +115,3 @@ git tag vX.Y.Z && git push --tags
 git checkout -b release-vX.Y.Z
 git push --set-upstream origin release-vX.Y.Z
 ```
-

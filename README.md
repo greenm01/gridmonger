@@ -16,7 +16,7 @@ Requires [Nim](https://nim-lang.org/) 2.2.4
 
 ### Dependencies
 
-* [koi](https://github.com/johnnovak/koi)
+* [koi](https://github.com/johnnovak/koi) (local checkout)
 * [nim-osdialog](https://github.com/johnnovak/nim-osdialog)
 * [nim-riff](https://github.com/johnnovak/nim-riff)
 * [semver](https://github.com/euantorano/semver.nim)
@@ -26,10 +26,11 @@ Requires [Nim](https://nim-lang.org/) 2.2.4
 You can install the dependencies with [Nimble](https://github.com/nim-lang/nimble):
 
 ```
-nimble install koi osdialog riff semver winim with
+nimble install osdialog riff semver winim with
 ```
 
-`winim` is only needed for the Windows builds.
+The Koi checkout is expected at `../koi-webgpu` by default; set `KOI_PATH` to
+use another location. `winim` is only needed for the Windows builds.
 
 
 ### Compiling
@@ -47,16 +48,21 @@ git checkout v1.1.0
 To build the debug version (debug logging enabled, file dialogs disabled):
 
 ```
-nim debug
+nimble debug
 ```
 
 To build the release version (file dialogs enabled):
 
 ```
-nim release
+nimble release
 ```
 
-Run `nim help` for the full list of build tasks.
+The build auto-detects the current platform and writes a single `gridmonger`
+binary (`gridmonger.exe` on Windows). On Linux, set
+`GRIDMONGER_BACKEND=wayland` or `GRIDMONGER_BACKEND=x11` to override backend
+detection, or run `nimble debugWayland` / `nimble debugX11` explicitly.
+
+Run `nimble tasks` for the full list of build tasks.
 
 > [!IMPORTANT]
 > Create an empty directory `Config` in the project root directory to enable
@@ -86,10 +92,10 @@ The website is published from the [docs](docs) directory of the `master` branch.
 
 ### Building
 
-- To build the website, run `nim site`
-- To build the manual, run `nim manual`
+- To build the website, run `nimble website`
+- To build the manual, run `nimble manual`
 - To create the zipped distribution package of the manual from the generated
-  files, run `nim packageManual`
+  files, run `nimble packageManual`
 - Check out the [release build instructions](https://github.com/johnnovak/gridmonger/blob/master/RELEASE.md#build-instructions) for further details.
 
 ### Theme development
@@ -132,4 +138,3 @@ This work is free. You can redistribute it and/or modify it under the terms of
 the [Do What The Fuck You Want To Public License, Version
 2](http://www.wtfpl.net), as published by Sam Hocevar. See the
 [COPYING](./COPYING) file for more details.
-

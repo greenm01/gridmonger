@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 
-nim -f releaseMacX64
-nim -f releaseMacArm64
-nim mergeMacUniversal
-nim packageMac
-nim publishPackageMac
-
+nimble releaseMacX64
+nimble releaseMacArm64
+nimble mergeMacUniversal
+nimble packageMac
+nimble publishPackageMac

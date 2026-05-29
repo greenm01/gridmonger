@@ -1,3 +1,3 @@
-nim packageExampleMaps
-nim packageManual
-nim publishExtras
+nimble packageExampleMaps
+nimble packageManual
+nimble publishExtras
