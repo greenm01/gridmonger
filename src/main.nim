@@ -947,6 +947,7 @@ type
     vg:            NVGContext
     backend:       KoiWgpuBackend
     show:          bool
+    dismissRequested: bool
     t0:            MonoTime
 
     logo:          ImageData
@@ -10281,6 +10282,103 @@ proc renderFramePreCb(a) =
 # {{{ renderFrameCb()
 
 proc closeSplash(a)
+proc loadSplashImages(a)
+
+proc useMainWindowSplash(a): bool =
+  when defined(linux) and defined(wayland):
+    a.splash.show and a.splash.win == nil and not a.layout.showThemeEditor
+  else:
+    false
+
+proc renderMainWindowSplash(a) =
+  alias(s, a.splash)
+  alias(vg, a.vg)
+
+  if s.logo.data == nil:
+    loadSplashImages(a)
+
+  let cfg = a.theme.config
+
+  if s.logoImage == NoImage or s.updateLogoImage:
+    colorImage(s.logo, cfg.getColorOrDefault("ui.splash-image.logo"))
+    if s.logoImage == NoImage:
+      s.logoImage = createImage(s.logo)
+    else:
+      vg.updateImage(s.logoImage, cast[ptr byte](s.logo.data))
+    s.updateLogoImage = false
+
+  if s.outlineImage == NoImage or s.updateOutlineImage:
+    colorImage(s.outline, cfg.getColorOrDefault("ui.splash-image.outline"))
+    if s.outlineImage == NoImage:
+      s.outlineImage = createImage(s.outline)
+    else:
+      vg.updateImage(s.outlineImage, cast[ptr byte](s.outline.data))
+    s.updateOutlineImage = false
+
+  if s.shadowImage == NoImage or s.updateShadowImage:
+    colorImage(s.shadow, black())
+    if s.shadowImage == NoImage:
+      s.shadowImage = createImage(s.shadow)
+    else:
+      vg.updateImage(s.shadowImage, cast[ptr byte](s.shadow.data))
+    s.updateShadowImage = false
+
+  let
+    canvasWidth = koi.winWidth()
+    canvasHeight = koi.winHeight()
+    splashWidth = min(canvasWidth * 0.78, s.logo.width * 1.5)
+    scale = splashWidth / s.logo.width
+    splashHeight = s.logo.height * scale
+    x = (canvasWidth - splashWidth) / 2
+    y = (canvasHeight - splashHeight) / 2
+
+  s.logoPaint = createPattern(vg, s.logoImage, xoffs=x, yoffs=y, scale=scale)
+  s.outlinePaint = createPattern(vg, s.outlineImage, xoffs=x, yoffs=y, scale=scale)
+  s.shadowPaint = createPattern(
+    vg, s.shadowImage,
+    alpha=cfg.getFloatOrDefault("ui.splash-image.shadow-alpha"),
+    xoffs=x, yoffs=y, scale=scale
+  )
+
+  vg.beginPath
+  vg.rect(0, 0, canvasWidth, canvasHeight)
+  vg.fillColor(a.theme.windowTheme.backgroundColor)
+  vg.fill
+
+  vg.beginPath
+  vg.rect(x, y, splashWidth, splashHeight)
+  vg.fillPaint(s.shadowPaint)
+  vg.fill
+
+  vg.fillPaint(s.outlinePaint)
+  vg.fill
+
+  vg.fillPaint(s.logoPaint)
+  vg.fill
+
+proc shouldCloseMainWindowSplash(a): bool =
+  if a.layout.showThemeEditor:
+    not a.splash.show
+  else:
+    let autoClose =
+      if a.prefs.autoCloseSplash:
+        let dt = getMonoTime() - a.splash.t0
+        koi.setFramesLeft()
+        dt > initDuration(seconds = a.prefs.splashTimeoutSecs)
+      else:
+        false
+
+    var inputDismiss = false
+    if koi.hasEvent():
+      let ev = koi.currEvent()
+      inputDismiss =
+        (ev.kind == ekKey and ev.action != kaUp) or
+        (ev.kind == ekMouseButton and ev.pressed)
+
+      if inputDismiss:
+        koi.markEventHandled()
+
+    a.splash.dismissRequested or inputDismiss or autoClose
 
 proc renderFrameCb(a) =
 
@@ -10325,7 +10423,11 @@ proc renderFrameCb(a) =
     renderUI(a)
     uiRendered = true
 
-  if a.splash.win == nil:
+  if a.useMainWindowSplash():
+    if shouldCloseMainWindowSplash(a):
+      closeSplash(a)
+
+  elif a.splash.win == nil:
     if a.ui.showQuickReference: handleQuickRefKeyEvents(a)
     elif a.doc.map.hasLevels:     handleGlobalKeyEvents(a)
     else:                         handleGlobalKeyEvents_NoLevels(a)
@@ -10337,6 +10439,9 @@ proc renderFrameCb(a) =
 
   if not a.layout.showThemeEditor or not uiRendered:
     renderUI(a)
+
+  if a.useMainWindowSplash():
+    renderMainWindowSplash(a)
 
   if a.win.shouldClose:
     a.win.shouldClose = false
@@ -10412,7 +10517,9 @@ proc renderFrameSplash(a) =
 
 
   if not a.layout.showThemeEditor and a.splash.win.shouldClose:
-    a.shouldClose = true
+    closeSplash(a)
+    a.win.focus
+    return
 
   proc shouldCloseSplash(a): bool =
     alias(w, a.splash.win)
@@ -10427,6 +10534,7 @@ proc renderFrameSplash(a) =
           dt > initDuration(seconds = a.prefs.splashTimeoutSecs)
         else: false
 
+      a.splash.dismissRequested or
       w.isKeyDown(keyEscape) or
       w.isKeyDown(keySpace) or
       w.isKeyDown(keyEnter) or
@@ -10454,12 +10562,37 @@ proc createSplashWindow(mousePassthrough: bool = false; a) =
   cfg.decorated = false
   cfg.floating = true
   cfg.mousePassthrough = mousePassthrough
+  when defined(linux) and defined(wayland):
+    cfg.focused = false
+    cfg.focusOnShow = false
+    cfg.mousePassthrough = true
 
   when defined(windows):
     cfg.hideFromTaskbar = true
 
-  s.win = newWgpuWindow(cfg, callbacks = false)
+  s.win = newWgpuWindow(cfg, callbacks = true)
   s.win.title = "Gridmonger Splash Image"
+  s.win.keyCb = proc(window: Window, key: Key, scanCode: int32,
+                     action: KeyAction, mods: set[ModifierKey]) =
+    if action != kaUp:
+      g_app.splash.dismissRequested = true
+      koi.setFramesLeft()
+  s.win.charCb = proc(window: Window, codePoint: Rune) =
+    g_app.splash.dismissRequested = true
+    koi.setFramesLeft()
+  s.win.mouseButtonCb = proc(window: Window, button: MouseButton, pressed: bool,
+                             mods: set[ModifierKey]) =
+    if pressed:
+      g_app.splash.dismissRequested = true
+      koi.setFramesLeft()
+  s.win.windowCloseCb = proc(window: Window) =
+    g_app.splash.dismissRequested = true
+    window.shouldClose = false
+    koi.setFramesLeft()
+  s.win.windowSizeCb = proc(window: Window, size: tuple[w, h: int32]) =
+    koi.setFramesLeft()
+  s.win.framebufferSizeCb = proc(window: Window, size: tuple[w, h: int32]) =
+    koi.setFramesLeft()
 
 # }}}
 # {{{ showSplash()
@@ -10473,10 +10606,18 @@ proc showSplash(a) =
   s.win.size = (w, h)
   s.win.pos = ((maxWidth - w) div 2, (maxHeight - h) div 2)
   s.win.show
-  glfw.pollEvents()
+  when defined(linux) and defined(wayland):
+    for _ in 0..<4:
+      glfw.waitEventsTimeout(0.05)
+  else:
+    glfw.pollEvents()
   let (width, height) = s.win.surfaceSize()
   s.backend.initKoiWgpuBackendWithSurface(s.win.wgpuSurfaceHandle(), width, height)
   s.vg = s.backend.createNanoVgContext({nifStencilStrokes, nifAntialias})
+
+  when defined(linux) and defined(wayland):
+    a.win.focus
+    glfw.pollEvents()
 
   if not a.layout.showThemeEditor:
     koi.setFocusCaptured(true)
@@ -10486,20 +10627,30 @@ proc showSplash(a) =
 proc closeSplash(a) =
   alias(s, a.splash)
 
-  s.vg.deleteImage(s.logoImage)
-  s.vg.deleteImage(s.outlineImage)
-  s.vg.deleteImage(s.shadowImage)
+  let vg = if s.vg != nil: s.vg else: a.vg
+
+  if vg != nil:
+    if s.logoImage != NoImage:
+      vg.deleteImage(s.logoImage)
+    if s.outlineImage != NoImage:
+      vg.deleteImage(s.outlineImage)
+    if s.shadowImage != NoImage:
+      vg.deleteImage(s.shadowImage)
 
   s.logoImage = NoImage
   s.outlineImage = NoImage
   s.shadowImage = NoImage
 
-  deleteNanoVgContext(s.vg)
-  s.vg = nil
-  s.win.destroy
-  s.win = nil
+  if s.vg != nil:
+    deleteNanoVgContext(s.vg)
+    s.vg = nil
+
+  if s.win != nil:
+    s.win.destroy
+    s.win = nil
 
   s.show = false
+  s.dismissRequested = false
 
   if not a.layout.showThemeEditor:
     koi.setFocusCaptured(false)
@@ -11071,7 +11222,7 @@ proc main() =
       csdwindow.renderFrame(a.win, a.vg)
 
       # Render splash
-      if a.splash.win == nil and a.splash.show:
+      if a.splash.win == nil and a.splash.show and not a.useMainWindowSplash():
         createSplashWindow(mousePassthrough = a.layout.showThemeEditor, a)
 
         if a.splash.logo.data == nil:
