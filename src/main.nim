@@ -9261,7 +9261,7 @@ proc renderThemeEditorProps(x, y, w, h: float; a) =
   template colorProp(label: string, path: string) =
     prop(label, path):
       var val = cfg.getColorOrDefault(path)
-      koi.color(val)
+      koi.colorPicker(val)
       hocon.set(cfg, path, $val)
 
   template boolProp(label: string, path: string) =
