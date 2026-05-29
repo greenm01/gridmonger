@@ -11041,10 +11041,12 @@ proc main() =
         initApp(configFile, mapFile=event.get.path.some, winCfg,
                 hideSplash=true, a)
       else:
-        initApp(configFile, mapFile, winCfg, a=a)
+        initApp(configFile, mapFile, winCfg,
+                hideSplash=winCfg.hideSplash.get(false), a)
 
     else: # Windows, Linux
-      initApp(configFile, mapFile, winCfg, a=a)
+      initApp(configFile, mapFile, winCfg,
+              hideSplash=winCfg.hideSplash.get(false), a)
 
     a.win.show
 

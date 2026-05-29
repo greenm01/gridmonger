@@ -6,8 +6,12 @@ import strutils
 
 
 var exeName = "gridmonger".toExe
-var exeNameMacArm64 = exeName & "-arm64"
-var exeNameMacX64 = exeName & "-x64"
+var exeNameWayland = "gridmonger-wayland".toExe
+var exeNameX11 = "gridmonger-x11".toExe
+var exeNameMac = "gridmonger-macos".toExe
+var exeNameWin = "gridmonger-windows".toExe
+var exeNameMacArm64 = "gridmonger-macos-arm64".toExe
+var exeNameMacX64 = "gridmonger-macos-x64".toExe
 
 const rootDir = getCurrentDir()
 const version = staticRead("CURRENT_VERSION").strip
@@ -57,10 +61,6 @@ const sphinxDocsDir = "sphinx-docs"
 
 
 proc setCommonCompileParams(useWayland = false) =
-#  --path:"../nim-riff"
-#  --path:"../nim-glfw"
-#  --path:"../nim-nanovg"
-
   --gc:orc
   --threads:on
   --deepcopy:on
@@ -78,6 +78,13 @@ proc setCommonCompileParams(useWayland = false) =
 
   if hostOS == "linux" and useWayland:
     --d:wayland
+    --d:gridmongerBackendWayland
+  elif hostOS == "linux":
+    --d:gridmongerBackendX11
+  elif hostOS == "macosx":
+    --d:gridmongerBackendMac
+  elif hostOS == "windows":
+    --d:gridmongerBackendWindows
 
   if hostOS == "windows":
     --dynlibOverride:ssl
@@ -103,6 +110,7 @@ task versionAndGitHash, "get version and Git hash":
 task debug, "debug build":
   --d:debug
   when hostOS == "linux":
+    exeName = exeNameWayland
     setCommonCompileParams(useWayland = true)
   else:
     setCommonCompileParams()
@@ -110,11 +118,13 @@ task debug, "debug build":
 
 task debugWayland, "debug build (Linux Wayland)":
   --d:debug
+  exeName = exeNameWayland
   setCommonCompileParams(useWayland = true)
 
 
 task debugX11, "debug build (Linux X11)":
   --d:debug
+  exeName = exeNameX11
   setCommonCompileParams()
 
 
@@ -122,6 +132,7 @@ task releaseNoStacktrace, "release build (no stacktrace)":
   --d:release
   --app:gui
   when hostOS == "linux":
+    exeName = exeNameWayland
     setCommonCompileParams(useWayland = true)
   else:
     setCommonCompileParams()
@@ -130,12 +141,14 @@ task releaseNoStacktrace, "release build (no stacktrace)":
 task releaseWayland, "release build (Linux Wayland)":
   --d:release
   --app:gui
+  exeName = exeNameWayland
   setCommonCompileParams(useWayland = true)
 
 
 task releaseX11, "release build (Linux X11)":
   --d:release
   --app:gui
+  exeName = exeNameX11
   setCommonCompileParams()
 
 
@@ -146,10 +159,12 @@ task release, "release build":
 
 
 task releaseMac, "release build (macOS host)":
+  exeName = exeNameMac
   releaseTask()
 
 
 task releaseWin, "release build (Windows host)":
+  exeName = exeNameWin
   releaseTask()
 
 

@@ -28,8 +28,20 @@ const
 
   BuildGitHash* = strutils.strip(staticExec("git rev-parse --short=5 HEAD"))
 
+when defined(gridmongerBackendWayland):
+  const BackendString* = "wayland"
+elif defined(gridmongerBackendX11):
+  const BackendString* = "x11"
+elif defined(gridmongerBackendMac):
+  const BackendString* = "macos"
+elif defined(gridmongerBackendWindows):
+  const BackendString* = "windows"
+else:
+  const BackendString* = "default"
+
+const
   VersionString*     = fmt"Version {AppVersion} ({BuildGitHash})"
-  FullVersionString* = fmt"Gridmonger {VersionString} [{hostOS}/{hostCPU}]"
+  FullVersionString* = fmt"Gridmonger {VersionString} [{hostOS}/{hostCPU}/{BackendString}]"
   CompiledAt*        = fmt"Compiled at {CompileDate} {CompileTime}"
   DevelopedBy*       = fmt"Developed by John Novak, 2020{EnDash}{CompileYear}"
 

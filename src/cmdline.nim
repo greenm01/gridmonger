@@ -13,6 +13,7 @@ type
     width*, height*: Option[int]
     maximized*:      Option[bool]
     showTitleBar*:   Option[bool]
+    hideSplash*:     Option[bool]
 
 # }}}
 
@@ -33,6 +34,7 @@ Options:
   -h, --height:INT            Override window height
   -m, --maximized:on|off      Override maximized state
   -t, --showTitleBar:on|off   Override show title bar state
+      --hideSplash:on|off     Override startup splash visibility
 
       --help                  Print help
       --version               Print version information"""
@@ -113,6 +115,9 @@ proc parseCommandLineParams*(): tuple[configFile, mapFile: Option[string],
 
       of "showTitleBar", "t":
         winCfg.showTitleBar = parseBoolOpt(opt, arg).some
+
+      of "hideSplash":
+        winCfg.hideSplash = parseBoolOpt(opt, arg).some
 
       of "configFile", "c": configFile = arg.some
 
