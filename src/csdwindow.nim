@@ -456,8 +456,18 @@ proc renderTitleBar(win; vg: NVGContext, canvasWidth: float) =
         win.maximize
 
   x += bw
-  if koi.button(x, by, bw, bh, IconWindowClose, style=buttonStyle):
+  let closeClicked = koi.button(x, by, bw, bh, IconWindowClose, style=buttonStyle)
+  let closePressed =
+    if koi.hasEvent():
+      let ev = koi.currEvent()
+      ev.kind == ekMouseButton and ev.button == mbLeft and ev.pressed and
+        ev.x >= x and ev.x < x + bw and ev.y >= by and ev.y < by + bh
+    else:
+      false
+
+  if closePressed or closeClicked:
     win.w.shouldClose = true
+    koi.setEventHandled()
 
   koi.setCurrentLayer(oldCurrLayer)
 

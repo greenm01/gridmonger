@@ -10580,16 +10580,24 @@ proc initGfx(a) =
   glfw.initialize()
   let win = newCSDWindow()
 
+  when defined(linux) and defined(wayland):
+    # Wayland requires the xdg_surface configure handshake before a buffer is
+    # attached. Pump the first events before creating the WebGPU surface, or
+    # Vulkan presentation can fail with "xdg_surface has never been configured".
+    win.show
+    for _ in 0..<4:
+      glfw.waitEventsTimeout(0.05)
+
   let (width, height) = win.glfwWin.surfaceSize()
   a.backend.initKoiWgpuBackendWithSurface(win.glfwWin.wgpuSurfaceHandle(), width, height)
   let vg = a.backend.createNanoVgContext({nifStencilStrokes, nifAntialias})
 
+  useWindow(win.glfwWin)
   koi.init(vg, getProcAddress)
   log.info("GPU info: Koi wgpu backend initialised")
 
   a.win = win
   a.vg = vg
-  useWindow(win.glfwWin)
 
 # }}}
 # {{{ initPaths()
@@ -10876,6 +10884,9 @@ proc initApp(configFile: Option[string], mapFile: Option[string],
     a.win.contentScaleCb = windowContentScaleCb
 
   a.win.dropCb = dropCb
+  a.win.glfwWin.windowCloseCb = proc(window: Window) =
+    g_app.win.shouldClose = true
+    koi.setFramesLeft()
 
   restoreLayoutsFromConfig(cfg, a)
   applyWindowConfigOverrides(winCfg, a)
