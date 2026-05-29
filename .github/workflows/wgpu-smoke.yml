@@ -1,0 +1,125 @@
+name: Wgpu smoke
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+env:
+  NIM_VERSION: binary:2.2.4
+  KOI_REPOSITORY: greenm01/koi
+  KOI_REF: master
+
+jobs:
+  linux:
+    name: Linux ${{ matrix.surface }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - surface: wayland
+            task: debugWayland
+          - surface: x11
+            task: debugX11
+
+    steps:
+      - name: Checkout Gridmonger
+        uses: actions/checkout@v4
+        with:
+          path: gridmonger-koi
+
+      - name: Checkout Koi
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.KOI_REPOSITORY }}
+          ref: ${{ env.KOI_REF }}
+          path: koi-webgpu
+
+      - name: Install Nim
+        uses: iffy/install-nim@v5
+        with:
+          version: ${{ env.NIM_VERSION }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install dependencies
+        run: nimble -y install webgpu glfw nanovg riff semver with
+
+      - name: Export dependency paths
+        shell: bash
+        run: echo "WEBGPU_PATH=$(nimble path webgpu)" >> "$GITHUB_ENV"
+
+      - name: Compile
+        working-directory: gridmonger-koi
+        run: nim -f ${{ matrix.task }}
+
+  macos:
+    name: macOS
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout Gridmonger
+        uses: actions/checkout@v4
+        with:
+          path: gridmonger-koi
+
+      - name: Checkout Koi
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.KOI_REPOSITORY }}
+          ref: ${{ env.KOI_REF }}
+          path: koi-webgpu
+
+      - name: Install Nim
+        uses: iffy/install-nim@v5
+        with:
+          version: ${{ env.NIM_VERSION }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install dependencies
+        run: nimble -y install webgpu glfw nanovg riff semver osdialog with
+
+      - name: Export dependency paths
+        shell: bash
+        run: echo "WEBGPU_PATH=$(nimble path webgpu)" >> "$GITHUB_ENV"
+
+      - name: Compile
+        working-directory: gridmonger-koi
+        run: nim -f releaseMac
+
+  windows:
+    name: Windows
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout Gridmonger
+        uses: actions/checkout@v4
+        with:
+          path: gridmonger-koi
+
+      - name: Checkout Koi
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.KOI_REPOSITORY }}
+          ref: ${{ env.KOI_REF }}
+          path: koi-webgpu
+
+      - name: Install Nim
+        uses: iffy/install-nim@v5
+        with:
+          version: ${{ env.NIM_VERSION }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install dependencies
+        run: nimble -y install webgpu glfw nanovg riff semver osdialog winim with
+
+      - name: Export dependency paths
+        shell: bash
+        run: echo "WEBGPU_PATH=$(nimble path webgpu)" >> "$GITHUB_ENV"
+
+      - name: Compile
+        working-directory: gridmonger-koi
+        run: nim -f releaseWin

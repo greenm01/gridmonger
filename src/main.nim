@@ -23,10 +23,11 @@ import std/times
 import std/unicode
 
 # Libraries
-import glad/gl
 import glfw
 
 import koi
+import koi/backends/glfw_wgpu
+import koi/backends/wgpu_renderer
 from koi/utils import lerp, invLerp, remap
 
 import nanovg
@@ -358,6 +359,7 @@ type
   AppContext = ref object
     win:          CSDWindow
     vg:           NVGContext
+    backend:      KoiWgpuBackend
 
     prefs:        Preferences
     paths:        Paths
@@ -943,6 +945,7 @@ type
   Splash = object
     win:           Window
     vg:            NVGContext
+    backend:       KoiWgpuBackend
     show:          bool
     t0:            MonoTime
 
@@ -2409,7 +2412,7 @@ proc loadImage(path: string; a): Option[Paint] =
 
 # {{{ setSwapInterval()
 proc setSwapInterval(a) =
-  glfw.swapInterval(if a.prefs.vsync: 1 else: 0)
+  discard a
 
 # }}}
 # {{{ getFinalUIScaleFactor()
@@ -10329,9 +10332,7 @@ proc renderFrameCb(a) =
 
   else:
     if not a.layout.showThemeEditor and a.win.glfwWin.focused:
-      glfw.makeContextCurrent(a.splash.win)
       closeSplash(a)
-      glfw.makeContextCurrent(a.win.glfwWin)
       a.win.focus
 
   if not a.layout.showThemeEditor or not uiRendered:
@@ -10354,9 +10355,7 @@ proc renderFrameSplash(a) =
     (fbWidth, fbHeight) = s.win.framebufferSize
     pxRatio = fbWidth.float / winWidth.float
 
-  glViewport(0, 0, fbWidth.GLsizei, fbHeight.GLsizei)
-
-  glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT or GL_STENCIL_BUFFER_BIT)
+  s.backend.resizeKoiWgpuBackend(fbWidth.uint32, fbHeight.uint32)
 
   vg.beginFrame(winWidth, winHeight, pxRatio)
 
@@ -10448,26 +10447,19 @@ proc renderFrameSplash(a) =
 proc createSplashWindow(mousePassthrough: bool = false; a) =
   alias(s, a.splash)
 
-  var cfg = DefaultOpenglWindowConfig
+  var cfg = defaultWgpuWindowConfig("Gridmonger Splash Image", 640, 480)
   cfg.visible = false
   cfg.resizable = false
-  cfg.bits = (r: 8, g: 8, b: 8, a: 8, stencil: 8, depth: 16)
-  cfg.nMultiSamples = 4
-  cfg.transparentFramebuffer = true
+  cfg.transparentFramebuffer = false
   cfg.decorated = false
   cfg.floating = true
   cfg.mousePassthrough = mousePassthrough
 
   when defined(windows):
     cfg.hideFromTaskbar = true
-  else:
-    cfg.version = glv32
-    cfg.forwardCompat = true
-    cfg.profile = opCoreProfile
 
-  s.win = newWindow(cfg)
+  s.win = newWgpuWindow(cfg, callbacks = false)
   s.win.title = "Gridmonger Splash Image"
-  s.vg = nvgCreateContext({nifStencilStrokes, nifAntialias})
 
 # }}}
 # {{{ showSplash()
@@ -10481,6 +10473,10 @@ proc showSplash(a) =
   s.win.size = (w, h)
   s.win.pos = ((maxWidth - w) div 2, (maxHeight - h) div 2)
   s.win.show
+  glfw.pollEvents()
+  let (width, height) = s.win.surfaceSize()
+  s.backend.initKoiWgpuBackendWithSurface(s.win.wgpuSurfaceHandle(), width, height)
+  s.vg = s.backend.createNanoVgContext({nifStencilStrokes, nifAntialias})
 
   if not a.layout.showThemeEditor:
     koi.setFocusCaptured(true)
@@ -10490,9 +10486,6 @@ proc showSplash(a) =
 proc closeSplash(a) =
   alias(s, a.splash)
 
-  s.win.destroy
-  s.win = nil
-
   s.vg.deleteImage(s.logoImage)
   s.vg.deleteImage(s.outlineImage)
   s.vg.deleteImage(s.shadowImage)
@@ -10501,8 +10494,10 @@ proc closeSplash(a) =
   s.outlineImage = NoImage
   s.shadowImage = NoImage
 
-  nvgDeleteContext(s.vg)
+  deleteNanoVgContext(s.vg)
   s.vg = nil
+  s.win.destroy
+  s.win = nil
 
   s.show = false
 
@@ -10585,29 +10580,16 @@ proc initGfx(a) =
   glfw.initialize()
   let win = newCSDWindow()
 
-  if not gladLoadGL(getProcAddress):
-    log.error("Error initialising OpenGL")
-    quit(QuitFailure)
-
-  let version  = cast[cstring](glGetString(GL_VERSION))
-  let vendor   = cast[cstring](glGetString(GL_VENDOR))
-  let renderer = cast[cstring](glGetString(GL_RENDERER))
-
-  let msg = fmt"""
-GPU info:
-  Vendor:   {vendor}
-  Renderer: {renderer}
-  Version:  {version}"""
-
-  log.info(msg)
-
-  nvgInit(getProcAddress)
-  let vg = nvgCreateContext({nifStencilStrokes, nifAntialias})
+  let (width, height) = win.glfwWin.surfaceSize()
+  a.backend.initKoiWgpuBackendWithSurface(win.glfwWin.wgpuSurfaceHandle(), width, height)
+  let vg = a.backend.createNanoVgContext({nifStencilStrokes, nifAntialias})
 
   koi.init(vg, getProcAddress)
+  log.info("GPU info: Koi wgpu backend initialised")
 
   a.win = win
   a.vg = vg
+  useWindow(win.glfwWin)
 
 # }}}
 # {{{ initPaths()
@@ -10880,7 +10862,9 @@ proc initApp(configFile: Option[string], mapFile: Option[string],
 
   a.ui.toolbarDrawParams = newDrawLevelParams()
 
-  a.splash.show = not hideSplash and a.prefs.showSplash
+  # TODO: Re-enable the separate splash surface after Koi's GLFW/wgpu helper
+  # supports multi-window Wayland surface capability negotiation reliably.
+  a.splash.show = false
   a.splash.t0 = getMonoTime()
 
   updateUIScaleFactor(a)
@@ -10909,9 +10893,9 @@ proc cleanup(a) =
 
   koi.deinit()
 
-  nvgDeleteContext(a.vg)
+  deleteNanoVgContext(a.vg)
   if a.splash.vg != nil:
-    nvgDeleteContext(a.splash.vg)
+    deleteNanoVgContext(a.splash.vg)
 
   a.win.glfwWin.destroy
   if a.splash.win != nil:
@@ -11067,19 +11051,17 @@ proc main() =
     a.win.show
 
     while not a.shouldClose:
-      # Render app
-      glfw.makeContextCurrent(a.win.glfwWin)
+      let (width, height) = a.win.glfwWin.surfaceSize()
+      a.backend.resizeKoiWgpuBackend(width, height)
 
       if a.dialogs.about.aboutLogo.logo.data == nil:
         loadAboutLogoImage(a)
 
       csdwindow.renderFrame(a.win, a.vg)
-      glFlush()
 
       # Render splash
       if a.splash.win == nil and a.splash.show:
         createSplashWindow(mousePassthrough = a.layout.showThemeEditor, a)
-        glfw.makeContextCurrent(a.splash.win)
 
         if a.splash.logo.data == nil:
           loadSplashImages(a)
@@ -11088,16 +11070,7 @@ proc main() =
           a.win.focus
 
       if a.splash.win != nil:
-        glfw.makeContextCurrent(a.splash.win)
         renderFrameSplash(a)
-        glFlush()
-
-      # Swap buffers
-      if a.updateUI:
-        glfw.swapBuffers(a.win.glfwWin)
-
-      if a.splash.win != nil:
-        glfw.swapBuffers(a.splash.win)
 
       # Handle app events
       let event = appEvents.tryRecv()

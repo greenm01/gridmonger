@@ -7,6 +7,7 @@ import std/sugar
 import glfw
 import icons
 import koi
+import koi/backends/glfw_wgpu
 import nanovg
 import with
 
@@ -293,20 +294,12 @@ proc `theme=`*(win; s: WindowTheme) =
 proc newCSDWindow*(): CSDWindow =
   result = new CSDWindow
 
-  var cfg = DefaultOpenglWindowConfig
+  var cfg = defaultWgpuWindowConfig("Gridmonger", 640, 480)
   cfg.resizable     = false
   cfg.visible       = false
-  cfg.bits          = (r: 8, g: 8, b: 8, a: 8, stencil: 8, depth: 16)
-  cfg.debugContext  = false
-  cfg.nMultiSamples = 4
   cfg.decorated     = false
 
-  when defined(macosx):
-    cfg.version       = glv32
-    cfg.forwardCompat = true
-    cfg.profile       = opCoreProfile
-
-  result.w = newWindow(cfg)
+  result.w = newWgpuWindow(cfg)
   result.setTheme(DefaultCSDWindowTheme)
   result.showTitleBar = true
 

@@ -4,7 +4,6 @@ import std/options
 import std/sets
 import std/tables
 
-import glad/gl
 import koi
 import nanovg
 
@@ -3035,4 +3034,3 @@ proc drawLevel*(map: Map, levelId: Natural; ctx) =
 # }}}
 
 # vim: et:ts=2:sw=2:fdm=marker
-

@@ -14,6 +14,19 @@ const version = staticRead("CURRENT_VERSION").strip
 const gitHash = strutils.strip(staticExec("git rev-parse --short=5 HEAD"))
 const currYear = CompileDate[0..3]
 
+proc packageSrcPath(pkg: string): string =
+  let envPath = getEnv(pkg.toUpperAscii & "_PATH")
+  if envPath.len > 0:
+    return if envPath.lastPathPart == "src": envPath else: envPath / "src"
+
+  when hostOS == "windows":
+    result = staticExec("nimble path " & pkg).strip / "src"
+  else:
+    result = staticExec(
+      "find \"$HOME/.nimble/pkgs2\" -maxdepth 1 -type d -name '" &
+      pkg & "-*' | sort | tail -n 1"
+    ).strip / "src"
+
 const macPackageName = fmt"gridmonger-v{version}-{gitHash}-macos.zip"
 
 const winInstallerPackageName = fmt"gridmonger-v{version}-{gitHash}-windows-setup.exe"
@@ -43,20 +56,28 @@ const previewWebsiteDir = "docs/preview"
 const sphinxDocsDir = "sphinx-docs"
 
 
-proc setCommonCompileParams() =
+proc setCommonCompileParams(useWayland = false) =
 #  --path:"../nim-riff"
 #  --path:"../nim-glfw"
 #  --path:"../nim-nanovg"
-#  --path:"../koi"
 
   --gc:orc
   --threads:on
   --deepcopy:on
   --d:ssl
   --d:nimPreviewFloatRoundtrip
-  --d:nvgGL3
-  --d:glfwStaticLib
+  --d:wgpu
+  --d:wgvkWGSL
+  --d:NoGLFW
+  --d:koiWebGpu
+  switch "passC", "-Wno-incompatible-pointer-types"
+  switch "path", "../koi-webgpu"
+  switch "path", packageSrcPath("webgpu")
+  switch "nimcache", "/tmp/gridmonger_nimcache"
   --hint:"Name:off"
+
+  if hostOS == "linux" and useWayland:
+    --d:wayland
 
   if hostOS == "windows":
     --dynlibOverride:ssl
@@ -81,10 +102,38 @@ task versionAndGitHash, "get version and Git hash":
 
 task debug, "debug build":
   --d:debug
+  when hostOS == "linux":
+    setCommonCompileParams(useWayland = true)
+  else:
+    setCommonCompileParams()
+
+
+task debugWayland, "debug build (Linux Wayland)":
+  --d:debug
+  setCommonCompileParams(useWayland = true)
+
+
+task debugX11, "debug build (Linux X11)":
+  --d:debug
   setCommonCompileParams()
 
 
 task releaseNoStacktrace, "release build (no stacktrace)":
+  --d:release
+  --app:gui
+  when hostOS == "linux":
+    setCommonCompileParams(useWayland = true)
+  else:
+    setCommonCompileParams()
+
+
+task releaseWayland, "release build (Linux Wayland)":
+  --d:release
+  --app:gui
+  setCommonCompileParams(useWayland = true)
+
+
+task releaseX11, "release build (Linux X11)":
   --d:release
   --app:gui
   setCommonCompileParams()
@@ -94,6 +143,14 @@ task release, "release build":
   --stacktrace:on
   --linetrace:on
   releaseNoStacktraceTask()
+
+
+task releaseMac, "release build (macOS host)":
+  releaseTask()
+
+
+task releaseWin, "release build (Windows host)":
+  releaseTask()
 
 
 task releaseMacArm64, "release build (macOS arm64)":
@@ -270,4 +327,3 @@ task clean, "clean everything":
   if fileExists(sphinxDocsDir):
     withDir sphinxDocsDir:
       exec "make clean"
-
