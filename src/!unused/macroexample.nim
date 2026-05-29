@@ -1,5 +1,4 @@
 macro prop(label: static[string], path: untyped): untyped =
-
   proc getRefObjType(sym: NimNode): NimNode =
     sym.getTypeImpl[0].getTypeImpl
 
@@ -21,8 +20,11 @@ macro prop(label: static[string], path: untyped): untyped =
 
   let
     p = propNameWithIndex.find('[')
-    propName = if p > -1: propNameWithIndex.substr(0, p-1)
-               else: propNameWithIndex
+    propName =
+      if p > -1:
+        propNameWithIndex.substr(0, p - 1)
+      else:
+        propNameWithIndex
 
   let
     rootObjType = getRefObjType(ThemeStyle.getTypeInst)
@@ -38,43 +40,38 @@ macro prop(label: static[string], path: untyped): untyped =
     koi.setNextId(`pathStr`)
 
   if propType == Color.getTypeInst or
-     # a bit hacky; all arrays are of type Color
-     propType.getTypeImpl.kind == nnkBracketExpr:
+      # a bit hacky; all arrays are of type Color
+      propType.getTypeImpl.kind == nnkBracketExpr:
     result.add quote do:
       koi.color(`fullPath`)
-
   elif propType == float.getTypeInst:
     let limitSym = newIdentNode(
-      sectionName.capitalizeAscii &
-      subsectionName.capitalizeAscii &
-      propName.capitalizeAscii &
-      "Limits"
+      sectionName.capitalizeAscii & subsectionName.capitalizeAscii &
+        propName.capitalizeAscii & "Limits"
     )
 
     result.add quote do:
       # TODO limits
-      koi.horizSlider(startVal=`limitSym`.minFloat,
-                      endVal=`limitSym`.maxFloat,
-                      `fullPath`,
-                      style=ThemeEditorSliderStyle)
-
+      koi.horizSlider(
+        startVal = `limitSym`.minFloat,
+        endVal = `limitSym`.maxFloat,
+        `fullPath`,
+        style = ThemeEditorSliderStyle,
+      )
   elif propType == bool.getTypeInst:
     result.add quote do:
       koi.checkBox(`fullPath`)
-
   elif propType.getTypeImpl.kind == nnkEnumTy:
     result.add quote do:
       koi.dropDown(`fullPath`)
-
   else:
     echo propType.treeRepr
     error("Unknown type: " & propType.strVal)
 
-#    echo result.repr
+  let #    echo result.repr
 
-  let prevFullPath = parseExpr("te.prevState." & pathStr)
+    prevFullPath = parseExpr("te.prevState." & pathStr)
 
   result.add quote do:
     if `prevFullPath` != `fullPath`:
       te.modified = true
-

@@ -15,21 +15,20 @@ import common
 import utils/misc
 import utils/rect
 
-
 # {{{ Constants
 const
-  TitleBarFontSize    = 14.0
-  TitleBarHeight*     = 26.0
-  TitleBarTitlePosX   = 16.0
+  TitleBarFontSize = 14.0
+  TitleBarHeight* = 26.0
+  TitleBarTitlePosX = 16.0
   TitleBarButtonWidth = 22.0
 
   TitleBarWindowStandardButtonsLeftPad = 20.0
-  TitleBarWindowButtonsRightPad        =  6.0
+  TitleBarWindowButtonsRightPad = 6.0
 
-  TitleBarWindowButtonsTotalWidth = TitleBarButtonWidth*5 +
-                                    TitleBarWindowStandardButtonsLeftPad +
-                                    TitleBarWindowButtonsRightPad
-  WindowResizeEdgeWidth  =  7.0
+  TitleBarWindowButtonsTotalWidth =
+    TitleBarButtonWidth * 5 + TitleBarWindowStandardButtonsLeftPad +
+    TitleBarWindowButtonsRightPad
+  WindowResizeEdgeWidth = 7.0
   WindowResizeCornerSize = 20.0
 
 # }}}
@@ -37,18 +36,18 @@ const
 type
   CSDWindow* = ref object
     modified*: bool
-    theme:     WindowTheme
+    theme: WindowTheme
 
-    w: Window  # the wrapper GLFW window
+    w: Window # the wrapper GLFW window
 
-    buttonActiveStyle:   ButtonStyle
+    buttonActiveStyle: ButtonStyle
     buttonInactiveStyle: ButtonStyle
-    title:               string
-    maximized:           bool
-    maximizing:          bool
-    showTitleBar:        bool
-    dragState:           WindowDragState
-    resizeDir:           WindowResizeDir
+    title: string
+    maximized: bool
+    maximizing: bool
+    showTitleBar: bool
+    dragState: WindowDragState
+    resizeDir: WindowResizeDir
 
     # Window-relative mouse coordinates when dragging started
     mouseStartDragX, mouseStartDragY: float
@@ -59,20 +58,28 @@ type
     # Window position at the start of window dragging
     startWinPosX, startWinPosY: int
 
-    posX0, posY0:        int
-    size0:               tuple[w, h: int]
-    unmaximizedPos:      tuple[x, y: int]
-    unmaximizedSize:     tuple[w, h: int]
+    posX0, posY0: int
+    size0: tuple[w, h: int]
+    unmaximizedPos: tuple[x, y: int]
+    unmaximizedSize: tuple[w, h: int]
 
     oldFocusCaptured, focusCaptured: bool
 
-
   WindowDragState = enum
-    wdsNone, wdsMoving, wdsResizing
+    wdsNone
+    wdsMoving
+    wdsResizing
 
   WindowResizeDir = enum
-    wrdNone, wrdN, wrdNW, wrdW, wrdSW, wrdS, wrdSE, wrdE, wrdNE
-
+    wrdNone
+    wrdN
+    wrdNW
+    wrdW
+    wrdSW
+    wrdS
+    wrdSE
+    wrdE
+    wrdNE
 
 using win: CSDWindow
 
@@ -83,15 +90,15 @@ var g_window: CSDWindow
 var DefaultCSDWindowTheme = new WindowTheme
 
 with DefaultCSDWindowTheme:
-  titleBackgroundColor         = gray(0.2)
+  titleBackgroundColor = gray(0.2)
   titleBackgroundInactiveColor = gray(0.1)
-  titleColor                   = gray(1.0, 0.7)
-  titleInactiveColor           = gray(1.0, 0.4)
-  buttonColor                  = gray(1.0, 0.45)
-  buttonHoverColor             = gray(1.0, 0.7)
-  buttonDownColor              = gray(1.0, 0.9)
-  buttonInactiveColor          = gray(1.0, 0.5)
-  modifiedFlagColor            = gray(1.0, 0.45)
+  titleColor = gray(1.0, 0.7)
+  titleInactiveColor = gray(1.0, 0.4)
+  buttonColor = gray(1.0, 0.45)
+  buttonHoverColor = gray(1.0, 0.7)
+  buttonDownColor = gray(1.0, 0.9)
+  buttonInactiveColor = gray(1.0, 0.5)
+  modifiedFlagColor = gray(1.0, 0.45)
 
 # }}}
 
@@ -106,7 +113,7 @@ proc title*(win): string =
 
 proc `title=`*(win; title: string) =
   if win.title != title:
-    win.title   = title
+    win.title = title
     win.w.title = title
 
 proc pos*(win): tuple[x, y: int] =
@@ -163,18 +170,18 @@ proc `dropCb=`*(win; f: DropCb) =
 # }}}
 # {{{ rect()
 proc rect(win): Rect[int] =
-  let (x1,y1) = win.pos
-  let (x2,y2) = (x1 + win.size.w, y1 + win.size.h)
-  coordRect(x1,y1, x2,y2)
+  let (x1, y1) = win.pos
+  let (x2, y2) = (x1 + win.size.w, y1 + win.size.h)
+  coordRect(x1, y1, x2, y2)
 
 # }}}
 
 # {{{ workAreaRect()
 proc workAreaRect(m: Monitor): Rect[int] =
   let wa = m.workArea
-  let (x1,y1) = (wa.x, wa.y)
-  let (x2,y2) = (x1 + wa.w, y1 + wa.h)
-  coordRect(x1,y1, x2,y2)
+  let (x1, y1) = (wa.x, wa.y)
+  let (x2, y2) = (x1 + wa.w, y1 + wa.h)
+  coordRect(x1, y1, x2, y2)
 
 # }}}
 # {{{ findMonitorByCoord()
@@ -196,7 +203,8 @@ proc findCurrentMonitor*(win): Monitor =
 # {{{ snapWindowToVisibleArea*()
 proc snapWindowToVisibleArea*(win) =
   let m = collect:
-    for m in  monitors(): m
+    for m in monitors():
+      m
 
   # We can have "zero monitors" momentarily on laptops when an external screen
   # is disconnected.
@@ -209,13 +217,15 @@ proc snapWindowToVisibleArea*(win) =
   if workAreaRect.contains(win.rect):
     # nothing to do
     return
-
   else:
     var winRect = win.rect
     let
       overlap = workAreaRect.intersect(winRect)
-      percentOverlap = if overlap.isSome: overlap.get.area / winRect.area * 100
-                       else: 0
+      percentOverlap =
+        if overlap.isSome:
+          overlap.get.area / winRect.area * 100
+        else:
+          0
 
     if percentOverlap >= 70:
       # Try to fit the window to the work area by shifting it firt
@@ -236,9 +246,8 @@ proc snapWindowToVisibleArea*(win) =
       if r.isSome:
         winRect = r.get
 
-      win.pos  = (winRect.x1, winRect.y1)
-      win.size = (winRect.w,  winRect.h)
-
+      win.pos = (winRect.x1, winRect.y1)
+      win.size = (winRect.w, winRect.h)
     else:
       # Center window to the primary monitor
       let currMonitor = win.findCurrentMonitor
@@ -247,11 +256,12 @@ proc snapWindowToVisibleArea*(win) =
       if win.rect.w > workAreaRect.w or win.rect.h > workAreaRect.h:
         win.size = (DefaultWindowWidth, DefaultWindowHeight)
 
-      let (cx, cy) = (workAreaRect.x1 + (workAreaRect.w div 2),
-                      workAreaRect.y1 + (workAreaRect.h div 2))
+      let (cx, cy) = (
+        workAreaRect.x1 + (workAreaRect.w div 2),
+        workAreaRect.y1 + (workAreaRect.h div 2),
+      )
 
-      win.pos = (cx - (win.size.w div 2),
-                 cy - (win.size.h div 2))
+      win.pos = (cx - (win.size.w div 2), cy - (win.size.h div 2))
 
 # }}}
 
@@ -261,28 +271,27 @@ proc setTheme(win; s: WindowTheme) =
 
   win.buttonActiveStyle = koi.getDefaultButtonStyle()
   with win.buttonActiveStyle:
-    strokeWidth       = 0
-    fillColor         = black().withAlpha(0)
-    fillColorHover    = black().withAlpha(0)
-    fillColorDown     = black().withAlpha(0)
+    strokeWidth = 0
+    fillColor = black().withAlpha(0)
+    fillColorHover = black().withAlpha(0)
+    fillColorDown = black().withAlpha(0)
     fillColorDisabled = black().withAlpha(0)
-    label.padHoriz    = 0
-    label.color       = s.buttonColor
-    label.colorHover  = s.buttonHoverColor
-    label.colorDown   = s.buttonDownColor
+    label.padHoriz = 0
+    label.color = s.buttonColor
+    label.colorHover = s.buttonHoverColor
+    label.colorDown = s.buttonDownColor
 
   win.buttonInactiveStyle = koi.getDefaultButtonStyle()
   with win.buttonInactiveStyle:
-
-    strokeWidth       = 0
-    fillColor         = black().withAlpha(0)
-    fillColorHover    = black().withAlpha(0)
-    fillColorDown     = black().withAlpha(0)
+    strokeWidth = 0
+    fillColor = black().withAlpha(0)
+    fillColorHover = black().withAlpha(0)
+    fillColorDown = black().withAlpha(0)
     fillColorDisabled = black().withAlpha(0)
-    label.padHoriz    = 0
-    label.color       = s.buttonInactiveColor
-    label.colorHover  = s.buttonInactiveColor
-    label.colorDown   = s.buttonInactiveColor
+    label.padHoriz = 0
+    label.color = s.buttonInactiveColor
+    label.colorHover = s.buttonInactiveColor
+    label.colorDown = s.buttonInactiveColor
 
 # }}}
 # # {{{ theme=*
@@ -295,9 +304,9 @@ proc newCSDWindow*(): CSDWindow =
   result = new CSDWindow
 
   var cfg = defaultWgpuWindowConfig("Gridmonger", 640, 480)
-  cfg.resizable     = false
-  cfg.visible       = false
-  cfg.decorated     = false
+  cfg.resizable = false
+  cfg.visible = false
+  cfg.decorated = false
 
   result.w = newWgpuWindow(cfg)
   result.setTheme(DefaultCSDWindowTheme)
@@ -393,12 +402,14 @@ proc snapToRight*(win) =
 proc renderTitleBar(win; vg: NVGContext, canvasWidth: float) =
   alias(s, win.theme)
 
-  let (bgColor, textColor, modifiedFlagColor, buttonStyle) = if win.w.focused:
-    (s.titleBackgroundColor, s.titleColor,
-     s.modifiedFlagColor, win.buttonActiveStyle)
-  else:
-    (s.titleBackgroundInactiveColor, s.titleInactiveColor,
-     s.modifiedFlagInactiveColor, win.buttonInactiveStyle)
+  let (bgColor, textColor, modifiedFlagColor, buttonStyle) =
+    if win.w.focused:
+      (s.titleBackgroundColor, s.titleColor, s.modifiedFlagColor, win.buttonActiveStyle)
+    else:
+      (
+        s.titleBackgroundInactiveColor, s.titleInactiveColor,
+        s.modifiedFlagInactiveColor, win.buttonInactiveStyle,
+      )
 
   let
     bw = TitleBarButtonWidth
@@ -421,8 +432,7 @@ proc renderTitleBar(win; vg: NVGContext, canvasWidth: float) =
 
     if win.modified:
       vg.fillColor(modifiedFlagColor)
-      discard vg.text(tx+10, ty, IconAsterisk)
-
+      discard vg.text(tx + 10, ty, IconAsterisk)
 
   # TODO hacky, shouldn't set the current layer from the outside
   let oldCurrLayer = koi.currentLayer()
@@ -431,37 +441,40 @@ proc renderTitleBar(win; vg: NVGContext, canvasWidth: float) =
   # Minimise/maximise/close window buttons
   var x = (canvasWidth - TitleBarWindowButtonsTotalWidth).float
 
-  if koi.button(x, by, bw.float, bh, IconWindowLeft, tooltip="Snap to left",
-                style=buttonStyle):
+  if koi.button(
+    x, by, bw.float, bh, IconWindowLeft, tooltip = "Snap to left", style = buttonStyle
+  ):
     win.snapToLeft
 
   x += bw
-  if koi.button(x, by, bw, bh, IconWindowRight, tooltip="Snap to right",
-                style=buttonStyle):
+  if koi.button(
+    x, by, bw, bh, IconWindowRight, tooltip = "Snap to right", style = buttonStyle
+  ):
     win.snapToRight
 
   x += bw + TitleBarWindowStandardButtonsLeftPad
-  if koi.button(x, by, bw, bh, IconWindowMinimise, style=buttonStyle):
+  if koi.button(x, by, bw, bh, IconWindowMinimise, style = buttonStyle):
     win.w.iconify
 
   x += bw
-  if koi.button(x, by, bw, bh,
-                if win.maximized: IconWindowRestore else: IconWindowMaximise,
-                style=buttonStyle):
-
-    if not win.maximizing:  # workaround to avoid double-activation
-      if win.maximized:
-        win.unmaximize
-      else:
-        win.maximize
+  if koi.button(
+    x,
+    by,
+    bw,
+    bh,
+    if win.maximized: IconWindowRestore else: IconWindowMaximise,
+    style = buttonStyle,
+  ):
+    if not win.maximizing: # workaround to avoid double-activation
+      if win.maximized: win.unmaximize else: win.maximize
 
   x += bw
-  let closeClicked = koi.button(x, by, bw, bh, IconWindowClose, style=buttonStyle)
+  let closeClicked = koi.button(x, by, bw, bh, IconWindowClose, style = buttonStyle)
   let closePressed =
     if koi.hasEvent():
       let ev = koi.currEvent()
-      ev.kind == ekMouseButton and ev.button == mbLeft and ev.pressed and
-        ev.x >= x and ev.x < x + bw and ev.y >= by and ev.y < by + bh
+      ev.kind == ekMouseButton and ev.button == mbLeft and ev.pressed and ev.x >= x and
+        ev.x < x + bw and ev.y >= by and ev.y < by + bh
     else:
       false
 
@@ -487,10 +500,8 @@ proc handleWindowDragEvents(win) =
   case win.dragState
   of wdsNone:
     if win.showTitleBar and koi.hasNoActiveItem() and koi.mbLeftDown():
-      if my < (TitleBarHeight * koi.getScale()) and
-         mx > 0 and
-         mx < (winWidth - TitleBarWindowButtonsTotalWidth * koi.getScale()):
-
+      if my < (TitleBarHeight * koi.getScale()) and mx > 0 and
+          mx < (winWidth - TitleBarWindowButtonsTotalWidth * koi.getScale()):
         win.mouseStartDragX = mx
         win.mouseStartDragY = my
 
@@ -509,25 +520,37 @@ proc handleWindowDragEvents(win) =
         let ew = WindowResizeEdgeWidth
         let cs = WindowResizeCornerSize
         let d =
-          if   mx < cs            and my < cs:             wrdNW
-          elif mx > winWidth - cs and my < cs:             wrdNE
-          elif mx > winWidth - cs and my > winHeight - cs: wrdSE
-          elif mx < cs            and my > winHeight - cs: wrdSW
-
-          elif mx < ew:             wrdW
-          elif mx > winWidth - ew:  wrdE
-          elif my < ew:             wrdN
-          elif my > winHeight - ew: wrdS
-
-          else: wrdNone
+          if mx < cs and my < cs:
+            wrdNW
+          elif mx > winWidth - cs and my < cs:
+            wrdNE
+          elif mx > winWidth - cs and my > winHeight - cs:
+            wrdSE
+          elif mx < cs and my > winHeight - cs:
+            wrdSW
+          elif mx < ew:
+            wrdW
+          elif mx > winWidth - ew:
+            wrdE
+          elif my < ew:
+            wrdN
+          elif my > winHeight - ew:
+            wrdS
+          else:
+            wrdNone
 
         if d > wrdNone:
           case d
-          of wrdW,  wrdE:  setCursorShape(csResizeEW)
-          of wrdN,  wrdS:  setCursorShape(csResizeNS)
-          of wrdNW, wrdSE: setCursorShape(csResizeNWSE)
-          of wrdNE, wrdSW: setCursorShape(csResizeNESW)
-          else: setCursorShape(csArrow)
+          of wrdW, wrdE:
+            setCursorShape(csResizeEW)
+          of wrdN, wrdS:
+            setCursorShape(csResizeNS)
+          of wrdNW, wrdSE:
+            setCursorShape(csResizeNWSE)
+          of wrdNE, wrdSW:
+            setCursorShape(csResizeNESW)
+          else:
+            setCursorShape(csArrow)
 
           if koi.mbLeftDown():
             win.mouseStartDragX = mx
@@ -542,7 +565,6 @@ proc handleWindowDragEvents(win) =
           setCursorShape(csArrow)
       else:
         setCursorShape(csArrow)
-
   of wdsMoving:
     if koi.mbLeftDown():
       let
@@ -552,7 +574,6 @@ proc handleWindowDragEvents(win) =
       # Only move or restore the window when we're actually
       # dragging the title bar while holding the LMB down.
       if dx != 0 or dy != 0:
-
         # LMB-dragging the title bar will restore the window first (we're
         # imitating Windows' behaviour here).
         if win.maximized:
@@ -584,13 +605,11 @@ proc handleWindowDragEvents(win) =
           win.w.pos = (win.posX0, win.posY0)
           win.w.size = (oldWidth, win.unmaximizedSize.h)
           win.maximized = false
-
         else:
           win.w.pos = (win.startWinPosX + dx, win.startWinPosY + dy)
           (win.posX0, win.posY0) = win.w.pos
     else:
       win.dragState = wdsNone
-
   of wdsResizing:
     if koi.mbLeftDown():
       let
@@ -601,7 +620,7 @@ proc handleWindowDragEvents(win) =
         (newX, newY) = (win.posX0, win.posY0)
         (newW, newH) = win.size0
 
-      case win.resizeDir:
+      case win.resizeDir
       of wrdN:
         newY += dy
         newH -= dy
@@ -631,8 +650,8 @@ proc handleWindowDragEvents(win) =
       of wrdNone:
         discard
 
-      let (newWidth, newHeight) = (newW.clampMin(MinWindowWidth),
-                                   newH.clampMin(MinWindowHeight))
+      let (newWidth, newHeight) =
+        (newW.clampMin(MinWindowWidth), newH.clampMin(MinWindowHeight))
 
       (win.posX0, win.posY0) = (newX, newY)
       win.w.pos = (newX, newY)
@@ -644,7 +663,6 @@ proc handleWindowDragEvents(win) =
 
       if win.resizeDir in {wrdNE, wrdN, wrdNW}:
         win.size0.h = newHeight
-
     else:
       win.dragState = wdsNone
       koi.showCursor()
@@ -653,14 +671,15 @@ proc handleWindowDragEvents(win) =
 
 # {{{ renderFrame*()
 
-type RenderFramePreProc = proc (win: CSDWindow)
-type RenderFrameProc = proc (win: CSDWindow)
+type RenderFramePreProc = proc(win: CSDWindow)
+type RenderFrameProc = proc(win: CSDWindow)
 
 var g_renderFramePreProc: RenderFramePreProc
 var g_renderFrameProc: RenderFrameProc
 
 proc renderFrame*(win: CSDWindow, vg: NVGContext) =
-  if win.w.iconified: return
+  if win.w.iconified:
+    return
 
   # For pre-rendering stuff into FBOs before the main frame starts
   g_renderFramePreProc(win)
@@ -687,7 +706,7 @@ proc renderFrame*(win: CSDWindow, vg: NVGContext) =
   # Window border
   koi.addDrawLayer(layerWindowDecoration, vg):
     vg.beginPath
-    vg.rect(0.5, 0.5, canvasWidth-1, canvasHeight-1)
+    vg.rect(0.5, 0.5, canvasWidth - 1, canvasHeight - 1)
     vg.strokeColor(win.theme.borderColor)
     vg.strokeWidth(1.0)
     vg.stroke

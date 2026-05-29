@@ -7,7 +7,6 @@ import common
 import selection
 import utils/rect
 
-
 const DefaultInitialSize = 64
 
 using
@@ -16,7 +15,7 @@ using
 
 # {{{ initLinks*()
 proc initLinks*(initialSize: Natural = DefaultInitialSize): Links =
-  result.srcToDest  = initOrderedTable[Location, Location](initialSize)
+  result.srcToDest = initOrderedTable[Location, Location](initialSize)
   result.destToSrcs = initOrderedTable[Location, HashSet[Location]](initialSize)
 
 # }}}
@@ -120,38 +119,40 @@ proc getByDest*(l; dest: Location): Option[HashSet[Location]] =
 # }}}
 
 # {{{ filterBySrcInRect*()
-proc filterBySrcInRect*(l; levelId: Natural, rect: Rect[Natural],
-                        sel: Option[Selection] = Selection.none): Links =
+proc filterBySrcInRect*(
+    l; levelId: Natural, rect: Rect[Natural], sel: Option[Selection] = Selection.none
+): Links =
   result = initLinks()
   var src: Location
   src.levelId = levelId
 
-  for r in rect.r1..<rect.r2:
-    for c in rect.c1..<rect.c2:
+  for r in rect.r1 ..< rect.r2:
+    for c in rect.c1 ..< rect.c2:
       src.row = r
       src.col = c
 
       let dest = l.getBySrc(src)
       if dest.isSome:
-        if sel.isNone or (sel.isSome and sel.get[r,c]):
+        if sel.isNone or (sel.isSome and sel.get[r, c]):
           result.set(src, dest.get)
 
 # }}}
 # {{{ filterByDestInRect*()
-proc filterByDestInRect*(l; levelId: Natural, rect: Rect[Natural],
-                         sel: Option[Selection] = Selection.none): Links =
+proc filterByDestInRect*(
+    l; levelId: Natural, rect: Rect[Natural], sel: Option[Selection] = Selection.none
+): Links =
   result = initLinks()
   var dest: Location
   dest.levelId = levelId
 
-  for r in rect.r1..<rect.r2:
-    for c in rect.c1..<rect.c2:
+  for r in rect.r1 ..< rect.r2:
+    for c in rect.c1 ..< rect.c2:
       dest.row = r
       dest.col = c
 
       let srcs = l.getByDest(dest)
       if srcs.isSome:
-        if sel.isNone or (sel.isSome and sel.get[r,c]):
+        if sel.isNone or (sel.isSome and sel.get[r, c]):
           for src in srcs.get:
             result.set(src, dest)
 
@@ -165,8 +166,9 @@ proc addAll*(vl, l) =
 # }}}
 
 # {{{ filterByInRect*()
-proc filterByInRect*(l; levelId: Natural, rect: Rect[Natural],
-                     sel: Option[Selection] = Selection.none): Links =
+proc filterByInRect*(
+    l; levelId: Natural, rect: Rect[Natural], sel: Option[Selection] = Selection.none
+): Links =
   result = l.filterBySrcInRect(levelId, rect, sel)
   result.addAll(l.filterByDestInRect(levelId, rect, sel))
 
@@ -193,12 +195,12 @@ proc filterByLevel*(l; levelId: Natural): Links =
   result = l.filterBySrcLevel(levelId)
   result.addAll(l.filterByDestLevel(levelId))
 
-
 # }}}
 
 # {{{ shiftLinksInLevel*()
-proc shiftLinksInLevel*(l; levelId: Natural, rowOffs, colOffs: int,
-                        levelRect: Rect[int], wraparound: bool): Links =
+proc shiftLinksInLevel*(
+    l; levelId: Natural, rowOffs, colOffs: int, levelRect: Rect[int], wraparound: bool
+): Links =
   result = initLinks()
 
   for src, dest in l:
@@ -213,7 +215,7 @@ proc shiftLinksInLevel*(l; levelId: Natural, rowOffs, colOffs: int,
         src.row = r.floorMod(levelRect.rows)
         src.col = c.floorMod(levelRect.cols)
       else:
-        if levelRect.contains(r,c):
+        if levelRect.contains(r, c):
           src.row = r
           src.col = c
         else:
@@ -227,7 +229,7 @@ proc shiftLinksInLevel*(l; levelId: Natural, rowOffs, colOffs: int,
         dest.row = r.floorMod(levelRect.rows)
         dest.col = c.floorMod(levelRect.cols)
       else:
-        if levelRect.contains(r,c):
+        if levelRect.contains(r, c):
           dest.row = r
           dest.col = c
         else:

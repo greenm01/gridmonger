@@ -9,7 +9,6 @@ import regions
 import selection
 import utils/rect
 
-
 using l: Level
 
 const MoveBufferLevelId* = Natural.high
@@ -28,71 +27,70 @@ proc cols*(l): Natural {.inline.} =
 # }}}
 
 # {{{ isEmpty*()
-proc isEmpty*(l; r,c: Natural): bool {.inline.} =
-  l.cellGrid.isEmpty(r,c)
+proc isEmpty*(l; r, c: Natural): bool {.inline.} =
+  l.cellGrid.isEmpty(r, c)
 
 # }}}
 # {{{ isNeighbourCellEmpty*()
-proc isNeighbourCellEmpty*(l; r,c: Natural, dir: Direction): bool {.inline.} =
-  l.cellGrid.isNeighbourCellEmpty(r,c, dir)
+proc isNeighbourCellEmpty*(l; r, c: Natural, dir: Direction): bool {.inline.} =
+  l.cellGrid.isNeighbourCellEmpty(r, c, dir)
 
 # }}}
 # {{{ getNeighbourCell*()
-proc getNeighbourCell*(l; r,c: Natural,
-                       dir: Direction): Option[Cell] {.inline.} =
-  l.cellGrid.getNeighbourCell(r,c, dir)
+proc getNeighbourCell*(l; r, c: Natural, dir: Direction): Option[Cell] {.inline.} =
+  l.cellGrid.getNeighbourCell(r, c, dir)
 
 # }}}
 
 # {{{ getFloor*()
-proc getFloor*(l; r,c: Natural): Floor {.inline.} =
-  l.cellGrid.getFloor(r,c)
+proc getFloor*(l; r, c: Natural): Floor {.inline.} =
+  l.cellGrid.getFloor(r, c)
 
 # }}}
 # {{{ setFloor*()
-proc setFloor*(l; r,c: Natural, f: Floor) =
-  l.annotations.convertNoteToComment(r,c)
-  l.cellGrid.setFloor(r,c, f)
+proc setFloor*(l; r, c: Natural, f: Floor) =
+  l.annotations.convertNoteToComment(r, c)
+  l.cellGrid.setFloor(r, c, f)
 
 # }}}
 # {{{ cleearFloor*()
-proc clearFloor*(l; r,c: Natural) =
-  l.cellGrid.setFloor(r,c, fBlank)
+proc clearFloor*(l; r, c: Natural) =
+  l.cellGrid.setFloor(r, c, fBlank)
 
 # }}}
 # {{{ getFloorOrientation*()
-proc getFloorOrientation*(l; r,c: Natural): CardinalDir {.inline.} =
-  l.cellGrid.getFloorOrientation(r,c)
+proc getFloorOrientation*(l; r, c: Natural): CardinalDir {.inline.} =
+  l.cellGrid.getFloorOrientation(r, c)
 
 # }}}
 # {{{ setFloorOrientation*()
-proc setFloorOrientation*(l; r,c: Natural, dir: CardinalDir) =
-  l.cellGrid.setFloorOrientation(r,c, dir)
+proc setFloorOrientation*(l; r, c: Natural, dir: CardinalDir) =
+  l.cellGrid.setFloorOrientation(r, c, dir)
 
 # }}}
 # {{{ getFloorColor*()
-proc getFloorColor*(l; r,c: Natural): byte {.inline.} =
-  l.cellGrid.getFloorColor(r,c)
+proc getFloorColor*(l; r, c: Natural): byte {.inline.} =
+  l.cellGrid.getFloorColor(r, c)
 
 # }}}
 # {{{ setFloorColor*()
-proc setFloorColor*(l; r,c: Natural, col: byte) =
-  l.cellGrid.setFloorColor(r,c, col)
+proc setFloorColor*(l; r, c: Natural, col: byte) =
+  l.cellGrid.setFloorColor(r, c, col)
 
 # }}}
 # {{{ getWall*()
-proc getWall*(l; r,c: Natural, dir: CardinalDir): Wall {.inline.} =
-  l.cellGrid.getWall(r,c, dir)
+proc getWall*(l; r, c: Natural, dir: CardinalDir): Wall {.inline.} =
+  l.cellGrid.getWall(r, c, dir)
 
 # }}}
 # {{{ setWall*()
-proc setWall*(l; r,c: Natural, dir: CardinalDir, w: Wall) =
-  l.cellGrid.setWall(r,c, dir, w)
+proc setWall*(l; r, c: Natural, dir: CardinalDir, w: Wall) =
+  l.cellGrid.setWall(r, c, dir, w)
 
 # }}}
 # {{{ canSetWall*()
-proc canSetWall*(l; r,c: Natural, dir: CardinalDir): bool {.inline.} =
-  not l.isEmpty(r,c) or not l.isNeighbourCellEmpty(r,c, {dir})
+proc canSetWall*(l; r, c: Natural, dir: CardinalDir): bool {.inline.} =
+  not l.isEmpty(r, c) or not l.isNeighbourCellEmpty(r, c, {dir})
 
 # }}}
 # {{{ fill*()
@@ -108,18 +106,18 @@ proc fill*(l; cell: Cell) =
 # {{{ Annotations
 
 # {{{ getAnnotation*()
-proc getAnnotation*(l; r,c: Natural): Option[Annotation] =
-  l.annotations[r,c]
+proc getAnnotation*(l; r, c: Natural): Option[Annotation] =
+  l.annotations[r, c]
 
 # }}}
 # {{{ setAnnotation*()
-proc setAnnotation*(l; r,c: Natural, a: Annotation) =
-  l.annotations[r,c] = a
+proc setAnnotation*(l; r, c: Natural, a: Annotation) =
+  l.annotations[r, c] = a
 
 # }}}
 # {{{ delAnnotation*()
-proc delAnnotation*(l; r,c: Natural) =
-  l.annotations.delAnnotation(r,c)
+proc delAnnotation*(l; r, c: Natural) =
+  l.annotations.delAnnotation(r, c)
 
 # }}}
 # {{{ numAnnotations*()
@@ -128,20 +126,19 @@ proc numAnnotations*(l): Natural =
 
 # }}}
 # {{{ allAnnotations*()
-template allAnnotations*(a): tuple[row, col: Natural,
-                                   annotation: Annotation] =
+template allAnnotations*(a): tuple[row, col: Natural, annotation: Annotation] =
   l.annotations.allAnnotations()
 
 # }}}
 
 # {{{ hasNote*()
-proc hasNote*(l; r,c: Natural): bool =
-  l.annotations.hasNote(r,c)
+proc hasNote*(l; r, c: Natural): bool =
+  l.annotations.hasNote(r, c)
 
 # }}}
 # {{{ getNote*()
-proc getNote*(l; r,c: Natural): Option[Annotation] =
-  l.annotations.getNote(r,c)
+proc getNote*(l; r, c: Natural): Option[Annotation] =
+  l.annotations.getNote(r, c)
 
 # }}}
 # {{{ allNotes*()
@@ -156,13 +153,13 @@ proc reindexNotes*(l) =
 # }}}
 
 # {{{ hasLabel*()
-proc hasLabel*(l; r,c: Natural): bool =
-  l.annotations.hasLabel(r,c)
+proc hasLabel*(l; r, c: Natural): bool =
+  l.annotations.hasLabel(r, c)
 
 # }}}
 # {{{ getLabel*()
-proc getLabel*(l; r,c: Natural): Option[Annotation] =
-  l.annotations.getLabel(r,c)
+proc getLabel*(l; r, c: Natural): Option[Annotation] =
+  l.annotations.getLabel(r, c)
 
 # }}}
 # {{{ allLabels*()
@@ -172,12 +169,12 @@ template allLabels*(l): tuple[row, col: Natural, annotation: Annotation] =
 # }}}
 #
 # {{{ copyAnnotationsFrom*()
-proc copyAnnotationsFrom*(l; destRow, destCol: Natural,
-                          srcLevel: Level, srcRect: Rect[Natural]) =
-  for r,c, a in srcLevel.annotations.allAnnotations:
-    if srcRect.contains(r,c):
-      l.annotations[destRow + r - srcRect.r1,
-                    destCol + c - srcRect.c1] = a
+proc copyAnnotationsFrom*(
+    l; destRow, destCol: Natural, srcLevel: Level, srcRect: Rect[Natural]
+) =
+  for r, c, a in srcLevel.annotations.allAnnotations:
+    if srcRect.contains(r, c):
+      l.annotations[destRow + r - srcRect.r1, destCol + c - srcRect.c1] = a
 
 # }}}
 
@@ -187,14 +184,16 @@ proc copyAnnotationsFrom*(l; destRow, destCol: Natural,
 proc regionRows*(l; ro: RegionOptions): Natural =
   ceil(l.rows / ro.rowsPerRegion).int
 
-proc regionRows*(l): Natural = l.regionRows(l.regionOpts)
+proc regionRows*(l): Natural =
+  l.regionRows(l.regionOpts)
 
 # }}}
 # {{{ regionCols*()
 proc regionCols*(l; ro: RegionOptions): Natural =
   ceil(l.cols / ro.colsPerRegion).int
 
-proc regionCols*(l): Natural = l.regionCols(l.regionOpts)
+proc regionCols*(l): Natural =
+  l.regionCols(l.regionOpts)
 
 # }}}
 # {{{ regionCoords*()
@@ -205,17 +204,19 @@ iterator regionCoords*(l): RegionCoords =
   # This just generates the coordinates, regardless whether regions are
   # enabled in RegionOptions or whether Regions contains any regions.
   #
-  for r in 0..<l.regionRows:
-    for c in 0..<l.regionCols:
+  for r in 0 ..< l.regionRows:
+    for c in 0 ..< l.regionCols:
       yield RegionCoords(row: r, col: c)
 
 # }}}
 
 # {{{ initRegionsFrom*()
-proc initRegionsFrom*(srcLevel: Option[Level] = Level.none, destLevel: Level,
-                      regionRowOffs: int = 0,
-                      regionColOffs: int = 0): Regions =
-
+proc initRegionsFrom*(
+    srcLevel: Option[Level] = Level.none,
+    destLevel: Level,
+    regionRowOffs: int = 0,
+    regionColOffs: int = 0,
+): Regions =
   var destRegions = initRegions()
   var index = 1
 
@@ -223,18 +224,18 @@ proc initRegionsFrom*(srcLevel: Option[Level] = Level.none, destLevel: Level,
     let srcRegionRow = destRegionCoord.row.int + regionRowOffs
     let srcRegionCol = destRegionCoord.col.int + regionColOffs
 
-    let srcRegion = if srcLevel.isNone or srcRegionRow < 0 or srcRegionCol < 0:
-                      Region.none
-                    else:
-                      let rc = RegionCoords(row: srcRegionRow,
-                                            col: srcRegionCol)
-                      srcLevel.get.regions[rc]
+    let srcRegion =
+      if srcLevel.isNone or srcRegionRow < 0 or srcRegionCol < 0:
+        Region.none
+      else:
+        let rc = RegionCoords(row: srcRegionRow, col: srcRegionCol)
+        srcLevel.get.regions[rc]
 
     if srcRegion.isSome and not srcRegion.get.isUntitledRegion():
       destRegions[destRegionCoord] = srcRegion.get
     else:
       let name = destLevel.regions.nextUntitledRegionName(index)
-      destRegions[destRegionCoord] = initRegion(name=name)
+      destRegions[destRegionCoord] = initRegion(name = name)
 
   destRegions.sortRegions
 
@@ -246,7 +247,11 @@ proc initRegionsFrom*(srcLevel: Option[Level] = Level.none, destLevel: Level,
 
 # {{{ getDetailedName*()
 proc getDetailedName*(l; short = false): string =
-  let elevation = if l.elevation == 0: "G" else: $l.elevation
+  let elevation =
+    if l.elevation == 0:
+      "G"
+    else:
+      $l.elevation
   if l.levelName == "":
     fmt"{l.locationName} ({elevation})"
   else:
@@ -258,13 +263,13 @@ proc getDetailedName*(l; short = false): string =
 # }}}
 
 # {{{ hasTrail*()
-proc hasTrail*(l; r,c: Natural): bool {.inline.} =
-  l.cellGrid.hasTrail(r,c)
+proc hasTrail*(l; r, c: Natural): bool {.inline.} =
+  l.cellGrid.hasTrail(r, c)
 
 # }}}
 # {{{ setTrail*()
-proc setTrail*(l; r,c: Natural, t: bool) =
-  l.cellGrid.setTrail(r,c, t)
+proc setTrail*(l; r, c: Natural, t: bool) =
+  l.cellGrid.setTrail(r, c, t)
 
 # }}}
 # {{{ calcTrailBoundingBox*()
@@ -274,12 +279,12 @@ proc calcTrailBoundingBox*(l): Option[Rect[Natural]] {.inline.} =
 # }}}
 
 # {{{ eraseOrphanedWalls*()
-proc eraseOrphanedWalls*(l; r,c: Natural) =
+proc eraseOrphanedWalls*(l; r, c: Natural) =
   template cleanWall(dir: CardinalDir) =
-    if l.isNeighbourCellEmpty(r,c, {dir}):
-      l.setWall(r,c, dir, wNone)
+    if l.isNeighbourCellEmpty(r, c, {dir}):
+      l.setWall(r, c, dir, wNone)
 
-  if l.isEmpty(r,c):
+  if l.isEmpty(r, c):
     cleanWall(dirN)
     cleanWall(dirW)
     cleanWall(dirS)
@@ -287,25 +292,25 @@ proc eraseOrphanedWalls*(l; r,c: Natural) =
 
 # }}}
 # {{{ eraseCellWalls*()
-proc eraseCellWalls*(l; r,c: Natural) =
-  l.setWall(r,c, dirN, wNone)
-  l.setWall(r,c, dirW, wNone)
-  l.setWall(r,c, dirS, wNone)
-  l.setWall(r,c, dirE, wNone)
+proc eraseCellWalls*(l; r, c: Natural) =
+  l.setWall(r, c, dirN, wNone)
+  l.setWall(r, c, dirW, wNone)
+  l.setWall(r, c, dirS, wNone)
+  l.setWall(r, c, dirE, wNone)
 
 # }}}
 # {{{ eraseCell*()
-proc eraseCell*(l; r,c: Natural) =
-  l.eraseCellWalls(r,c)
-  l.setFloor(r,c, fEmpty)
-  l.annotations.delAnnotation(r,c)
+proc eraseCell*(l; r, c: Natural) =
+  l.eraseCellWalls(r, c)
+  l.setFloor(r, c, fEmpty)
+  l.annotations.delAnnotation(r, c)
 
 # }}}
 
 # {{{ copyCellsAndAnnotationsFrom*(()
-proc copyCellsAndAnnotationsFrom*(l; destRow, destCol: Natural,
-                                  srcLevel: Level, srcRect: Rect[Natural]) =
-
+proc copyCellsAndAnnotationsFrom*(
+    l; destRow, destCol: Natural, srcLevel: Level, srcRect: Rect[Natural]
+) =
   l.cellGrid.copyFrom(destRow, destCol, srcLevel.cellGrid, srcRect)
 
   l.annotations.delAnnotations(
@@ -317,10 +322,13 @@ proc copyCellsAndAnnotationsFrom*(l; destRow, destCol: Natural,
 # }}}
 
 # {{{ copyCell()
-proc copyCell(destLevel: Level, destRow, destCol: Natural,
-              srcLevel: Level, srcRow, srcCol: Natural,
-              pasteTrail: bool = false) =
-
+proc copyCell(
+    destLevel: Level,
+    destRow, destCol: Natural,
+    srcLevel: Level,
+    srcRow, srcCol: Natural,
+    pasteTrail: bool = false,
+) =
   let floor = srcLevel.getFloor(srcRow, srcCol)
   destLevel.setFloor(destRow, destCol, floor)
 
@@ -353,55 +361,65 @@ proc copyCell(destLevel: Level, destRow, destCol: Natural,
 
 # }}}
 # {{{ paste*()
-proc paste*(l; destRow, destCol: int, srcLevel: Level, sel: Selection,
-            pasteTrail: bool = false): Option[Rect[Natural]] =
-
+proc paste*(
+    l; destRow, destCol: int, srcLevel: Level, sel: Selection, pasteTrail: bool = false
+): Option[Rect[Natural]] =
   let destRect = rectI(
-    destRow, destCol,
-    destRow + srcLevel.rows, destCol + srcLevel.cols
-  ).intersect(
-    rectI(0,0, l.rows, l.cols)
-  )
+      destRow, destCol, destRow + srcLevel.rows, destCol + srcLevel.cols
+    )
+    .intersect(rectI(0, 0, l.rows, l.cols))
 
   if destRect.isSome:
     let d = destRect.get
     result = rectN(d.r1, d.c1, d.r2, d.c2).some
 
-    for r in d.r1..<d.r2:
-      for c in d.c1..<d.c2:
+    for r in d.r1 ..< d.r2:
+      for c in d.c1 ..< d.c2:
         var srcRow = r - d.r1
         var srcCol = c - d.c1
-        if destRow < 0: inc(srcRow, -destRow)
-        if destCol < 0: inc(srcCol, -destCol)
+        if destRow < 0:
+          inc(srcRow, -destRow)
+        if destCol < 0:
+          inc(srcCol, -destCol)
 
         if sel[srcRow, srcCol]:
-          copyCell(destLevel=l, destRow=r, destCol=c,
-                   srcLevel, srcRow, srcCol, pasteTrail)
+          copyCell(
+            destLevel = l,
+            destRow = r,
+            destCol = c,
+            srcLevel,
+            srcRow,
+            srcCol,
+            pasteTrail,
+          )
 
 # }}}
 # {{{ pasteWithWraparound*()
-proc pasteWithWraparound*(l; destRow, destCol: int, srcLevel: Level,
-                          sel: Selection, pasteTrail: bool = false,
-                          levelRows, levelCols: Natural,
-                          selStartRow, selStartCol: int,
-                          destStartRow:  Natural = 0,
-                          destStartCol:  Natural = 0,
-                          destRowOffset: Natural = 0,
-                          destColOffset: Natural = 0): Option[Rect[Natural]] =
-
+proc pasteWithWraparound*(
+    l;
+    destRow, destCol: int,
+    srcLevel: Level,
+    sel: Selection,
+    pasteTrail: bool = false,
+    levelRows, levelCols: Natural,
+    selStartRow, selStartCol: int,
+    destStartRow: Natural = 0,
+    destStartCol: Natural = 0,
+    destRowOffset: Natural = 0,
+    destColOffset: Natural = 0,
+): Option[Rect[Natural]] =
   # The 'dest' params are for working with the "oversized" paste preview
   # buffers.
 
-#  echo "---------------------------------"
-#  echo fmt"destLevel: {l.rows} x {l.cols}, destRow: {destRow}, destCol: {destCol}"
-#  echo fmt"srcLevel: {srcLevel.rows} x {srcLevel.cols}, selection: {sel.rows} x {sel.cols}"
-#  echo fmt"levelRows: {levelRows}, levelCols: {levelCols}"
-#  echo fmt"selStartRow: {selStartRow}, selStartCol: {selStartCol}"
-#  echo fmt"destStartRow: {destStartRow}, destStartCol: {destStartCol}"
-#  echo fmt"destRowOffset: {destRowOffset}, destColOffset: {destColOffset}"
-
-  for srcRow in 0..<srcLevel.rows:
-    for srcCol in 0..<srcLevel.cols:
+  #  echo "---------------------------------"
+  #  echo fmt"destLevel: {l.rows} x {l.cols}, destRow: {destRow}, destCol: {destCol}"
+  #  echo fmt"srcLevel: {srcLevel.rows} x {srcLevel.cols}, selection: {sel.rows} x {sel.cols}"
+  #  echo fmt"levelRows: {levelRows}, levelCols: {levelCols}"
+  #  echo fmt"selStartRow: {selStartRow}, selStartCol: {selStartCol}"
+  #  echo fmt"destStartRow: {destStartRow}, destStartCol: {destStartCol}"
+  #  echo fmt"destRowOffset: {destRowOffset}, destColOffset: {destColOffset}"
+  for srcRow in 0 ..< srcLevel.rows:
+    for srcCol in 0 ..< srcLevel.cols:
       if sel[srcRow, srcCol]:
         # Don't allow large levels to wrap around multiple times
         if srcRow >= levelRows or srcCol >= levelCols:
@@ -414,41 +432,48 @@ proc pasteWithWraparound*(l; destRow, destCol: int, srcLevel: Level,
           dr = wrappedRow.int + destRowOffset - destStartRow
           dc = wrappedCol.int + destColOffset - destStartCol
 
-        if wrappedRow >= destStartRow and dr < l.rows and
-           wrappedCol >= destStartCol and dc < l.cols:
-
-          copyCell(destLevel=l, destRow=dr, destCol=dc,
-                   srcLevel, srcRow, srcCol, pasteTrail)
+        if wrappedRow >= destStartRow and dr < l.rows and wrappedCol >= destStartCol and
+            dc < l.cols:
+          copyCell(
+            destLevel = l,
+            destRow = dr,
+            destCol = dc,
+            srcLevel,
+            srcRow,
+            srcCol,
+            pasteTrail,
+          )
 
 # }}}
 
 # {{{ guessFloorOrientation*()
-proc guessFloorOrientation*(l; r,c: Natural): CardinalDir =
-  if l.getWall(r,c, dirN) != wNone and
-     l.getWall(r,c, dirS) != wNone:
-    Horiz
-  else:
-    Vert
+proc guessFloorOrientation*(l; r, c: Natural): CardinalDir =
+  if l.getWall(r, c, dirN) != wNone and l.getWall(r, c, dirS) != wNone: Horiz else: Vert
 
 # }}}
 # {{{ getSrcRectAlignedToDestRect*()
 proc getSrcRectAlignedToDestRect*(
-  l; newRows, newCols: Natural, anchor: Direction
+    l; newRows, newCols: Natural, anchor: Direction
 ): Rect[int] =
-
   var srcRect = rectI(0, 0, l.rows, l.cols)
 
   # Align srcRect to destRect
   srcRect.shiftHoriz(
-    if    dirE in anchor:              newCols - l.cols
-    elif {dirE, dirW} * anchor == {}: (newCols - l.cols) div 2
-    else:                              0
+    if dirE in anchor:
+      newCols - l.cols
+    elif {dirE, dirW} * anchor == {}:
+      (newCols - l.cols) div 2
+    else:
+      0
   )
 
   srcRect.shiftVert(
-    if    dirS in anchor:              newRows - l.rows
-    elif {dirS, dirN} * anchor == {}: (newRows - l.rows) div 2
-    else:                              0
+    if dirS in anchor:
+      newRows - l.rows
+    elif {dirS, dirN} * anchor == {}:
+      (newRows - l.rows) div 2
+    else:
+      0
   )
 
   result = srcRect
@@ -456,9 +481,8 @@ proc getSrcRectAlignedToDestRect*(
 # }}}
 # {{{ calcResizeParams*()
 proc calcResizeParams*(
-  l; newRows, newCols: Natural, anchor: Direction
+    l; newRows, newCols: Natural, anchor: Direction
 ): tuple[copyRect: Rect[Natural], destRow, destCol: Natural] =
-
   let
     srcRect = getSrcRectAlignedToDestRect(l, newRows, newCols, anchor)
     destRect = rectI(0, 0, newRows, newCols)
@@ -468,11 +492,15 @@ proc calcResizeParams*(
     copyRect: Rect[Natural]
     destRow, destCol: int
 
-  if srcRect.r1 < 0: copyRect.r1 = -srcRect.r1
-  else: destRow = srcRect.r1
+  if srcRect.r1 < 0:
+    copyRect.r1 = -srcRect.r1
+  else:
+    destRow = srcRect.r1
 
-  if srcRect.c1 < 0: copyRect.c1 = -srcRect.c1
-  else: destCol = srcRect.c1
+  if srcRect.c1 < 0:
+    copyRect.c1 = -srcRect.c1
+  else:
+    destCol = srcRect.c1
 
   copyRect.r2 = copyRect.r1 + intRect.rows
   copyRect.c2 = copyRect.c1 + intRect.cols
@@ -496,29 +524,28 @@ proc setNextLevelId*(nextId: Natural) =
 # {{{ newLevel*()
 
 const DefaultCoordOpts = CoordinateOptions(
-  origin:      coNorthWest,
-  rowStyle:    csNumber,
+  origin: coNorthWest,
+  rowStyle: csNumber,
   columnStyle: csNumber,
-  rowStart:    1,
-  columnStart: 1
+  rowStart: 1,
+  columnStart: 1,
 )
 
 const DefaultRegionOpts = RegionOptions(
-  enabled:         false,
-  rowsPerRegion:   2,
-  colsPerRegion:   2,
-  perRegionCoords: true
+  enabled: false, rowsPerRegion: 2, colsPerRegion: 2, perRegionCoords: true
 )
 
-proc newLevel*(locationName, levelName: string, elevation: int,
-               rows, cols: Natural,
-               overrideCoordOpts = false,
-               coordOpts: CoordinateOptions = DefaultCoordOpts,
-               regionOpts: RegionOptions = DefaultRegionOpts,
-               notes: string = "",
-               initRegions = true,
-               overrideId: Option[Natural] = Natural.none): Level =
-
+proc newLevel*(
+    locationName, levelName: string,
+    elevation: int,
+    rows, cols: Natural,
+    overrideCoordOpts = false,
+    coordOpts: CoordinateOptions = DefaultCoordOpts,
+    regionOpts: RegionOptions = DefaultRegionOpts,
+    notes: string = "",
+    initRegions = true,
+    overrideId: Option[Natural] = Natural.none,
+): Level =
   var l = new Level
 
   if overrideId.isSome:
@@ -528,8 +555,8 @@ proc newLevel*(locationName, levelName: string, elevation: int,
     inc(g_nextLevelId)
 
   l.locationName = locationName
-  l.levelName    = levelName
-  l.elevation    = elevation
+  l.levelName = levelName
+  l.elevation = elevation
 
   l.overrideCoordOpts = overrideCoordOpts
   l.coordOpts = coordOpts
@@ -542,7 +569,7 @@ proc newLevel*(locationName, levelName: string, elevation: int,
   l.notes = notes
 
   if initRegions and l.regionOpts.enabled:
-    l.regions = initRegionsFrom(destLevel=l)
+    l.regions = initRegionsFrom(destLevel = l)
 
   l.dirty = true
 
@@ -551,11 +578,10 @@ proc newLevel*(locationName, levelName: string, elevation: int,
 # }}}
 # {{{ calcNewLevelFromParams*()
 proc calcNewLevelFromParams*(
-  srcLevel: Level, srcRect: Rect[Natural], border: Natural = 0
+    srcLevel: Level, srcRect: Rect[Natural], border: Natural = 0
 ): tuple[copyRect: Rect[Natural], destRow, destCol: Natural] =
-
-  assert srcRect.r1  < srcLevel.rows
-  assert srcRect.c1  < srcLevel.cols
+  assert srcRect.r1 < srcLevel.rows
+  assert srcRect.c1 < srcLevel.cols
   assert srcRect.r2 <= srcLevel.rows
   assert srcRect.c2 <= srcLevel.cols
 
@@ -589,21 +615,26 @@ proc calcNewLevelFromParams*(
 
 # NOTE: This method doesn't copy the regions.
 
-proc newLevelFrom*(srcLevel: Level, srcRect: Rect[Natural],
-                   border: Natural = 0,
-                   overrideId: Option[Natural] = Natural.none): Level =
-
-  let (copyRect, destRow, destCol) = calcNewLevelFromParams(srcLevel, srcRect,
-                                                            border)
+proc newLevelFrom*(
+    srcLevel: Level,
+    srcRect: Rect[Natural],
+    border: Natural = 0,
+    overrideId: Option[Natural] = Natural.none,
+): Level =
+  let (copyRect, destRow, destCol) = calcNewLevelFromParams(srcLevel, srcRect, border)
 
   result = newLevel(
-    srcLevel.locationName, srcLevel.levelName, srcLevel.elevation,
-    rows = srcRect.rows + border*2,
-    cols = srcRect.cols + border*2,
-    srcLevel.overrideCoordOpts, srcLevel.coordOpts, srcLevel.regionOpts,
+    srcLevel.locationName,
+    srcLevel.levelName,
+    srcLevel.elevation,
+    rows = srcRect.rows + border * 2,
+    cols = srcRect.cols + border * 2,
+    srcLevel.overrideCoordOpts,
+    srcLevel.coordOpts,
+    srcLevel.regionOpts,
     srcLevel.notes,
     initRegions = false,
-    overrideId = overrideId
+    overrideId = overrideId,
   )
 
   result.copyCellsAndAnnotationsFrom(destRow, destCol, srcLevel, copyRect)

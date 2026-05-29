@@ -6,7 +6,8 @@ import std/times
 
 # {{{ alias*()
 template alias*(newName: untyped, call: untyped) =
-  template newName(): untyped {.redefine.} = call
+  template newName(): untyped {.redefine.} =
+    call
 
 # }}}
 # {{{ first*()
@@ -30,13 +31,11 @@ proc currentLocalDatetimeString*(): string =
 # {{{ isValidFilename*()
 func isValidFilename*(filename: string): bool =
   const MaxLen = 259
-  const InvalidFilenameChars = {'/', '\\', ':', '*', '?', '"', '<', '>',
-                                '|', '^', '\0'}
+  const InvalidFilenameChars = {'/', '\\', ':', '*', '?', '"', '<', '>', '|', '^', '\0'}
 
-  if filename.len == 0 or filename.len > MaxLen or
-    filename[0] == ' ' or filename[^1] == ' ' or filename[^1] == '.' or
-    find(filename, InvalidFilenameChars) != -1: false
-  else: true
+  if filename.len == 0 or filename.len > MaxLen or filename[0] == ' ' or
+      filename[^1] == ' ' or filename[^1] == '.' or
+      find(filename, InvalidFilenameChars) != -1: false else: true
 
 # }}}
 # {{{ findUniquePath*()
@@ -44,17 +43,21 @@ proc findUniquePath*(dir: string, name: string, ext: string): string =
   var n = 1
   while true:
     let path = dir / fmt"{name} {n}".addFileExt(ext)
-    if fileExists(path): inc(n)
-    else: return path
+    if fileExists(path):
+      inc(n)
+    else:
+      return path
 
 # }}}
 
 # {{{ clampMin*()
-func clampMin*[T](x, minLimit: T): T = max(x, minLimit)
+func clampMin*[T](x, minLimit: T): T =
+  max(x, minLimit)
 
 # }}}
 # {{{ clampMax*()
-func clampMax*[T](x, maxLimit: T): T = min(x, maxLimit)
+func clampMax*[T](x, maxLimit: T): T =
+  min(x, maxLimit)
 
 # }}}
 

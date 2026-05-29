@@ -6,14 +6,13 @@ import std/strutils
 import common
 
 # {{{ WindowConfig*
-type
-  WindowConfig* = object
-    layout*:         Option[Natural]
-    x*, y*:          Option[int]
-    width*, height*: Option[int]
-    maximized*:      Option[bool]
-    showTitleBar*:   Option[bool]
-    hideSplash*:     Option[bool]
+type WindowConfig* = object
+  layout*: Option[Natural]
+  x*, y*: Option[int]
+  width*, height*: Option[int]
+  maximized*: Option[bool]
+  showTitleBar*: Option[bool]
+  hideSplash*: Option[bool]
 
 # }}}
 
@@ -82,8 +81,9 @@ proc parseBoolOpt(opt, arg: string): bool =
 
 # }}}
 # {{{ parseCommandLineParams*()
-proc parseCommandLineParams*(): tuple[configFile, mapFile: Option[string],
-                                      winCfg: WindowConfig] =
+proc parseCommandLineParams*(): tuple[
+  configFile, mapFile: Option[string], winCfg: WindowConfig
+] =
   var
     configFile, mapFile: Option[string]
     numArgs = 0
@@ -96,7 +96,6 @@ proc parseCommandLineParams*(): tuple[configFile, mapFile: Option[string],
         quitWithError("cannot provide more than file argument")
       mapFile = opt.some
       inc(numArgs)
-
     of cmdLongOption, cmdShortOption:
       case opt
       of "layout", "l":
@@ -104,36 +103,32 @@ proc parseCommandLineParams*(): tuple[configFile, mapFile: Option[string],
         if (layout < 0 or layout > 4):
           quitWithError(fmt"invalid layout number: must be between 1 and 4")
         winCfg.layout = (layout - 1).Natural.some
-
-      of "xpos",   "x": winCfg.x      = parseIntOpt(opt, arg).some
-      of "ypos",   "y": winCfg.y      = parseIntOpt(opt, arg).some
-      of "width",  "w": winCfg.width  = parseIntOpt(opt, arg).some
-      of "height", "h": winCfg.height = parseIntOpt(opt, arg).some
-
+      of "xpos", "x":
+        winCfg.x = parseIntOpt(opt, arg).some
+      of "ypos", "y":
+        winCfg.y = parseIntOpt(opt, arg).some
+      of "width", "w":
+        winCfg.width = parseIntOpt(opt, arg).some
+      of "height", "h":
+        winCfg.height = parseIntOpt(opt, arg).some
       of "maximized", "m":
         winCfg.maximized = parseBoolOpt(opt, arg).some
-
       of "showTitleBar", "t":
         winCfg.showTitleBar = parseBoolOpt(opt, arg).some
-
       of "hideSplash":
         winCfg.hideSplash = parseBoolOpt(opt, arg).some
-
-      of "configFile", "c": configFile = arg.some
-
+      of "configFile", "c":
+        configFile = arg.some
       of "help":
         printHelp()
         quit()
-
       of "version", "v":
         printVersion()
         quit()
-
       else:
         quitWithError(fmt"invalid option: {opt}")
-
     of cmdEnd:
-      assert false  # cannot happen
+      assert false # cannot happen
 
   result = (configFile, mapFile, winCfg)
 

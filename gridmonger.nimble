@@ -70,15 +70,21 @@ proc gitHash(): string =
 proc packageSrcPath(pkg: string): string =
   let envPath = getEnv(pkg.toUpperAscii & "_PATH")
   if envPath.len > 0:
-    return if envPath.lastPathPart == "src": envPath else: envPath / "src"
+    return
+      if envPath.lastPathPart == "src":
+        envPath
+      else:
+        envPath / "src"
 
   when hostOS == "windows":
     result = gorge("nimble path " & pkg).strip() / "src"
   else:
-    result = gorge(
-      "find \"$HOME/.nimble/pkgs2\" -maxdepth 1 -type d -name '" &
-        pkg & "-*' | sort | tail -n 1"
-    ).strip() / "src"
+    result =
+      gorge(
+        "find \"$HOME/.nimble/pkgs2\" -maxdepth 1 -type d -name '" & pkg &
+          "-*' | sort | tail -n 1"
+      )
+      .strip() / "src"
 
 proc koiSrcPath(): string =
   let envPath = getEnv("KOI_PATH")
@@ -140,13 +146,13 @@ proc backendFlags(backend: string): string =
 
 proc commonFlags(backend: string): string =
   validateBackend(backend)
-  result = "--mm:orc --threads:on --deepcopy:on -d:ssl " &
+  result =
+    "--mm:orc --threads:on --deepcopy:on -d:ssl " &
     "-d:nimPreviewFloatRoundtrip -d:wgpu -d:wgvkWGSL -d:NoGLFW " &
     "-d:koiWebGpu --passC:-Wno-incompatible-pointer-types --passC:-D_GNU_SOURCE " &
-    "--path:" & quoteShell(koiSrcPath()) & " " &
-    "--path:" & quoteShell(packageSrcPath("webgpu")) & " " &
-    "--nimcache:/tmp/gridmonger_nimcache --hint:Name:off " &
-    backendFlags(backend)
+    "--path:" & quoteShell(koiSrcPath()) & " " & "--path:" &
+    quoteShell(packageSrcPath("webgpu")) & " " &
+    "--nimcache:/tmp/gridmonger_nimcache --hint:Name:off " & backendFlags(backend)
 
   when hostOS == "linux":
     result.add " -d:osdialogGtk3"
@@ -156,14 +162,13 @@ proc commonFlags(backend: string): string =
 
 proc modeFlags(mode: BuildMode): string =
   case mode
-  of bmDebug:
-    "-d:debug"
-  of bmReleaseNoStacktrace:
-    "-d:release --app:gui"
-  of bmRelease:
-    "-d:release --app:gui --stacktrace:on --linetrace:on"
+  of bmDebug: "-d:debug"
+  of bmReleaseNoStacktrace: "-d:release --app:gui"
+  of bmRelease: "-d:release --app:gui --stacktrace:on --linetrace:on"
 
-proc compileGridmonger(mode: BuildMode, backend = hostBackend(), outPath = ExeName, extraFlags = "") =
+proc compileGridmonger(
+    mode: BuildMode, backend = hostBackend(), outPath = ExeName, extraFlags = ""
+) =
   let flags = commonFlags(backend) & " " & modeFlags(mode) & " " & extraFlags
   echo "Building " & outPath & " (" & backend & ")"
   sh "nim c " & flags & " --out:" & quoteShell(outPath) & " " & quoteShell("src/main")
@@ -215,7 +220,8 @@ task releaseMacArm64, "release build (macOS arm64)":
     bmRelease,
     backend = "mac",
     outPath = ExeNameMacArm64,
-    extraFlags = "--passL:\"-target arm64-apple-macos11\" --passC:\"-target arm64-apple-macos11\"",
+    extraFlags =
+      "--passL:\"-target arm64-apple-macos11\" --passC:\"-target arm64-apple-macos11\"",
   )
 
 task releaseMacX64, "release build (macOS x86-64)":
@@ -223,7 +229,8 @@ task releaseMacX64, "release build (macOS x86-64)":
     bmRelease,
     backend = "mac",
     outPath = ExeNameMacX64,
-    extraFlags = "--passL:\"-target x86_64-apple-macos10.12\" --passC:\"-target x86_64-apple-macos10.12\"",
+    extraFlags =
+      "--passL:\"-target x86_64-apple-macos10.12\" --passC:\"-target x86_64-apple-macos10.12\"",
   )
 
 task mergeMacUniversal, "create macOS universal binary":
@@ -293,12 +300,17 @@ task packageMac, "create macOS app bundle package":
 
   sh "chmod +x " & quoteShell(distExePath)
   sh "xattr -cr " & quoteShell(distExePath)
-  sh "codesign --verbose --sign '-' --options runtime --deep " & quoteShell(appBundleDir)
+  sh "codesign --verbose --sign '-' --options runtime --deep " & quoteShell(
+    appBundleDir
+  )
   sh "codesign --verify --deep --strict --verbose=2 " & quoteShell(appBundleDir)
 
   mkDir DistMacDir
   withDir DistMacDir:
-    createZip(zipName = fmt"gridmonger-v{packageVersionTag()}-macos.zip", srcPath = appBundleName)
+    createZip(
+      zipName = fmt"gridmonger-v{packageVersionTag()}-macos.zip",
+      srcPath = appBundleName,
+    )
     rmDir appBundleName
 
 task packageManual, "create zipped manual package":
@@ -313,7 +325,9 @@ task packageManual, "create zipped manual package":
 task packageExampleMaps, "create zipped example maps package":
   mkDir DistDir
   removeFileIfExists(DistDir / DistMapsName)
-  createZip(zipName = DistDir / DistMapsName, srcPath = ExampleMapsDir, extraArgs = "-i *.gmm")
+  createZip(
+    zipName = DistDir / DistMapsName, srcPath = ExampleMapsDir, extraArgs = "-i *.gmm"
+  )
 
 task publishPackageWin, "publish Windows packages to website dir":
   let
@@ -368,7 +382,7 @@ task tidy, "format Nim sources and remove generated binaries":
         path.startsWith("./sphinx-docs"):
       continue
     if path.endsWith(".nim") or path.endsWith(".nims") or path.endsWith(".nimble"):
-      sh "nimpretty " & quoteShell(path)
+      sh "nph " & quoteShell(path)
 
   removeFileIfExists ExeName
   removeFileIfExists ExeNameMacArm64

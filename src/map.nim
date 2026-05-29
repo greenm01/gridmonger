@@ -15,15 +15,14 @@ import utils/misc
 import utils/naturalsort
 import utils/rect
 
-
 using m: Map
 
 # {{{ newMap*()
 proc newMap*(title, game, author, creationTime: string): Map =
   var m = new Map
-  m.title        = title
-  m.game         = game
-  m.author       = author
+  m.title = title
+  m.game = game
+  m.author = author
   m.creationTime = creationTime
 
   m.levels = initOrderedTable[Natural, Level]()
@@ -33,14 +32,14 @@ proc newMap*(title, game, author, creationTime: string): Map =
   m.links = initLinks()
 
   m.coordOpts = CoordinateOptions(
-    origin:      coNorthWest,
-    rowStyle:    csNumber,
+    origin: coNorthWest,
+    rowStyle: csNumber,
     columnStyle: csNumber,
-    rowStart:    1,
-    columnStart: 1
+    rowStart: 1,
+    columnStart: 1,
   )
 
-  m.sortedLevelIds   = @[]
+  m.sortedLevelIds = @[]
   m.sortedLevelNames = @[]
 
   result = m
@@ -50,23 +49,26 @@ proc newMap*(title, game, author, creationTime: string): Map =
 # {{{ sortLevels*()
 proc sortLevels*(m) =
   m.levels.sort(
-    proc (a, b: tuple[levelId: Natural, level: Level]): int =
-      var c = cmpNaturalIgnoreCase(a.level.locationName.toRunes,
-                                   b.level.locationName.toRunes)
-      if c != 0: return c
+    proc(a, b: tuple[levelId: Natural, level: Level]): int =
+      var c =
+        cmpNaturalIgnoreCase(a.level.locationName.toRunes, b.level.locationName.toRunes)
+      if c != 0:
+        return c
 
       c = cmp(b.level.elevation, a.level.elevation)
-      if c != 0: return c
+      if c != 0:
+        return c
 
-      return cmpNaturalIgnoreCase(a.level.levelName.toRunes,
-                                  b.level.levelName.toRunes)
+      return cmpNaturalIgnoreCase(a.level.levelName.toRunes, b.level.levelName.toRunes)
   )
 
   m.sortedLevelIds = collect:
-    for id, _ in m.levels: id
+    for id, _ in m.levels:
+      id
 
   m.sortedLevelNames = collect:
-    for _, level in m.levels: level.getDetailedName
+    for _, level in m.levels:
+      level.getDetailedName
 
 # }}}
 # {{{ hasLevels*()
@@ -109,9 +111,8 @@ proc getRegionRect(m; levelId: Natural, rc: RegionCoords): Rect[Natural] =
     of coNorthWest:
       r.r1 = rc.row * rowsPerRegion
       r.r2 = (r.r1 + rowsPerRegion).clampMax(l.rows)
-
     of coSouthWest:
-      r.r2 = (l.rows - rc.row*rowsPerRegion).clampMin(0)
+      r.r2 = (l.rows - rc.row * rowsPerRegion).clampMin(0)
       r.r1 = (r.r2.int - rowsPerRegion).clampMin(0)
 
   result = r
@@ -122,32 +123,40 @@ proc getRegionCoords*(m; loc: Location): RegionCoords =
   let
     l = m.levels[loc.levelId]
 
-    row = case m.coordOptsForLevel(loc.levelId).origin
-          of coNorthWest: loc.row
-          of coSouthWest: ((l.rows-1).int - loc.row).clampMin(0)
+    row =
+      case m.coordOptsForLevel(loc.levelId).origin
+      of coNorthWest:
+        loc.row
+      of coSouthWest:
+        ((l.rows - 1).int - loc.row).clampMin(0)
 
-  result.row = row     div l.regionOpts.rowsPerRegion
+  result.row = row div l.regionOpts.rowsPerRegion
   result.col = loc.col div l.regionOpts.colsPerRegion
 
 # }}}
 # {{{ getRegionCenterLocation*()
-proc getRegionCenterLocation*(m; levelId: Natural,
-                              rc: RegionCoords): tuple[row, col: Natural] =
+proc getRegionCenterLocation*(
+    m; levelId: Natural, rc: RegionCoords
+): tuple[row, col: Natural] =
   let
     l = m.levels[levelId]
     r = m.getRegionRect(levelId, rc)
 
   let
-    centerRow = (r.r1 + (r.r2-r.r1-1) div 2).clampMax(l.rows-1)
-    centerCol = (r.c1 + (r.c2-r.c1-1) div 2).clampMax(l.cols-1)
+    centerRow = (r.r1 + (r.r2 - r.r1 - 1) div 2).clampMax(l.rows - 1)
+    centerCol = (r.c1 + (r.c2 - r.c1 - 1) div 2).clampMax(l.cols - 1)
 
   (centerRow.Natural, centerCol.Natural)
 
 # }}}
 # {{{ reallocateRegions*()
-proc reallocateRegions*(m; levelId: Natural, oldCoordOpts: CoordinateOptions,
-                        oldRegionOpts: RegionOptions, oldRegions: Regions) =
-
+proc reallocateRegions*(
+    m;
+    levelId: Natural,
+    oldCoordOpts: CoordinateOptions,
+    oldRegionOpts: RegionOptions,
+    oldRegions: Regions,
+) =
   let
     l = m.levels[levelId]
     coordOpts = m.coordOptsForLevel(levelId)
@@ -158,17 +167,18 @@ proc reallocateRegions*(m; levelId: Natural, oldCoordOpts: CoordinateOptions,
   l.regions = initRegions()
 
   for rc in l.regionCoords:
-    let oldRc = if flipVert:
-                  RegionCoords(row: l.regionRows(oldRegionOpts)-1 - rc.row,
-                               col: rc.col)
-                else: rc
+    let oldRc =
+      if flipVert:
+        RegionCoords(row: l.regionRows(oldRegionOpts) - 1 - rc.row, col: rc.col)
+      else:
+        rc
 
     let region = oldRegions[oldRc]
 
     if region.isSome and not region.get.isUntitledRegion:
       l.regions[rc] = region.get
     else:
-      let region = initRegion(name=l.regions.nextUntitledRegionName(index))
+      let region = initRegion(name = l.regions.nextUntitledRegionName(index))
       l.regions[rc] = region
 
   l.regions.sortRegions
@@ -176,35 +186,35 @@ proc reallocateRegions*(m; levelId: Natural, oldCoordOpts: CoordinateOptions,
 # }}}
 # {{{ calcRegionResizeOffsets*()
 proc calcRegionResizeOffsets*(
-  m; levelId: Natural, newRows, newCols: Natural, anchor: Direction
- ): tuple[rowOffs, colOffs: int] =
-
+    m; levelId: Natural, newRows, newCols: Natural, anchor: Direction
+): tuple[rowOffs, colOffs: int] =
   let l = m.levels[levelId]
   let srcRect = getSrcRectAlignedToDestRect(l, newRows, newCols, anchor)
 
   with l.regionOpts:
     result.colOffs = -srcRect.c1 div colsPerRegion
 
-    result.rowOffs = (case m.coordOptsForLevel(levelId).origin
-                      of coNorthWest: -srcRect.r1
-                      of coSouthWest:
-                        -(newRows - srcRect.r2)) div rowsPerRegion
+    result.rowOffs =
+      (
+        case m.coordOptsForLevel(levelId).origin
+        of coNorthWest: -srcRect.r1
+        of coSouthWest:
+          -(newRows - srcRect.r2)
+      ) div rowsPerRegion
 
 # }}}
 
 # {{{ regionNotes*()
 iterator regionNotes*(
-  m; levelId: Natural, rc: RegionCoords
+    m; levelId: Natural, rc: RegionCoords
 ): tuple[loc: Location, note: Annotation] =
-
   let
     level = m.levels[levelId]
-    rect  = m.getRegionRect(levelId, rc)
+    rect = m.getRegionRect(levelId, rc)
 
   for note in level.allNotes:
     if rect.contains(note.row, note.col):
-      yield (Location(levelId: levelId, row: note.row, col: note.col),
-             note.annotation)
+      yield (Location(levelId: levelId, row: note.row, col: note.col), note.annotation)
 
 # }}}
 # {{{ hasNote*()
@@ -295,8 +305,7 @@ proc getFloorColor*(m; loc: Location): Natural {.inline.} =
 
 # }}}
 # {{{ setFloorColor*()
-proc setFloorColor*(m; loc: Location,
-                    floorColor: Natural) =
+proc setFloorColor*(m; loc: Location, floorColor: Natural) =
   m.levels[loc.levelId].setFloorColor(loc.row, loc.col, floorColor.byte)
 
 # }}}
@@ -329,20 +338,23 @@ proc setTrail*(m; loc: Location, t: bool) =
 # }}}
 
 # {{{ excavateTunnel*()
-proc excavateTunnel*(m; loc: Location, floorColor: Natural,
-                     dir: Option[CardinalDir] = CardinalDir.none,
-                     prevLoc: Option[Location] = Location.none,
-                     prevDir: Option[CardinalDir] = CardinalDir.none) =
+proc excavateTunnel*(
+    m;
+    loc: Location,
+    floorColor: Natural,
+    dir: Option[CardinalDir] = CardinalDir.none,
+    prevLoc: Option[Location] = Location.none,
+    prevDir: Option[CardinalDir] = CardinalDir.none,
+) =
   alias(l, m.levels[loc.levelId])
   alias(c, loc.col)
   alias(r, loc.row)
 
-  m.eraseCell(loc, preserveLabel=true)
+  m.eraseCell(loc, preserveLabel = true)
   m.setFloor(loc, fBlank)
   m.setFloorColor(loc, floorColor)
 
-  if dir.isSome and prevDir.isSome and
-     dir.get.isHoriz != prevDir.get.isHoriz:
+  if dir.isSome and prevDir.isSome and dir.get.isHoriz != prevDir.get.isHoriz:
     m.excavateTunnel(prevLoc.get, floorColor)
 
   var wallDirs = @[dirN, dirS, dirE, dirW]
@@ -376,9 +388,9 @@ proc getLinkedLocations*(m; loc: Location): HashSet[Location] =
 proc normaliseLinkedStairs*(m; levelId: Natural) =
   let l = m.levels[levelId]
 
-  for r in 0..<l.rows:
-    for c in 0..<l.cols:
-      let f = l.getFloor(r,c)
+  for r in 0 ..< l.rows:
+    for c in 0 ..< l.cols:
+      let f = l.getFloor(r, c)
 
       if f in LinkStairs:
         let src = Location(levelId: levelId, row: r, col: c)
@@ -394,8 +406,10 @@ proc normaliseLinkedStairs*(m; levelId: Natural) =
             m.levels[src.levelId].setFloor(src.row, src.col, thisFloor)
             m.levels[dst.levelId].setFloor(dst.row, dst.col, thatFloor)
 
-          if   srcElevation > dstElevation: setFloors(fStairsDown, fStairsUp)
-          elif srcElevation < dstElevation: setFloors(fStairsUp, fStairsDown)
+          if srcElevation > dstElevation:
+            setFloors(fStairsDown, fStairsUp)
+          elif srcElevation < dstElevation:
+            setFloors(fStairsUp, fStairsDown)
 
 # }}}
 # {{{ deleteLinksFromOrToLevel*()
@@ -407,26 +421,33 @@ proc deleteLinksFromOrToLevel*(m; levelId: Natural) =
 # }}}
 
 # {{{ newLevelFrom*()
-proc newLevelFrom*(m; srcLevelId: Natural, srcRect: Rect[Natural],
-                   overrideId: Option[Natural] = Natural.none): Level =
-
+proc newLevelFrom*(
+    m;
+    srcLevelId: Natural,
+    srcRect: Rect[Natural],
+    overrideId: Option[Natural] = Natural.none,
+): Level =
   let src = m.levels[srcLevelId]
   alias(ro, src.regionOpts)
 
-  var dest = newLevelFrom(src, srcRect, overrideId=overrideId)
+  var dest = newLevelFrom(src, srcRect, overrideId = overrideId)
 
   # Copy regions
   let (copyRect, _, _) = calcNewLevelFromParams(src, srcRect)
 
   let
-    rowOffs = (case m.coordOptsForLevel(srcLevelId).origin
-               of coNorthWest: copyRect.r1
-               of coSouthWest: src.rows - copyRect.r2) div ro.rowsPerRegion
+    rowOffs =
+      (
+        case m.coordOptsForLevel(srcLevelId).origin
+        of coNorthWest: copyRect.r1
+        of coSouthWest: src.rows - copyRect.r2
+      ) div ro.rowsPerRegion
 
     colOffs = copyRect.c1 div ro.colsPerRegion
 
   dest.regions = initRegionsFrom(src.some, dest, rowOffs, colOffs)
   result = dest
+
 # }}}
 
 # }}}

@@ -10,7 +10,6 @@ proc sendReturnKeypress() =
   if IsWindow(h):
     PostMessage(h, WM_KEYUP, VK_RETURN, 0)
 
-
 proc attachOutputToConsole*(): bool =
   ## Allow console output for Windows GUI applications compiled with the
   ## --app:gui flag
@@ -18,11 +17,13 @@ proc attachOutputToConsole*(): bool =
   if AttachConsole(AttachParentProcess) != 0:
     if GetStdHandle(StdOutputHandle) != InvalidHandleValue:
       discard stdout.reopen("CONOUT$", fmWrite)
-    else: return
+    else:
+      return
 
     if GetStdHandle(StdErrorHandle) != InvalidHandleValue:
       discard stderr.reopen("CONOUT$", fmWrite)
-    else: return
+    else:
+      return
 
     setStdIoUnbuffered()
 
@@ -31,4 +32,3 @@ proc attachOutputToConsole*(): bool =
     addExitProc(sendReturnKeypress)
 
     result = true
-

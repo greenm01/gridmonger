@@ -1,26 +1,23 @@
 import std/options
 import std/tables
 
-
 const DefaultInitialSize = 64
 
 type BiTable*[K, V] = object
   keyToVal: Table[K, V]
   valToKey: Table[V, K]
 
-proc initBiTable*[K, V](
-    initialSize: Natural = DefaultInitialSize): BiTable[K, V] =
+proc initBiTable*[K, V](initialSize: Natural = DefaultInitialSize): BiTable[K, V] =
   result.keyToVal = initTable[K, V](initialSize)
   result.valToKey = initTable[V, K](initialSize)
 
 proc dumpBiTable*[K, V](t: BiTable[K, V]) =
   echo "KEY TO VAL"
-  for k,v in t.keyToVal:
+  for k, v in t.keyToVal:
     echo "1: ", k, ", 2: ", v
   echo "VAL TO KEY"
-  for k,v in t.valToKey:
+  for k, v in t.valToKey:
     echo "1: ", k, ", 2: ", v
-
 
 proc len*[K, V](t: BiTable[K, V]): Natural =
   t.keyToVal.len
@@ -40,16 +37,20 @@ iterator pairs*[K, V](t: BiTable[K, V]): tuple[key: K, val: V] =
 proc hasKey*[K, V](t: BiTable[K, V], key: K): bool =
   t.keyToVal.hasKey(key)
 
-proc hasVal*[K, V](t: BiTable[K, V], val: V): bool=
+proc hasVal*[K, V](t: BiTable[K, V], val: V): bool =
   t.valToKey.hasKey(val)
 
 proc getValByKey*[K, V](t: BiTable[K, V], key: K): Option[V] =
-  if t.hasKey(key): t.keyToVal[key].some
-  else: V.none
+  if t.hasKey(key):
+    t.keyToVal[key].some
+  else:
+    V.none
 
 proc getKeyByVal*[K, V](t: BiTable[K, V], val: V): Option[K] =
-  if t.hasVal(val): t.valToKey[val].some
-  else: K.none
+  if t.hasVal(val):
+    t.valToKey[val].some
+  else:
+    K.none
 
 proc delByKey*[K, V](t: var BiTable[K, V], key: K) =
   if key in t.keyToVal:
@@ -75,7 +76,6 @@ proc `[]=`*[K, V](t: var BiTable[K, V], key: K, val: V) =
 proc addAll*[K, V](t: var BiTable[K, V], src: BiTable[K, V]) =
   for k, v in src.pairs:
     t[k] = v
-
 
 when isMainModule:
   var t = initBiTable[int, string]()
@@ -115,4 +115,3 @@ when isMainModule:
   assert t.len == 0
   assert t.hasKey(1) == false
   assert t.hasVal("cat") == false
-

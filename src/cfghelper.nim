@@ -10,7 +10,6 @@ import nanovg
 import fieldlimits
 import utils/hocon
 
-
 using cfg: HoconNode
 
 # {{{ invalidValueError*()
@@ -69,11 +68,11 @@ proc parseColor*(s: string): Option[Color] =
   result = Color.none
   if s.len == 9 and s[0] == '#':
     try:
-      let r = s[1..2].parseHexInt
-      let g = s[3..4].parseHexInt
-      let b = s[5..6].parseHexInt
-      let a = s[7..8].parseHexInt
-      result = rgba(r/255, g/255, b/255, a/255).some
+      let r = s[1 .. 2].parseHexInt
+      let g = s[3 .. 4].parseHexInt
+      let b = s[5 .. 6].parseHexInt
+      let a = s[7 .. 8].parseHexInt
+      result = rgba(r / 255, g / 255, b / 255, a / 255).some
     except ValueError:
       discard
 
@@ -129,13 +128,13 @@ proc getNaturalOrDefault*(cfg; path: string, default: Natural = 0): Natural =
   except CatchableError as e:
     log.error(e.msg)
 
-
-proc getNaturalOrDefault*(cfg; path: string, limits: FieldLimits,
-                          default: Natural = 0): Natural =
+proc getNaturalOrDefault*(
+    cfg; path: string, limits: FieldLimits, default: Natural = 0
+): Natural =
   try:
     result = default
     var i: int
-    case limits.kind:
+    case limits.kind
     of fkInt:
       i = cfg.getNatural(path)
       result = i.limit(limits)

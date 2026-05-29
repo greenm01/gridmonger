@@ -13,22 +13,22 @@ import common
 
 when defined(windows):
   import platform/windows/ipc
-
 elif defined(macosx):
   import platform/macos/fileopener
 
 # {{{ Auto-saver
 type
   AutoSaverMsgKind = enum
-    askMapSaved, askSetTimeout
+    askMapSaved
+    askSetTimeout
 
   AutoSaverMsg* = object
     case kind*: AutoSaverMsgKind
-    of askMapSaved:   discard
+    of askMapSaved: discard
     of askSetTimeout: timeout*: Duration
 
 var
-  g_autoSaverCh:  Channel[AutoSaverMsg]
+  g_autoSaverCh: Channel[AutoSaverMsg]
   g_autoSaverThr: Thread[void]
 
 # {{{ autoSaver()
@@ -41,7 +41,8 @@ proc autoSaver() {.thread.} =
     let (dataAvailable, msg) = g_autoSaverCh.tryRecv
     if dataAvailable:
       case msg.kind
-      of askMapSaved: t0 = getMonoTime()
+      of askMapSaved:
+        t0 = getMonoTime()
       of askSetTimeout:
         timeout = msg.timeout
         t0 = getMonoTime()
@@ -73,28 +74,27 @@ proc disableAutoSave*() =
 
 # }}}
 # {{{ Version fetcher
-type
-  VersionFetcherMsg = enum
-    vfkFetch
+type VersionFetcherMsg = enum
+  vfkFetch
 
 var
-  g_versionFetcherCh:  Channel[VersionFetcherMsg]
+  g_versionFetcherCh: Channel[VersionFetcherMsg]
   g_versionFetcherThr: Thread[void]
 
 # {{{ versionFetcher()
 proc versionFetcher() {.thread.} =
   const
     LatestVersionUrl = fmt"{ProjectHomeUrl}latest_version"
-    NumTries         = 5
-    RetryIntervalMs  = 2000
+    NumTries = 5
+    RetryIntervalMs = 2000
 
   while true:
     let msg = g_versionFetcherCh.recv
     case msg
     of vfkFetch:
       var
-        event     = AppEvent(kind: aeVersionUpdate)
-        response  = ""
+        event = AppEvent(kind: aeVersionUpdate)
+        response = ""
         triesLeft = NumTries
 
       while triesLeft > 0:
@@ -113,11 +113,10 @@ proc versionFetcher() {.thread.} =
       if response != "":
         try:
           let parts = response.split("|")
-          event.versionInfo = VersionInfo(
-            version: parseVersion(parts[0]),
-            message: parts[1]
-          ).some
-        except: discard
+          event.versionInfo =
+            VersionInfo(version: parseVersion(parts[0]), message: parts[1]).some
+        except:
+          discard
 
       sendAppEvent(event)
 
@@ -155,7 +154,6 @@ proc initOrQuit*() =
       quit()
     else:
       discard ipc.initServer()
-
   elif defined(macosx):
     fileopener.init()
 

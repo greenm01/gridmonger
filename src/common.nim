@@ -13,7 +13,6 @@ import semver
 
 import utils/rect
 
-
 const
   ThinSp* = "\u2009"
   HairSp* = "\u200a"
@@ -23,8 +22,8 @@ const
 const
   ProjectHomeUrl* = "https://gridmonger.johnnovak.net/"
 
-  AppVersion*  = parseVersion(staticRead("../CURRENT_VERSION").strip)
-  CompileYear* = CompileDate[0..3]
+  AppVersion* = parseVersion(staticRead("../CURRENT_VERSION").strip)
+  CompileYear* = CompileDate[0 .. 3]
 
   BuildGitHash* = strutils.strip(staticExec("git rev-parse --short=5 HEAD"))
 
@@ -40,26 +39,26 @@ else:
   const BackendString* = "default"
 
 const
-  VersionString*     = fmt"Version {AppVersion} ({BuildGitHash})"
-  FullVersionString* = fmt"Gridmonger {VersionString} [{hostOS}/{hostCPU}/{BackendString}]"
-  CompiledAt*        = fmt"Compiled at {CompileDate} {CompileTime}"
-  DevelopedBy*       = fmt"Developed by John Novak, 2020{EnDash}{CompileYear}"
+  VersionString* = fmt"Version {AppVersion} ({BuildGitHash})"
+  FullVersionString* =
+    fmt"Gridmonger {VersionString} [{hostOS}/{hostCPU}/{BackendString}]"
+  CompiledAt* = fmt"Compiled at {CompileDate} {CompileTime}"
+  DevelopedBy* = fmt"Developed by John Novak, 2020{EnDash}{CompileYear}"
 
 const
-  MinWindowWidth*      = 640
-  MinWindowHeight*     = 520
+  MinWindowWidth* = 640
+  MinWindowHeight* = 520
 
-  DefaultWindowWidth*  = 700
+  DefaultWindowWidth* = 700
   DefaultWindowHeight* = 800
 
 const
-  TextVertAlignFactor*  = 0.55
+  TextVertAlignFactor* = 0.55
   MaxLabelWidthInCells* = 15
-
 
 type
   Location* = object
-    levelId*:   Natural
+    levelId*: Natural
     row*, col*: Natural
 
   CardinalDir* = enum
@@ -71,18 +70,18 @@ type
   Direction* = set[CardinalDir]
 
 const
-  North*     = {dirN}
+  North* = {dirN}
   NorthEast* = {dirN, dirE}
-  East*      = {dirE}
+  East* = {dirE}
   SouthEast* = {dirS, dirE}
-  South*     = {dirS}
+  South* = {dirS}
   SouthWest* = {dirS, dirW}
-  West*      = {dirW}
+  West* = {dirW}
   NorthWest* = {dirN, dirW}
 
   # When CardinalDir is used to represent a horiz/vert direction
   Horiz* = dirE
-  Vert*  = dirN
+  Vert* = dirN
 
 func isHoriz*(dir: CardinalDir): bool =
   dir in {dirE, dirW}
@@ -103,32 +102,29 @@ func rotateCW*(dir: CardinalDir): CardinalDir =
 func rotateACW*(dir: CardinalDir): CardinalDir =
   CardinalDir(floorMod(ord(dir) - 1, ord(CardinalDir.high) + 1))
 
-
 type
   Map* = ref object
-    title*:            string
-    game*:             string
-    author*:           string
-    creationTime*:     string
-    notes*:            string
+    title*: string
+    game*: string
+    author*: string
+    creationTime*: string
+    notes*: string
 
-    levels*:           OrderedTable[Natural, Level]
-    levelsDirty*:      bool
+    levels*: OrderedTable[Natural, Level]
+    levelsDirty*: bool
 
-    coordOpts*:        CoordinateOptions
-    links*:            Links
+    coordOpts*: CoordinateOptions
+    links*: Links
 
-    sortedLevelIds*:   seq[Natural]
+    sortedLevelIds*: seq[Natural]
     sortedLevelNames*: seq[string]
 
-
   Links* = object
-    srcToDest*:  OrderedTable[Location, Location]
+    srcToDest*: OrderedTable[Location, Location]
     destToSrcs*: OrderedTable[Location, HashSet[Location]]
 
-
   CoordinateOptions* = object
-    origin*:                 CoordinateOrigin
+    origin*: CoordinateOrigin
     rowStyle*, columnStyle*: CoordinateStyle
     rowStart*, columnStart*: int
 
@@ -140,139 +136,133 @@ type
     csNumber = 0
     csLetter = 1
 
-  Level* = ref object
-    # Internal ID, never written to disk
-    id*:                Natural
+  Level* = ref object # Internal ID, never written to disk
+    id*: Natural
 
-    locationName*:      string
-    levelName*:         string
-    elevation*:         int
-    notes*:             string
+    locationName*: string
+    levelName*: string
+    elevation*: int
+    notes*: string
 
     overrideCoordOpts*: bool
-    coordOpts*:         CoordinateOptions
+    coordOpts*: CoordinateOptions
 
     # Note that Regions *can* contain region data even if regions are disabled
     # (regionOpts.enabled = false). This is to preserve the region names and
     # notes when regions are temporarily disabled. Also, we always write the
     # region data into the map file, even if regions are disabled.
-    regionOpts*:        RegionOptions
-    regions*:           Regions
+    regionOpts*: RegionOptions
+    regions*: Regions
 
-    annotations*:       Annotations
-    cellGrid*:          CellGrid
-    dirty*:             bool
+    annotations*: Annotations
+    cellGrid*: CellGrid
+    dirty*: bool
 
   RegionOptions* = object
-    enabled*:           bool
-    colsPerRegion*:     Natural
-    rowsPerRegion*:     Natural
-    perRegionCoords*:   bool
+    enabled*: bool
+    colsPerRegion*: Natural
+    rowsPerRegion*: Natural
+    perRegionCoords*: bool
 
   Regions* = object
-    regionsByCoords*:   OrderedTable[RegionCoords, Region]
-    sortedRegionIds*:   seq[Natural]
+    regionsByCoords*: OrderedTable[RegionCoords, Region]
+    sortedRegionIds*: seq[Natural]
     sortedRegionNames*: seq[string]
-
 
   # The top-left region has region coordinate (0,0)
   RegionCoords* = object
     row*, col*: Natural
 
   Region* = object
-    name*:  string
+    name*: string
     notes*: string
 
   CellGrid* = ref object
-    cols*:  Natural
-    rows*:  Natural
+    cols*: Natural
+    rows*: Natural
 
     # Cells are stored in row-major order; (0,0) is the top-left cell.
     # We store a cell grid one row & column larger internally.
     cells*: seq[Cell]
 
-
   Cell* = object
-    floor*:            Floor
+    floor*: Floor
     floorOrientation*: CardinalDir
-    floorColor*:       byte
-    wallN*, wallW*:    Wall
-    trail*:            bool
+    floorColor*: byte
+    wallN*, wallW*: Wall
+    trail*: bool
 
   Floor* = enum
-    fEmpty               = ( 0,  "none")
-    fBlank               = ( 1,  "blank")
-    fDoor                = (20,  "open door")
-    fLockedDoor          = (21,  "locked door")
-    fArchway             = (22,  "archway")
-    fSecretDoorBlock     = (23,  "secret door (block)")
-    fSecretDoor          = (24,  "secret door")
-
-    fOneWayDoor          = (25,  "one-way door")
+    fEmpty = (0, "none")
+    fBlank = (1, "blank")
+    fDoor = (20, "open door")
+    fLockedDoor = (21, "locked door")
+    fArchway = (22, "archway")
+    fSecretDoorBlock = (23, "secret door (block)")
+    fSecretDoor = (24, "secret door")
+    fOneWayDoor = (25, "one-way door")
     # for backward compatibility with pre-v4 maps
-    fOneWayDoorSW        = (26,  "one-way door")
-
-    fPressurePlate       = (30,  "pressure plate")
-    fHiddenPressurePlate = (31,  "hidden pressure plate")
-    fClosedPit           = (40,  "closed pit")
-    fOpenPit             = (41,  "open pit")
-    fHiddenPit           = (42,  "hidden pit")
-    fCeilingPit          = (43,  "ceiling pit")
-    fStairsDown          = (50,  "stairs down")
-    fStairsUp            = (51,  "stairs up")
-    fEntranceDoor        = (52,  "entrance door")
-    fExitDoor            = (53,  "exit door")
-    fSpinner             = (60,  "spinner")
-    fTeleportSource      = (70,  "teleport")
-    fTeleportDestination = (71,  "teleport destination")
-    fInvisibleBarrier    = (80,  "invisible barrier")
-    fBridge              = (90,  "bridge")
-    fArrow               = (91,  "arrow")
-    fColumn              = (100, "column")
-    fStatue              = (110, "statue")
-
+    fOneWayDoorSW = (26, "one-way door")
+    fPressurePlate = (30, "pressure plate")
+    fHiddenPressurePlate = (31, "hidden pressure plate")
+    fClosedPit = (40, "closed pit")
+    fOpenPit = (41, "open pit")
+    fHiddenPit = (42, "hidden pit")
+    fCeilingPit = (43, "ceiling pit")
+    fStairsDown = (50, "stairs down")
+    fStairsUp = (51, "stairs up")
+    fEntranceDoor = (52, "entrance door")
+    fExitDoor = (53, "exit door")
+    fSpinner = (60, "spinner")
+    fTeleportSource = (70, "teleport")
+    fTeleportDestination = (71, "teleport destination")
+    fInvisibleBarrier = (80, "invisible barrier")
+    fBridge = (90, "bridge")
+    fArrow = (91, "arrow")
+    fColumn = (100, "column")
+    fStatue = (110, "statue")
 
   Wall* = enum
-    wNone          = ( 0, "none")
-    wWall          = (10, "wall")
-    wIllusoryWall  = (11, "illusory wall")
+    wNone = (0, "none")
+    wWall = (10, "wall")
+    wIllusoryWall = (11, "illusory wall")
     wInvisibleWall = (12, "invisible wall")
-    wDoor          = (20, "open door")
-    wLockedDoor    = (21, "locked door")
-    wArchway       = (22, "archway")
-    wSecretDoor    = (23, "secret door")
-    wOneWayDoorNE  = (24, "one-way door")
-    wOneWayDoorSW  = (25, "one-way door")
-    wLeverNE       = (30, "lever")
-    wLeverSW       = (31, "lever")
-    wNicheNE       = (40, "niche")
-    wNicheSW       = (41, "niche")
-    wStatueNE      = (50, "statue")
-    wStatueSW      = (51, "statue")
-    wKeyhole       = (60, "keyhole")
-    wWritingNE     = (70, "writing")
-    wWritingSW     = (71, "writing")
+    wDoor = (20, "open door")
+    wLockedDoor = (21, "locked door")
+    wArchway = (22, "archway")
+    wSecretDoor = (23, "secret door")
+    wOneWayDoorNE = (24, "one-way door")
+    wOneWayDoorSW = (25, "one-way door")
+    wLeverNE = (30, "lever")
+    wLeverSW = (31, "lever")
+    wNicheNE = (40, "niche")
+    wNicheSW = (41, "niche")
+    wStatueNE = (50, "statue")
+    wStatueSW = (51, "statue")
+    wKeyhole = (60, "keyhole")
+    wWritingNE = (70, "writing")
+    wWritingSW = (71, "writing")
 
   Annotations* = ref object
     cols*, rows*: Natural
     annotations*: OrderedTable[Natural, Annotation]
-    dirty*:       bool
+    dirty*: bool
 
   AnnotationKind* = enum
-    akComment  = (0, "comment")
-    akIndexed  = (1, "indexed")
+    akComment = (0, "comment")
+    akIndexed = (1, "indexed")
     akCustomId = (2, "custom ID")
-    akIcon     = (3, "icon")
-    akLabel    = (4, "label")
+    akIcon = (3, "icon")
+    akLabel = (4, "label")
 
   Annotation* = object
     text*: string
     case kind*: AnnotationKind
-    of akComment:  discard
-    of akIndexed:  index*, indexColor*: Natural
+    of akComment: discard
+    of akIndexed: index*, indexColor*: Natural
     of akCustomId: customId*: string
-    of akIcon:     icon*: Natural
-    of akLabel:    labelColor*: Natural
+    of akIcon: icon*: Natural
+    of akLabel: labelColor*: Natural
 
 func isLabel*(a: Annotation): bool =
   a.kind == akLabel
@@ -280,37 +270,16 @@ func isLabel*(a: Annotation): bool =
 func isNote*(a: Annotation): bool =
   not a.isLabel
 
-
 let
-  HorizVertFloors* = {
-    fArchway,
-    fDoor,
-    fLockedDoor,
-    fSecretDoor,
-    fBridge
-  }
+  HorizVertFloors* = {fArchway, fDoor, fLockedDoor, fSecretDoor, fBridge}
 
-  RotatableFloors* = {
-    fArrow,
-    fOneWayDoor
-  }
+  RotatableFloors* = {fArrow, fOneWayDoor}
 
-const
-  SpecialWalls* = @[
-    wDoor,
-    wLockedDoor,
-    wArchway,
-    wSecretDoor,
-    wOneWayDoorNE,
-    wIllusoryWall,
-    wInvisibleWall,
-    wLeverSW,
-    wNicheSW,
-    wStatueSW,
-    wKeyhole,
-    wWritingSW
+const SpecialWalls* =
+  @[
+    wDoor, wLockedDoor, wArchway, wSecretDoor, wOneWayDoorNE, wIllusoryWall,
+    wInvisibleWall, wLeverSW, wNicheSW, wStatueSW, wKeyhole, wWritingSW,
   ]
-
 
 type
   # Selections always have the same dimensions as the level the selection was
@@ -320,62 +289,64 @@ type
   # (0,0) is the top-left cell of the selection
   Selection* = ref object
     rows*, cols*: Natural
-    cells*:       seq[bool]
+    cells*: seq[bool]
 
   SelectionRect* = object
-    startRow*:    Natural
-    startCol*:    Natural
-    rect*:        Rect[Natural]
-    selected*:    bool
+    startRow*: Natural
+    startCol*: Natural
+    rect*: Rect[Natural]
+    selected*: bool
 
   SelectionBuffer* = object
-    level*:       Level
-    selection*:   Selection
-
+    level*: Level
+    selection*: Selection
 
 type
   LineWidth* = enum
-    lwThin   = (0, "Thin")
+    lwThin = (0, "Thin")
     lwNormal = (1, "Normal")
 
   GridStyle* = enum
-    gsNone  = (0, "None")
+    gsNone = (0, "None")
     gsSolid = (1, "Solid")
     gsLoose = (2, "Loose")
     gsCross = (3, "Cross")
 
   OutlineStyle* = enum
-    osNone               = (0, "None")
-    osCell               = (1, "Cell")
-    osSquareEdges        = (2, "Square Edges")
-    osRoundedEdges       = (3, "Rounded Edges")
+    osNone = (0, "None")
+    osCell = (1, "Cell")
+    osSquareEdges = (2, "Square Edges")
+    osRoundedEdges = (3, "Rounded Edges")
     osRoundedEdgesFilled = (4, "Filled Rounded Edges")
 
   OutlineFillStyle* = enum
-    ofsSolid   = (0, "Solid")
+    ofsSolid = (0, "Solid")
     ofsHatched = (1, "Hatched")
 
   NoteBackgroundShape* = enum
-    nbsCircle    = (0, "Circle")
+    nbsCircle = (0, "Circle")
     nbsRectangle = (1, "Rectangle")
 
-
 const
-  LinkPitSources*      = {fClosedPit, fOpenPit, fHiddenPit}
+  LinkPitSources* = {fClosedPit, fOpenPit, fHiddenPit}
   LinkPitDestinations* = {fCeilingPit}
-  LinkTeleports*       = {fTeleportSource, fTeleportDestination}
-  LinkStairs*          = {fStairsDown, fStairsUp}
-  LinkDoors*           = {fEntranceDoor, fExitDoor}
+  LinkTeleports* = {fTeleportSource, fTeleportDestination}
+  LinkStairs* = {fStairsDown, fStairsUp}
+  LinkDoors* = {fEntranceDoor, fExitDoor}
 
   LinkSources* = LinkPitSources + LinkTeleports + LinkStairs + LinkDoors
 
-
 func linkFloorToString*(f: Floor): string =
-  if   f in LinkPitSources:      return "pit"
-  elif f in LinkPitDestinations: return "pit"
-  elif f in LinkStairs:          return "stairs"
-  elif f in LinkDoors:           return "door"
-  elif f in LinkTeleports:       return "teleport"
+  if f in LinkPitSources:
+    return "pit"
+  elif f in LinkPitDestinations:
+    return "pit"
+  elif f in LinkStairs:
+    return "stairs"
+  elif f in LinkDoors:
+    return "door"
+  elif f in LinkTeleports:
+    return "teleport"
 
 func hash*(rc: RegionCoords): Hash =
   var h: Hash = 0
@@ -391,158 +362,157 @@ func hash*(l: Location): Hash =
   !$h
 
 func `<`*(a, b: Location): bool =
-  if   a.levelId < b.levelId: true
-  elif a.levelId > b.levelId: false
-
-  elif a.row < b.row: true
-  elif a.row > b.row: false
-
-  elif a.col < b.col: true
-  else: false
-
+  if a.levelId < b.levelId:
+    true
+  elif a.levelId > b.levelId:
+    false
+  elif a.row < b.row:
+    true
+  elif a.row > b.row:
+    false
+  elif a.col < b.col:
+    true
+  else:
+    false
 
 type
   NotesListFilter* = object
-    scope*:      NoteScopeFilter
-    noteType*:   set[NoteTypeFilter]
+    scope*: NoteScopeFilter
+    noteType*: set[NoteTypeFilter]
     searchTerm*: string
-    orderBy*:    NoteOrdering
+    orderBy*: NoteOrdering
 
   NoteScopeFilter* = enum
-    nsfMap    = "Map"
-    nsfLevel  = "Level"
+    nsfMap = "Map"
+    nsfLevel = "Level"
     nsfRegion = "Region"
 
   NoteTypeFilter* = enum
-    ntfNone   = ("None")
+    ntfNone = ("None")
     ntfNumber = ("Num")
-    ntfId     = ("ID")
-    ntfIcon   = ("Icon")
+    ntfId = ("ID")
+    ntfIcon = ("Icon")
 
   NoteOrdering* = enum
-    noType    = "Type"
-    noText    = "Text"
-
+    noType = "Type"
+    noText = "Text"
 
 type
   WindowTheme* = ref object
-    borderColor*:                  Color
-    backgroundColor*:              Color
-    backgroundImage*:              string
+    borderColor*: Color
+    backgroundColor*: Color
+    backgroundImage*: string
 
-    titleBackgroundColor*:         Color
+    titleBackgroundColor*: Color
     titleBackgroundInactiveColor*: Color
-    titleColor*:                   Color
-    titleInactiveColor*:           Color
+    titleColor*: Color
+    titleInactiveColor*: Color
 
-    buttonColor*:                  Color
-    buttonHoverColor*:             Color
-    buttonDownColor*:              Color
-    buttonInactiveColor*:          Color
+    buttonColor*: Color
+    buttonHoverColor*: Color
+    buttonDownColor*: Color
+    buttonInactiveColor*: Color
 
-    modifiedFlagColor*:            Color
-    modifiedFlagInactiveColor*:    Color
-
+    modifiedFlagColor*: Color
+    modifiedFlagInactiveColor*: Color
 
   StatusBarTheme* = ref object
-    backgroundColor*:              Color
-    textColor*:                    Color
-    warningTextColor*:             Color
-    errorTextColor*:               Color
-    coordinatesColor*:             Color
+    backgroundColor*: Color
+    textColor*: Color
+    warningTextColor*: Color
+    errorTextColor*: Color
+    coordinatesColor*: Color
 
-    commandBackgroundColor*:       Color
-    commandTextColor*:             Color
-
+    commandBackgroundColor*: Color
+    commandTextColor*: Color
 
   CurrentNotePaneTheme* = ref object
-    textColor*:                    Color
-    indexColor*:                   Color
-    indexBackgroundColor*:         array[4, Color]
-
+    textColor*: Color
+    indexColor*: Color
+    indexBackgroundColor*: array[4, Color]
 
   NotesListPaneTheme* = ref object
-    controlsBackgroundColor*:      Color
-    listBackgroundColor*:          Color
+    controlsBackgroundColor*: Color
+    listBackgroundColor*: Color
 
-    itemBackgroundHoverColor*:     Color
-    itemBackgroundActiveColor*:    Color
-    itemTextNormalColor*:          Color
-    itemTextHoverColor*:           Color
-    itemTextActiveColor*:          Color
-
+    itemBackgroundHoverColor*: Color
+    itemBackgroundActiveColor*: Color
+    itemTextNormalColor*: Color
+    itemTextHoverColor*: Color
+    itemTextActiveColor*: Color
 
   ToolbarPaneTheme* = ref object
-    buttonNormalColor*:            Color
-    buttonHoverColor*:             Color
-
+    buttonNormalColor*: Color
+    buttonHoverColor*: Color
 
   LevelTheme* = ref object
-    lineWidth*:                    LineWidth
-    backgroundColor*:              Color
-    cursorColor*:                  Color
-    cursorGuidesColor*:            Color
-    linkMarkerColor*:              Color
-    linkLineColor*:                Color
-    selectionColor*:               Color
-    trailNormalColor*:             Color
-    trailCursorColor*:             Color
-    pastePreviewColor*:            Color
+    lineWidth*: LineWidth
+    backgroundColor*: Color
+    cursorColor*: Color
+    cursorGuidesColor*: Color
+    linkMarkerColor*: Color
+    linkLineColor*: Color
+    selectionColor*: Color
+    trailNormalColor*: Color
+    trailCursorColor*: Color
+    pastePreviewColor*: Color
 
-    foregroundNormalNormalColor*:  Color
-    foregroundNormalCursorColor*:  Color
-    foregroundLightNormalColor*:   Color
-    foregroundLightCursorColor*:   Color
+    foregroundNormalNormalColor*: Color
+    foregroundNormalCursorColor*: Color
+    foregroundLightNormalColor*: Color
+    foregroundLightCursorColor*: Color
 
-    coordinatesNormalColor*:       Color
-    coordinatesHighlightColor*:    Color
+    coordinatesNormalColor*: Color
+    coordinatesHighlightColor*: Color
 
-    regionBorderNormalColor*:      Color
-    regionBorderEmptyColor*:       Color
+    regionBorderNormalColor*: Color
+    regionBorderEmptyColor*: Color
 
-    backgroundHatchEnabled*:       bool
-    backgroundHatchColor*:         Color
-    backgroundHatchWidth*:         float
+    backgroundHatchEnabled*: bool
+    backgroundHatchColor*: Color
+    backgroundHatchWidth*: float
     backgroundHatchSpacingFactor*: float
 
-    gridBackgroundStyle*:          GridStyle
-    gridBackgroundGridColor*:      Color
-    gridFloorStyle*:               GridStyle
-    gridFloorGridColor*:           Color
+    gridBackgroundStyle*: GridStyle
+    gridBackgroundGridColor*: Color
+    gridFloorStyle*: GridStyle
+    gridFloorGridColor*: Color
 
-    outlineStyle*:                 OutlineStyle
-    outlineFillStyle*:             OutlineFillStyle
-    outlineColor*:                 Color
-    outlineWidthFactor*:           float
-    outlineOverscan*:              bool
+    outlineStyle*: OutlineStyle
+    outlineFillStyle*: OutlineFillStyle
+    outlineColor*: Color
+    outlineWidthFactor*: float
+    outlineOverscan*: bool
 
-    shadowInnerColor*:             Color
-    shadowInnerWidthFactor*:       float
-    shadowOuterColor*:             Color
-    shadowOuterWidthFactor*:       float
+    shadowInnerColor*: Color
+    shadowInnerWidthFactor*: float
+    shadowOuterColor*: Color
+    shadowOuterWidthFactor*: float
 
-    floorTransparent*:             bool
-    floorBackgroundColor*:         array[10, Color]
+    floorTransparent*: bool
+    floorBackgroundColor*: array[10, Color]
 
-    noteMarkerNormalColor*:        Color
-    noteMarkerCursorColor*:        Color
-    noteCommentColor*:             Color
-    noteBackgroundShape*:          NoteBackgroundShape
-    noteIndexBackgroundColor*:     array[4, Color]
-    noteIndexColor*:               Color
-    noteTooltipBackgroundColor*:   Color
-    noteTooltipTextColor*:         Color
-    noteTooltipCornerRadius*:      float
-    noteTooltipShadowStyle*:       ShadowStyle
+    noteMarkerNormalColor*: Color
+    noteMarkerCursorColor*: Color
+    noteCommentColor*: Color
+    noteBackgroundShape*: NoteBackgroundShape
+    noteIndexBackgroundColor*: array[4, Color]
+    noteIndexColor*: Color
+    noteTooltipBackgroundColor*: Color
+    noteTooltipTextColor*: Color
+    noteTooltipCornerRadius*: float
+    noteTooltipShadowStyle*: ShadowStyle
 
-    labelTextColor*:               array[4, Color]
-
+    labelTextColor*: array[4, Color]
 
 # {{{ App events
 
 type
   AppEventKind* = enum
-    aeFocus, aeOpenFile, aeAutoSave, aeVersionUpdate
+    aeFocus
+    aeOpenFile
+    aeAutoSave
+    aeVersionUpdate
 
   AppEvent* = object
     case kind*: AppEventKind
@@ -550,15 +520,15 @@ type
       path*: string
     of aeVersionUpdate:
       versionInfo*: Option[VersionInfo]
-      error*:       Option[CatchableError]
-    else: discard
+      error*: Option[CatchableError]
+    else:
+      discard
 
   VersionInfo* = object
     version*: Version
     message*: string
 
-var
-  g_appEventCh*: Channel[AppEvent]
+var g_appEventCh*: Channel[AppEvent]
 
 proc sendAppEvent*(event: AppEvent) =
   g_appEventCh.send(event)
@@ -566,6 +536,5 @@ proc sendAppEvent*(event: AppEvent) =
   glfw.postEmptyEvent()
 
 # }}}
-
 
 # vim: et:ts=2:sw=2:fdm=marker

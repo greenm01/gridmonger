@@ -12,7 +12,6 @@ import fieldlimits
 import utils/hocon
 import utils/misc
 
-
 # {{{ DefaultThemeConfig
 
 # Determining if a theme has been modified requires that the Default theme has
@@ -29,20 +28,20 @@ let DefaultThemeConfig* = p.parse
 
 # {{{ Limits
 const
-  DialogCornerRadiusLimits* = floatLimits(min=   0.0, max=20.0)
-  DialogBorderWidthLimits*  = floatLimits(min=   0.0, max=30.0)
-  ShadowOffsetLimits*       = floatLimits(min= -10.0, max=10.0)
-  ShadowFeatherLimits*      = floatLimits(min=   0.0, max=50.0)
+  DialogCornerRadiusLimits* = floatLimits(min = 0.0, max = 20.0)
+  DialogBorderWidthLimits* = floatLimits(min = 0.0, max = 30.0)
+  ShadowOffsetLimits* = floatLimits(min = -10.0, max = 10.0)
+  ShadowFeatherLimits* = floatLimits(min = 0.0, max = 50.0)
 
-  WidgetCornerRadiusLimits* = floatLimits(min=0.0, max=12.0)
+  WidgetCornerRadiusLimits* = floatLimits(min = 0.0, max = 12.0)
 
-  BackgroundHatchWidthLimits*         = floatLimits(min=0.5, max=10.0)
-  BackgroundHatchSpacingFactorLimits* = floatLimits(min=1.0, max=10.0)
+  BackgroundHatchWidthLimits* = floatLimits(min = 0.5, max = 10.0)
+  BackgroundHatchSpacingFactorLimits* = floatLimits(min = 1.0, max = 10.0)
 
-  OutlineWidthFactorLimits* = floatLimits(min=0.0, max=1.0)
-  ShadowWidthFactorLimits*  = floatLimits(min=0.0, max=1.0)
+  OutlineWidthFactorLimits* = floatLimits(min = 0.0, max = 1.0)
+  ShadowWidthFactorLimits* = floatLimits(min = 0.0, max = 1.0)
 
-  AlphaLimits* = floatLimits(min=0.0, max=1.0)
+  AlphaLimits* = floatLimits(min = 0.0, max = 1.0)
 
 # }}}
 
@@ -53,7 +52,7 @@ proc limit(config: HoconNode, key: string, limits: FieldLimits) =
     v.get.num = v.get.num.limit(limits)
 
 proc getColorOrDefaultArray(cfg: HoconNode, key: string, colors: var openArray[Color]) =
-  for i,c in colors.mpairs:
+  for i, c in colors.mpairs:
     c = cfg.getColorOrDefault(fmt"{key}.{i}")
 
 # }}}
@@ -64,58 +63,58 @@ proc toLevelTheme*(cfg: HoconNode): LevelTheme =
   s = new LevelTheme
 
   var p = "general."
-  s.lineWidth         = cfg.getEnumOrDefault(p & "line-width", LineWidth)
-  s.backgroundColor   = cfg.getColorOrDefault(p & "background")
-  s.cursorColor       = cfg.getColorOrDefault(p & "cursor")
+  s.lineWidth = cfg.getEnumOrDefault(p & "line-width", LineWidth)
+  s.backgroundColor = cfg.getColorOrDefault(p & "background")
+  s.cursorColor = cfg.getColorOrDefault(p & "cursor")
   s.cursorGuidesColor = cfg.getColorOrDefault(p & "cursor-guides")
-  s.linkMarkerColor   = cfg.getColorOrDefault(p & "link-marker")
+  s.linkMarkerColor = cfg.getColorOrDefault(p & "link-marker")
 
   if cfg.getOpt(p & "link-line").isNone:
     cfg.set(p & "link-line", $s.linkMarkerColor.withAlpha(0.8))
 
-  s.linkLineColor     = cfg.getColorOrDefault(p & "link-line")
+  s.linkLineColor = cfg.getColorOrDefault(p & "link-line")
 
-  s.linkLineColor     = cfg.getColorOrDefault(p & "link-line")
-  s.selectionColor    = cfg.getColorOrDefault(p & "selection")
-  s.trailNormalColor  = cfg.getColorOrDefault(p & "trail.normal")
-  s.trailCursorColor  = cfg.getColorOrDefault(p & "trail.cursor")
+  s.linkLineColor = cfg.getColorOrDefault(p & "link-line")
+  s.selectionColor = cfg.getColorOrDefault(p & "selection")
+  s.trailNormalColor = cfg.getColorOrDefault(p & "trail.normal")
+  s.trailCursorColor = cfg.getColorOrDefault(p & "trail.cursor")
   s.pastePreviewColor = cfg.getColorOrDefault(p & "paste-preview")
 
   s.foregroundNormalNormalColor = cfg.getColorOrDefault(p & "foreground.normal.normal")
   s.foregroundNormalCursorColor = cfg.getColorOrDefault(p & "foreground.normal.cursor")
-  s.foregroundLightNormalColor  = cfg.getColorOrDefault(p & "foreground.light.normal")
-  s.foregroundLightCursorColor  = cfg.getColorOrDefault(p & "foreground.light.cursor")
+  s.foregroundLightNormalColor = cfg.getColorOrDefault(p & "foreground.light.normal")
+  s.foregroundLightCursorColor = cfg.getColorOrDefault(p & "foreground.light.cursor")
 
-  s.coordinatesNormalColor    = cfg.getColorOrDefault(p & "coordinates.normal")
+  s.coordinatesNormalColor = cfg.getColorOrDefault(p & "coordinates.normal")
   s.coordinatesHighlightColor = cfg.getColorOrDefault(p & "coordinates.highlight")
 
   s.regionBorderNormalColor = cfg.getColorOrDefault(p & "region-border.normal")
-  s.regionBorderEmptyColor  = cfg.getColorOrDefault(p & "region-border.empty")
+  s.regionBorderEmptyColor = cfg.getColorOrDefault(p & "region-border.empty")
 
   p = "background-hatch."
-  s.backgroundHatchEnabled       = cfg.getBoolOrDefault(p & "enabled")
-  s.backgroundHatchColor         = cfg.getColorOrDefault(p & "color")
-  s.backgroundHatchWidth         = cfg.getFloatOrDefault(p & "width")
+  s.backgroundHatchEnabled = cfg.getBoolOrDefault(p & "enabled")
+  s.backgroundHatchColor = cfg.getColorOrDefault(p & "color")
+  s.backgroundHatchWidth = cfg.getFloatOrDefault(p & "width")
   s.backgroundHatchSpacingFactor = cfg.getFloatOrDefault(p & "spacing-factor")
 
   p = "grid."
-  s.gridBackgroundStyle     = cfg.getEnumOrDefault(p & "background.style", GridStyle)
+  s.gridBackgroundStyle = cfg.getEnumOrDefault(p & "background.style", GridStyle)
   s.gridBackgroundGridColor = cfg.getColorOrDefault(p & "background.grid")
-  s.gridFloorStyle          = cfg.getEnumOrDefault(p & "floor.style", GridStyle)
-  s.gridFloorGridColor      = cfg.getColorOrDefault(p & "floor.grid")
+  s.gridFloorStyle = cfg.getEnumOrDefault(p & "floor.style", GridStyle)
+  s.gridFloorGridColor = cfg.getColorOrDefault(p & "floor.grid")
 
   p = "outline."
-  s.outlineStyle       = cfg.getEnumOrDefault(p & "style", OutlineStyle)
-  s.outlineFillStyle   = cfg.getEnumOrDefault(p & "fill-style", OutlineFillStyle)
-  s.outlineColor       = cfg.getColorOrDefault(p & "color")
+  s.outlineStyle = cfg.getEnumOrDefault(p & "style", OutlineStyle)
+  s.outlineFillStyle = cfg.getEnumOrDefault(p & "fill-style", OutlineFillStyle)
+  s.outlineColor = cfg.getColorOrDefault(p & "color")
   s.outlineWidthFactor = cfg.getFloatOrDefault(p & "width-factor")
-  s.outlineOverscan    = cfg.getBoolOrDefault(p & "overscan")
+  s.outlineOverscan = cfg.getBoolOrDefault(p & "overscan")
 
   p = "shadow."
-  s.shadowInnerColor        = cfg.getColorOrDefault(p & "inner.color")
-  s.shadowInnerWidthFactor  = cfg.getFloatOrDefault(p & "inner.width-factor")
-  s.shadowOuterColor        = cfg.getColorOrDefault(p & "outer.color")
-  s.shadowOuterWidthFactor  = cfg.getFloatOrDefault(p & "outer.width-factor")
+  s.shadowInnerColor = cfg.getColorOrDefault(p & "inner.color")
+  s.shadowInnerWidthFactor = cfg.getFloatOrDefault(p & "inner.width-factor")
+  s.shadowOuterColor = cfg.getColorOrDefault(p & "outer.color")
+  s.shadowOuterWidthFactor = cfg.getFloatOrDefault(p & "outer.width-factor")
 
   p = "floor."
   s.floorTransparent = cfg.getBoolOrDefault(p & "transparent")
@@ -125,14 +124,15 @@ proc toLevelTheme*(cfg: HoconNode): LevelTheme =
   p = "note."
   s.noteMarkerNormalColor = cfg.getColorOrDefault(p & "marker.normal")
   s.noteMarkerCursorColor = cfg.getColorOrDefault(p & "marker.cursor")
-  s.noteCommentColor      = cfg.getColorOrDefault(p & "comment")
-  s.noteBackgroundShape   = cfg.getEnumOrDefault(p & "background-shape", NoteBackgroundShape)
+  s.noteCommentColor = cfg.getColorOrDefault(p & "comment")
+  s.noteBackgroundShape =
+    cfg.getEnumOrDefault(p & "background-shape", NoteBackgroundShape)
 
   cfg.getColorOrDefaultArray(p & "index-background", s.noteIndexBackgroundColor)
 
-  s.noteIndexColor             = cfg.getColorOrDefault(p & "index")
+  s.noteIndexColor = cfg.getColorOrDefault(p & "index")
   s.noteTooltipBackgroundColor = cfg.getColorOrDefault(p & "tooltip.background")
-  s.noteTooltipTextColor       = cfg.getColorOrDefault(p & "tooltip.text")
+  s.noteTooltipTextColor = cfg.getColorOrDefault(p & "tooltip.text")
 
   let cr = cfg.getFloatOrDefault(p & "tooltip.corner-radius")
   s.noteTooltipCornerRadius = cr
@@ -155,17 +155,17 @@ proc toWindowTheme*(cfg: HoconNode): WindowTheme =
   s.backgroundColor = cfg.getColorOrDefault("background.color")
   s.backgroundImage = cfg.getStringOrDefault("background.image")
 
-  s.titleBackgroundColor         = cfg.getColorOrDefault("title.background.normal")
+  s.titleBackgroundColor = cfg.getColorOrDefault("title.background.normal")
   s.titleBackgroundInactiveColor = cfg.getColorOrDefault("title.background.inactive")
-  s.titleColor                   = cfg.getColorOrDefault("title.text.normal")
-  s.titleInactiveColor           = cfg.getColorOrDefault("title.text.inactive")
+  s.titleColor = cfg.getColorOrDefault("title.text.normal")
+  s.titleInactiveColor = cfg.getColorOrDefault("title.text.inactive")
 
-  s.modifiedFlagColor         = cfg.getColorOrDefault("modified-flag.normal")
+  s.modifiedFlagColor = cfg.getColorOrDefault("modified-flag.normal")
   s.modifiedFlagInactiveColor = cfg.getColorOrDefault("modified-flag.inactive")
 
-  s.buttonColor         = cfg.getColorOrDefault("button.normal")
-  s.buttonHoverColor    = cfg.getColorOrDefault("button.hover")
-  s.buttonDownColor     = cfg.getColorOrDefault("button.down")
+  s.buttonColor = cfg.getColorOrDefault("button.normal")
+  s.buttonHoverColor = cfg.getColorOrDefault("button.hover")
+  s.buttonDownColor = cfg.getColorOrDefault("button.down")
   s.buttonInactiveColor = cfg.getColorOrDefault("button.inactive")
 
 # }}}
@@ -174,14 +174,14 @@ proc toStatusBarTheme*(cfg: HoconNode): StatusBarTheme =
   alias(s, result)
   s = new StatusBarTheme
 
-  s.backgroundColor  = cfg.getColorOrDefault("background")
-  s.textColor        = cfg.getColorOrDefault("text")
+  s.backgroundColor = cfg.getColorOrDefault("background")
+  s.textColor = cfg.getColorOrDefault("text")
   s.warningTextColor = cfg.getColorOrDefault("warning")
-  s.errorTextColor   = cfg.getColorOrDefault("error")
+  s.errorTextColor = cfg.getColorOrDefault("error")
   s.coordinatesColor = cfg.getColorOrDefault("coordinates")
 
   s.commandBackgroundColor = cfg.getColorOrDefault("command.background")
-  s.commandTextColor       = cfg.getColorOrDefault("command.text")
+  s.commandTextColor = cfg.getColorOrDefault("command.text")
 
 # }}}
 # {{{ toCurrentNotePaneTheme*()
@@ -189,7 +189,7 @@ proc toCurrentNotePaneTheme*(cfg: HoconNode): CurrentNotePaneTheme =
   alias(s, result)
   s = new CurrentNotePaneTheme
 
-  s.textColor  = cfg.getColorOrDefault("text")
+  s.textColor = cfg.getColorOrDefault("text")
   s.indexColor = cfg.getColorOrDefault("index")
 
   cfg.getColorOrDefaultArray("index-background", s.indexBackgroundColor)
@@ -201,13 +201,13 @@ proc toNotesListPaneTheme*(cfg: HoconNode): NotesListPaneTheme =
   s = new NotesListPaneTheme
 
   s.controlsBackgroundColor = cfg.getColorOrDefault("controls-background")
-  s.listBackgroundColor     = cfg.getColorOrDefault("list-background")
+  s.listBackgroundColor = cfg.getColorOrDefault("list-background")
 
-  s.itemBackgroundHoverColor  = cfg.getColorOrDefault("item.background.hover")
+  s.itemBackgroundHoverColor = cfg.getColorOrDefault("item.background.hover")
   s.itemBackgroundActiveColor = cfg.getColorOrDefault("item.background.active")
-  s.itemTextNormalColor       = cfg.getColorOrDefault("item.text.normal")
-  s.itemTextHoverColor        = cfg.getColorOrDefault("item.text.hover")
-  s.itemTextActiveColor       = cfg.getColorOrDefault("item.text.active")
+  s.itemTextNormalColor = cfg.getColorOrDefault("item.text.normal")
+  s.itemTextHoverColor = cfg.getColorOrDefault("item.text.hover")
+  s.itemTextActiveColor = cfg.getColorOrDefault("item.text.active")
 
 # }}}
 # {{{ toToolbarPaneTheme*()
@@ -216,7 +216,7 @@ proc toToolbarPaneTheme*(cfg: HoconNode): ToolbarPaneTheme =
   s = new ToolbarPaneTheme
 
   s.buttonNormalColor = cfg.getColorOrDefault("button.normal")
-  s.buttonHoverColor  = cfg.getColorOrDefault("button.hover")
+  s.buttonHoverColor = cfg.getColorOrDefault("button.hover")
 
 # }}}
 
@@ -228,23 +228,25 @@ proc loadTheme*(filename: string): HoconNode =
     var p = initHoconParser(s)
     let cfg = p.parse
 
-    cfg.limit("ui.dialog.corner-radius",      DialogCornerRadiusLimits)
+    cfg.limit("ui.dialog.corner-radius", DialogCornerRadiusLimits)
     cfg.limit("ui.dialog.outer-border.width", DialogBorderWidthLimits)
     cfg.limit("ui.dialog.inner-border.width", DialogBorderWidthLimits)
-    cfg.limit("ui.dialog.shadow.feather",     ShadowFeatherLimits)
-    cfg.limit("ui.dialog.shadow.x-offset",    ShadowOffsetLimits)
-    cfg.limit("ui.dialog.shadow.y-offset",    ShadowOffsetLimits)
+    cfg.limit("ui.dialog.shadow.feather", ShadowFeatherLimits)
+    cfg.limit("ui.dialog.shadow.x-offset", ShadowOffsetLimits)
+    cfg.limit("ui.dialog.shadow.y-offset", ShadowOffsetLimits)
 
-    cfg.limit("ui.widget.corner-radius",      WidgetCornerRadiusLimits)
+    cfg.limit("ui.widget.corner-radius", WidgetCornerRadiusLimits)
 
     cfg.limit("ui.splash-image.shadow-alpha", AlphaLimits)
 
-    cfg.limit("level.background-hatch.width",          BackgroundHatchWidthLimits)
-    cfg.limit("level.background-hatch.spacing-factor", BackgroundHatchSpacingFactorLimits)
+    cfg.limit("level.background-hatch.width", BackgroundHatchWidthLimits)
+    cfg.limit(
+      "level.background-hatch.spacing-factor", BackgroundHatchSpacingFactorLimits
+    )
 
     cfg.limit("level.note.tooltip.corner-radius", WidgetCornerRadiusLimits)
 
-    cfg.limit("level.outline.width-factor",   OutlineWidthFactorLimits)
+    cfg.limit("level.outline.width-factor", OutlineWidthFactorLimits)
 
     cfg.limit("level.shadow.inner.width-factor", ShadowWidthFactorLimits)
     cfg.limit("level.shadow.outer.width-factor", ShadowWidthFactorLimits)
@@ -258,8 +260,7 @@ proc loadTheme*(filename: string): HoconNode =
 
     # Default new settings
     if cfg.getObjectOpt("ui.drop-down").isNone:
-      let color = lerp(cfg.getColorOrDefault("ui.dialog.background"),
-                       black(), 0.4)
+      let color = lerp(cfg.getColorOrDefault("ui.dialog.background"), black(), 0.4)
       cfg.set("ui.drop-down.item-list-background", $color)
 
     if cfg.getObjectOpt("pane.notes-list").isNone:
@@ -270,33 +271,36 @@ proc loadTheme*(filename: string): HoconNode =
       nl.set("controls-background", $lerp(bgColor, black(), 0.2))
       nl.set("list-background", $bgColor)
 
-      var (blendCol, blendColInv) = if bgColor.isLight: (black(), white())
-                                    else:               (white(), black())
+      var (blendCol, blendColInv) =
+        if bgColor.isLight:
+          (black(), white())
+        else:
+          (white(), black())
 
-      nl.set("item.background.hover",  $lerp(bgColor, blendCol, 0.08))
+      nl.set("item.background.hover", $lerp(bgColor, blendCol, 0.08))
       nl.set("item.background.active", $lerp(bgColor, blendCol, 0.15))
 
       let textFg = cfg.getColorOrDefault("ui.dialog.label")
       nl.set("item.text.normal", $textFg)
-      nl.set("item.text.hover",  $lerp(textFg, blendCol, 0.2))
+      nl.set("item.text.hover", $lerp(textFg, blendCol, 0.2))
       nl.set("item.text.active", $lerp(textFg, blendCol, 0.4))
 
       nl.set("level-section.background", $lerp(bgColor, blendColInv, 0.3))
-      nl.set("level-section.text",       $lerp(textFg,  blendCol,    0.2))
+      nl.set("level-section.text", $lerp(textFg, blendCol, 0.2))
 
       nl.set("region-section.background", $lerp(bgColor, blendColInv, 0.4))
-      nl.set("region-section.text",       $lerp(textFg,  blendCol,    0.2))
+      nl.set("region-section.text", $lerp(textFg, blendCol, 0.2))
 
       nl.set("section-separator", $lerp(bgColor, blendCol, 0.06))
-      nl.set("scroll-bar",        $lerp(bgColor, blendCol, 0.5))
+      nl.set("scroll-bar", $lerp(bgColor, blendCol, 0.5))
 
       cfg.set("pane.notes-list", nl)
 
     result = DefaultThemeConfig.deepCopy
     result.merge(cfg)
-
   finally:
-    if s != nil: s.close
+    if s != nil:
+      s.close
 
 # }}}
 # {{{ saveTheme*()
@@ -306,7 +310,8 @@ proc saveTheme*(config: HoconNode, filename: string) =
     s = newFileStream(filename, fmWrite)
     config.write(s)
   finally:
-    if s != nil: s.close
+    if s != nil:
+      s.close
 
 # }}}
 

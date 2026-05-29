@@ -2,40 +2,39 @@ import std/options
 
 # {{{ RLE encoder
 
-type
-  RunLengthEncoder* = object
-    prevData:  byte
-    first:     bool
-    runLength: Natural
-    buf*:      seq[byte]
-    bufIdx:    Natural
+type RunLengthEncoder* = object
+  prevData: byte
+  first: bool
+  runLength: Natural
+  buf*: seq[byte]
+  bufIdx: Natural
 
 using e: var RunLengthEncoder
 
 proc initRunLengthEncoder*(e; bufSize: Positive) =
-  e.first     = true
+  e.first = true
   e.runLength = 0
-  e.bufIdx    = 0
+  e.bufIdx = 0
   if e.buf.len < bufSize:
     e.buf = newSeq[byte](bufSize)
-
 
 proc flush*(e): bool =
   assert e.runLength <= 0x80
 
   if e.prevData > 0x7f or e.runLength > 2:
-    if e.bufIdx > e.buf.len-2: return false
-    e.buf[e.bufIdx  ] = 0x80 or (e.runLength-1).byte
-    e.buf[e.bufIdx+1] = e.prevData
+    if e.bufIdx > e.buf.len - 2:
+      return false
+    e.buf[e.bufIdx] = 0x80 or (e.runLength - 1).byte
+    e.buf[e.bufIdx + 1] = e.prevData
     inc(e.bufIdx, 2)
   else:
-    for _ in 1..e.runLength:
-      if e.bufIdx >= e.buf.len: return false
+    for _ in 1 .. e.runLength:
+      if e.bufIdx >= e.buf.len:
+        return false
       e.buf[e.bufIdx] = e.prevData
       inc(e.bufIdx)
   e.runLength = 1
   result = true
-
 
 proc encode*(e; data: byte): bool =
   result = true
@@ -54,18 +53,17 @@ proc encode*(e; data: byte): bool =
 
   e.prevData = data
 
-
-proc encodedLength*(e): Positive = e.bufIdx
+proc encodedLength*(e): Positive =
+  e.bufIdx
 
 # }}}
 # {{{ RLE decoder
 
-type
-  RunLengthDecoder* = object
-    buf:       seq[byte]
-    bufIdx:    Natural
-    data:      byte
-    runLength: Natural
+type RunLengthDecoder* = object
+  buf: seq[byte]
+  bufIdx: Natural
+  data: byte
+  runLength: Natural
 
 using d: var RunLengthDecoder
 
@@ -79,12 +77,15 @@ proc decode*(d): Option[byte] =
     dec(d.runLength)
     return d.data.some
   else:
-    if d.bufIdx > d.buf.high: return byte.none
+    if d.bufIdx > d.buf.high:
+      return byte.none
     let data = d.buf[d.bufIdx]
     inc(d.bufIdx)
-    if data <= 0x7f: return data.some
+    if data <= 0x7f:
+      return data.some
     else:
-      if d.bufIdx > d.buf.high: return byte.none
+      if d.bufIdx > d.buf.high:
+        return byte.none
       d.runLength = data and 0x7f
       d.data = d.buf[d.bufIdx]
       inc(d.bufIdx)
@@ -131,12 +132,13 @@ when isMainModule:
     var i = 0
     while true:
       let b = d.decode
-      if b.isNone: break
+      if b.isNone:
+        break
       else:
         outbuf[i] = b.get
         inc(i)
 
-    for i in 0..s.high:
+    for i in 0 .. s.high:
       assert outbuf[i] == s[i].byte
 
   # }}}
@@ -145,7 +147,7 @@ when isMainModule:
     template fill(e: RunLengthEncoder, len: Natural) =
       initRunLengthEncoder(e, len)
 
-      for i in 1..len:
+      for i in 1 .. len:
         discard e.encode(5)
       discard e.flush
 
@@ -153,7 +155,7 @@ when isMainModule:
       e.buf.setLen(e.encodedLength)
       initRunLengthDecoder(d, e.buf)
 
-      for i in 1..len:
+      for i in 1 .. len:
         assert d.decode.get == 5
       assert d.decode == byte.none
 
@@ -212,35 +214,34 @@ when isMainModule:
     template fill(e: RunLengthEncoder, repeats: Natural) =
       initRunLengthEncoder(e, 1_000_000)
 
-      for i in 0..255:
-        for _ in 1..repeats:
+      for i in 0 .. 255:
+        for _ in 1 .. repeats:
           discard e.encode(i.byte)
       discard e.flush
 
-    template verify(e: RunLengthEncoder, d: RunLengthDecoder,
-                    repeats: Natural) =
+    template verify(e: RunLengthEncoder, d: RunLengthDecoder, repeats: Natural) =
       e.buf.setLen(e.encodedLength)
       initRunLengthDecoder(d, e.buf)
 
-      for i in 0..255:
-        for _ in 1..repeats:
+      for i in 0 .. 255:
+        for _ in 1 .. repeats:
           assert d.decode.get == i.byte
       assert d.decode == byte.none
 
     fill(e, 1)
-    assert e.encodedLength == 128 + 128*2
+    assert e.encodedLength == 128 + 128 * 2
     verify(e, d, 1)
 
     fill(e, 2)
-    assert e.encodedLength == 128*2 + 128*2
+    assert e.encodedLength == 128 * 2 + 128 * 2
     verify(e, d, 2)
 
     fill(e, 3)
-    assert e.encodedLength == 128*2 + 128*2
+    assert e.encodedLength == 128 * 2 + 128 * 2
     verify(e, d, 3)
 
     fill(e, 4)
-    assert e.encodedLength == 128*2 + 128*2
+    assert e.encodedLength == 128 * 2 + 128 * 2
     verify(e, d, 4)
 
   # }}}

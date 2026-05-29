@@ -1,15 +1,14 @@
 import std/tables
 
-
 const DefaultInitialSize = 64
 
 type SeqMultiTable[A, B] = object
   uniqueValues: bool
-  table:        Table[A, seq[B]]
+  table: Table[A, seq[B]]
 
 proc initMultiTable*[A, B](
-    uniqueValues: bool = false,
-    initialSize: Natural = DefaultInitialSize): SeqMultiTable[A, B] =
+    uniqueValues: bool = false, initialSize: Natural = DefaultInitialSize
+): SeqMultiTable[A, B] =
   result.uniqueValues = uniqueValues
   result.table = initTable[A, seq[B]](initialSize)
 
@@ -29,7 +28,8 @@ proc `[]`[A, B](t: SeqMultiTable[A, B], key: A): seq[B] =
 proc `[]=`[A, B](t: var SeqMultiTable[A, B], key: A, val: B) =
   if key in t.table:
     var s = t.table[key]
-    if not t.uniqueValues or not (val in s): s.add(val)
+    if not t.uniqueValues or not (val in s):
+      s.add(val)
     t.table[key] = s
   else:
     t.table[key] = @[val]
@@ -47,11 +47,10 @@ proc del*[A, B](t: var SeqMultiTable[A, B], key: A, val: B) =
 proc delAll*[A, B](t: var SeqMultiTable[A, B], key: A) =
   t.table.del(key)
 
-
 # {{{ Tests
 
 when isMainModule:
-  block:  # non-unique values
+  block: # non-unique values
     var t = initMultiTable[int, string]()
     assert t.len == 0
 
@@ -94,8 +93,8 @@ when isMainModule:
     except KeyError as e:
       assert true
 
-  block:  # non-unique values
-    var t = initMultiTable[int, string](uniqueValues=true)
+  block: # non-unique values
+    var t = initMultiTable[int, string](uniqueValues = true)
     assert t.len == 0
 
     t[1] = "cat"
