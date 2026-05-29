@@ -71,6 +71,7 @@ proc setCommonCompileParams(useWayland = false) =
   --d:NoGLFW
   --d:koiWebGpu
   switch "passC", "-Wno-incompatible-pointer-types"
+  switch "passC", "-D_GNU_SOURCE"
   switch "path", "../koi-webgpu"
   switch "path", packageSrcPath("webgpu")
   switch "nimcache", "/tmp/gridmonger_nimcache"
@@ -85,6 +86,9 @@ proc setCommonCompileParams(useWayland = false) =
     --d:gridmongerBackendMac
   elif hostOS == "windows":
     --d:gridmongerBackendWindows
+
+  if hostOS == "linux":
+    --d:osdialogGtk3
 
   if hostOS == "windows":
     --dynlibOverride:ssl

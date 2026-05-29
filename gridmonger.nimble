@@ -142,11 +142,14 @@ proc commonFlags(backend: string): string =
   validateBackend(backend)
   result = "--mm:orc --threads:on --deepcopy:on -d:ssl " &
     "-d:nimPreviewFloatRoundtrip -d:wgpu -d:wgvkWGSL -d:NoGLFW " &
-    "-d:koiWebGpu --passC:-Wno-incompatible-pointer-types " &
+    "-d:koiWebGpu --passC:-Wno-incompatible-pointer-types --passC:-D_GNU_SOURCE " &
     "--path:" & quoteShell(koiSrcPath()) & " " &
     "--path:" & quoteShell(packageSrcPath("webgpu")) & " " &
     "--nimcache:/tmp/gridmonger_nimcache --hint:Name:off " &
     backendFlags(backend)
+
+  when hostOS == "linux":
+    result.add " -d:osdialogGtk3"
 
   when hostOS == "windows":
     result.add " --dynlibOverride:ssl --dynlibOverride:crypto"
