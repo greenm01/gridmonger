@@ -69,7 +69,6 @@ macro prop(label: static[string], path: untyped): untyped =
     error("Unknown type: " & propType.strVal)
 
   let #    echo result.repr
-
     prevFullPath = parseExpr("te.prevState." & pathStr)
 
   result.add quote do:
