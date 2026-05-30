@@ -163,6 +163,7 @@ type AppShortcut = enum
   scAccept
   scCancel
   scDiscard
+  scQuit
   scUndo
   scRedo
 
@@ -946,13 +947,13 @@ func mkQuickRefGeneral(a): seq[seq[QuickRefItem]] =
       scShowAboutDialog.sc, "Show about dialog".desc, scToggleQuickReference.sc,
       "Toggle quick keyboard reference".desc, scOpenUserManual.sc,
       "Open user manual in browser".desc, scEditPreferences.sc, "Preferences".desc,
-      QuickRefSepa, scNewMap.sc, "New map".desc, scOpenMap.sc, "Open map".desc,
-      scSaveMap.sc, "Save map".desc, scSaveMapAs.sc, "Save map as".desc,
-      scEditMapProps.sc, "Edit map properties".desc, QuickRefSepa, scNewLevel.sc,
-      "New level".desc, scEditLevelProps.sc, "Edit level properties".desc,
-      scEditRegionProps.sc, "Edit region properties".desc, scDeleteLevel.sc,
-      "Delete level".desc, QuickRefSepa, scPreviousLevel.sc, "Previous level".desc,
-      scNextLevel.sc, "Next level".desc,
+      scQuit.sc, "Quit".desc, QuickRefSepa, scNewMap.sc, "New map".desc, scOpenMap.sc,
+      "Open map".desc, scSaveMap.sc, "Save map".desc, scSaveMapAs.sc,
+      "Save map as".desc, scEditMapProps.sc, "Edit map properties".desc, QuickRefSepa,
+      scNewLevel.sc, "New level".desc, scEditLevelProps.sc,
+      "Edit level properties".desc, scEditRegionProps.sc, "Edit region properties".desc,
+      scDeleteLevel.sc, "Delete level".desc, QuickRefSepa, scPreviousLevel.sc,
+      "Previous level".desc, scNextLevel.sc, "Next level".desc,
     ],
     @[
       scUndo.sc,
@@ -1270,6 +1271,7 @@ let DefaultAppShortcuts = {
   scAccept: @[mkKeyShortcut(keyEnter, {}), mkKeyShortcut(keyKpEnter, {})],
   scCancel: @[mkKeyShortcut(keyEscape, {}), mkKeyShortcut(keyLeftBracket, {mkCtrl})],
   scDiscard: @[mkKeyShortcut(keyD, {mkAlt})],
+  scQuit: @[mkKeyShortcut(keyQ, {mkCtrl})],
   scUndo:
     @[
       mkKeyShortcut(keyU, {}),
@@ -3950,6 +3952,12 @@ proc closeDialog(a) =
   koi.closeDialog()
   a.dialogs.activeDialog = dlgNone
 
+proc releaseThemeEditorModalState(a) =
+  if a.layout.showThemeEditor:
+    a.themeEditor.focusCaptured = false
+    koi.setFocusCaptured(false)
+    koi.closePopup()
+
 # }}}
 
 # }}}
@@ -6014,6 +6022,7 @@ proc editRegionPropsDialog(dlg: var EditRegionPropsParams, a) =
 proc openSaveDiscardThemeDialog(nextAction: proc(a: var AppContext), a) =
   alias(dlg, a.dialogs.saveDiscardTheme)
   dlg.nextAction = nextAction
+  releaseThemeEditorModalState(a)
   a.dialogs.activeDialog = dlgSaveDiscardTheme
 
 proc saveDiscardThemeDialog(dlg: SaveDiscardThemeDialogParams, a) =
@@ -6051,6 +6060,8 @@ proc saveDiscardThemeDialog(dlg: SaveDiscardThemeDialogParams, a) =
     dlg.nextAction(a)
 
   proc discardAction(dlg: SaveDiscardThemeDialogParams, a) =
+    a.themeEditor.modified = false
+    releaseThemeEditorModalState(a)
     closeDialog(a)
     dlg.nextAction(a)
 
@@ -10997,6 +11008,13 @@ proc renderFrameCb(a) =
       else:
         handleMapModified(a)
 
+  if a.dialogs.activeDialog == dlgNone and hasKeyEvent():
+    let ke = koi.currEvent()
+    if ke.isShortcutDown(scQuit, a):
+      setEventHandled()
+      releaseThemeEditorModalState(a)
+      a.win.shouldClose = true
+
   # XXX HACK: If the theme pane is shown, widgets are handled first, then
   # the global shortcuts, so widget-specific shorcuts can take precedence
   let
@@ -11034,6 +11052,7 @@ proc renderFrameCb(a) =
 
   if a.win.shouldClose:
     a.win.shouldClose = false
+    releaseThemeEditorModalState(a)
     handleWindowClose(a)
 
   if themeEditorShown:

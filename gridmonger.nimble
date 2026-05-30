@@ -173,15 +173,31 @@ proc modeFlags(mode: BuildMode): string =
   of bmReleaseNoStacktrace: "-d:release --app:gui"
   of bmRelease: "-d:release --app:gui --stacktrace:on --linetrace:on"
 
+proc isReleaseMode(mode: BuildMode): bool =
+  mode in {bmReleaseNoStacktrace, bmRelease}
+
+proc zigOptimizeMode(mode: BuildMode): string =
+  if mode.isReleaseMode: "ReleaseFast" else: "Debug"
+
+proc stripBinary(path: string) =
+  when hostOS == "macosx":
+    sh "strip -S " & quoteShell(path)
+  elif hostOS == "windows":
+    sh "strip " & quoteShell(path)
+  else:
+    sh "strip " & quoteShell(path)
+
 proc compileGridmonger(
     mode: BuildMode, backend = hostBackend(), outPath = ExeName, extraFlags = ""
 ) =
   if backend == "wayland":
-    sh "zig build -Doptimize=Debug --build-file " &
+    sh "zig build -Doptimize=" & zigOptimizeMode(mode) & " --build-file " &
       quoteShell(koiSrcPath() / "koi" / "wayland" / "build.zig")
   let flags = commonFlags(backend) & " " & modeFlags(mode) & " " & extraFlags
   echo "Building " & outPath & " (" & backend & ")"
   sh "nim c " & flags & " --out:" & quoteShell(outPath) & " " & quoteShell("src/main")
+  if mode.isReleaseMode:
+    stripBinary(outPath)
 
 proc createZip(zipName, srcPath: string, extraArgs = "") =
   sh "zip -q -9 -r " & quoteShell(zipName) & " " & quoteShell(srcPath) & " " & extraArgs
