@@ -44,6 +44,7 @@ jobs:
           repository: ${{ env.WEBGPU_REPOSITORY }}
           ref: ${{ env.WEBGPU_REF }}
           path: webgpu-nim
+          submodules: recursive
 
       - name: Install Nim
         uses: iffy/install-nim@v5
@@ -86,6 +87,7 @@ jobs:
           repository: ${{ env.WEBGPU_REPOSITORY }}
           ref: ${{ env.WEBGPU_REF }}
           path: webgpu-nim
+          submodules: recursive
 
       - name: Install Nim
         uses: iffy/install-nim@v5
@@ -128,6 +130,7 @@ jobs:
           repository: ${{ env.WEBGPU_REPOSITORY }}
           ref: ${{ env.WEBGPU_REF }}
           path: webgpu-nim
+          submodules: recursive
 
       - name: Install Nim
         uses: iffy/install-nim@v5
