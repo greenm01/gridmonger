@@ -46,6 +46,12 @@ jobs:
           path: webgpu-nim
           submodules: recursive
 
+      - name: Checkout SPIR-V headers
+        uses: actions/checkout@v4
+        with:
+          repository: KhronosGroup/SPIRV-Headers
+          path: spirv-headers
+
       - name: Install Nim
         uses: iffy/install-nim@v5
         with:
@@ -58,7 +64,9 @@ jobs:
 
       - name: Export dependency paths
         shell: bash
-        run: echo "WEBGPU_PATH=$GITHUB_WORKSPACE/webgpu-nim" >> "$GITHUB_ENV"
+        run: |
+          echo "WEBGPU_PATH=$GITHUB_WORKSPACE/webgpu-nim" >> "$GITHUB_ENV"
+          echo "SPIRV_HEADERS_PATH=$GITHUB_WORKSPACE/spirv-headers/include" >> "$GITHUB_ENV"
 
       - name: Compile
         working-directory: gridmonger-koi
@@ -89,6 +97,12 @@ jobs:
           path: webgpu-nim
           submodules: recursive
 
+      - name: Checkout SPIR-V headers
+        uses: actions/checkout@v4
+        with:
+          repository: KhronosGroup/SPIRV-Headers
+          path: spirv-headers
+
       - name: Install Nim
         uses: iffy/install-nim@v5
         with:
@@ -101,7 +115,9 @@ jobs:
 
       - name: Export dependency paths
         shell: bash
-        run: echo "WEBGPU_PATH=$GITHUB_WORKSPACE/webgpu-nim" >> "$GITHUB_ENV"
+        run: |
+          echo "WEBGPU_PATH=$GITHUB_WORKSPACE/webgpu-nim" >> "$GITHUB_ENV"
+          echo "SPIRV_HEADERS_PATH=$GITHUB_WORKSPACE/spirv-headers/include" >> "$GITHUB_ENV"
 
       - name: Compile
         working-directory: gridmonger-koi
@@ -132,6 +148,12 @@ jobs:
           path: webgpu-nim
           submodules: recursive
 
+      - name: Checkout SPIR-V headers
+        uses: actions/checkout@v4
+        with:
+          repository: KhronosGroup/SPIRV-Headers
+          path: spirv-headers
+
       - name: Install Nim
         uses: iffy/install-nim@v5
         with:
@@ -144,7 +166,9 @@ jobs:
 
       - name: Export dependency paths
         shell: bash
-        run: echo "WEBGPU_PATH=$GITHUB_WORKSPACE/webgpu-nim" >> "$GITHUB_ENV"
+        run: |
+          echo "WEBGPU_PATH=$GITHUB_WORKSPACE/webgpu-nim" >> "$GITHUB_ENV"
+          echo "SPIRV_HEADERS_PATH=$GITHUB_WORKSPACE/spirv-headers/include" >> "$GITHUB_ENV"
 
       - name: Compile
         working-directory: gridmonger-koi
