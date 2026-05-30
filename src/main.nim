@@ -3957,6 +3957,12 @@ proc releaseThemeEditorModalState(a) =
     a.themeEditor.focusCaptured = false
     koi.setFocusCaptured(false)
     koi.closePopup()
+    koi.g_uiState.activeItem = 0
+    koi.g_uiState.hotItem = 0
+    koi.g_uiState.dialogState.widgetInsidePopupCapturedFocus = false
+    koi.g_uiState.colorPickerState.opened = false
+    koi.g_uiState.colorPickerState.mouseMode = cmmNormal
+    koi.g_uiState.colorPickerState.activeItem = 0
 
 # }}}
 
@@ -6039,6 +6045,7 @@ proc saveDiscardThemeDialog(dlg: SaveDiscardThemeDialogParams, a) =
     x = calcDialogX(DlgWidth, a).some,
     style = a.theme.dialogStyle,
   )
+  koi.setFocusCaptured(false)
 
   clearStatusMessage(a)
 
@@ -10818,7 +10825,8 @@ proc renderUI(a) =
       h = mainPane.h
 
     renderThemeEditorPane(x, y, w, h, a)
-    a.themeEditor.focusCaptured = koi.focusCaptured()
+    if a.dialogs.activeDialog == dlgNone:
+      a.themeEditor.focusCaptured = koi.focusCaptured()
 
   renderDialogs(a)
 
@@ -11022,7 +11030,10 @@ proc renderFrameCb(a) =
     savedFocusCaptured = koi.focusCaptured()
 
   if themeEditorShown:
-    koi.setFocusCaptured(a.themeEditor.focusCaptured)
+    if a.dialogs.activeDialog == dlgNone:
+      koi.setFocusCaptured(a.themeEditor.focusCaptured)
+    else:
+      koi.setFocusCaptured(true)
 
   var uiRendered = false
   if themeEditorShown:
