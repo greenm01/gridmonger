@@ -1,13 +1,17 @@
 import std/lenientops
-import std/logging as log
-import std/options
-import std/strformat
-import std/sugar
+when not defined(gridmongerBackendWayland):
+  import std/logging as log
+  import std/options
+  import std/strformat
+  import std/sugar
 
-import glfw
 import icons
 import koi
-import koi/backends/glfw_wgpu
+when defined(gridmongerBackendWayland):
+  import koi/backends/wayland_app
+else:
+  import glfw
+  import koi/backends/glfw_wgpu
 import nanovg
 import with
 
@@ -33,12 +37,22 @@ const
 
 # }}}
 #  {{{ CSDWindow
+when defined(gridmongerBackendWayland):
+  type
+    BackendWindow = KoiWaylandApp
+    Monitor = object
+      name: string
+      workArea: tuple[x, y, w, h: int]
+
+else:
+  type BackendWindow = koi.Window
+
 type
   CSDWindow* = ref object
     modified*: bool
     theme: WindowTheme
 
-    w: Window # the wrapper GLFW window
+    w: BackendWindow
 
     buttonActiveStyle: ButtonStyle
     buttonInactiveStyle: ButtonStyle
@@ -105,7 +119,7 @@ with DefaultCSDWindowTheme:
 # {{{ GLFW Window adapters
 # Just for the functions that actually get used in the app
 
-proc glfwWin*(win): Window =
+proc glfwWin*(win): BackendWindow =
   win.w
 
 proc title*(win): string =
@@ -146,6 +160,9 @@ proc show*(win) =
 proc hide*(win) =
   win.w.hide
 
+proc destroy*(win) =
+  win.w.destroy
+
 proc focus*(win) =
   win.w.focus
 
@@ -154,6 +171,9 @@ proc requestAttention*(win) =
 
 proc restore*(win) =
   win.w.restore
+
+proc focused*(win): bool =
+  win.w.focused
 
 proc shouldClose*(win): bool =
   win.w.shouldClose
@@ -164,8 +184,9 @@ proc `shouldClose=`*(win; state: bool) =
 proc maximized*(win): bool =
   win.maximized
 
-proc `dropCb=`*(win; f: DropCb) =
-  win.w.dropCb = f
+when not defined(gridmongerBackendWayland):
+  proc `dropCb=`*(win; f: DropCb) =
+    win.w.dropCb = f
 
 # }}}
 # {{{ rect()
@@ -186,13 +207,16 @@ proc workAreaRect(m: Monitor): Rect[int] =
 # }}}
 # {{{ findMonitorByCoord()
 proc findMonitorByCoord(x, y: int): Monitor =
-  for m in monitors():
-    let r = m.workAreaRect
-    if r.contains(x, y):
-      return m
+  when defined(gridmongerBackendWayland):
+    Monitor(name: "Wayland", workArea: (x: 0, y: 0, w: 1920, h: 1080))
+  else:
+    for m in monitors():
+      let r = m.workAreaRect
+      if r.contains(x, y):
+        return m
 
-  # Use the primary monitor as fallback
-  getPrimaryMonitor()
+    # Use the primary monitor as fallback
+    getPrimaryMonitor()
 
 # }}}
 # {{{ findCurrentMonitor()
@@ -202,66 +226,69 @@ proc findCurrentMonitor*(win): Monitor =
 # }}}
 # {{{ snapWindowToVisibleArea*()
 proc snapWindowToVisibleArea*(win) =
-  let m = collect:
-    for m in monitors():
-      m
-
-  # We can have "zero monitors" momentarily on laptops when an external screen
-  # is disconnected.
-  if m.len == 0:
-    return
-
-  let currMonitor = win.findCurrentMonitor
-  let workAreaRect = currMonitor.workAreaRect
-
-  if workAreaRect.contains(win.rect):
-    # nothing to do
-    return
+  when defined(gridmongerBackendWayland):
+    discard
   else:
-    var winRect = win.rect
-    let
-      overlap = workAreaRect.intersect(winRect)
-      percentOverlap =
-        if overlap.isSome:
-          overlap.get.area / winRect.area * 100
-        else:
-          0
+    let m = collect:
+      for m in monitors():
+        m
 
-    if percentOverlap >= 70:
-      # Try to fit the window to the work area by shifting it firt
-      if winRect.x2 > workAreaRect.x2:
-        winRect.shiftHoriz(workAreaRect.x2 - winRect.x2)
+    # We can have "zero monitors" momentarily on laptops when an external screen
+    # is disconnected.
+    if m.len == 0:
+      return
 
-      if winRect.y2 > workAreaRect.y2:
-        winRect.shiftVert(workAreaRect.y2 - winRect.y2)
+    let currMonitor = win.findCurrentMonitor
+    let workAreaRect = currMonitor.workAreaRect
 
-      if winRect.x1 < workAreaRect.x1:
-        winRect.shiftHoriz(workAreaRect.x1 - winRect.x1)
-
-      if winRect.y1 < workAreaRect.y1:
-        winRect.shiftVert(workAreaRect.y1 - winRect.y1)
-
-      # Chop off the rest
-      let r = winRect.intersect(workAreaRect)
-      if r.isSome:
-        winRect = r.get
-
-      win.pos = (winRect.x1, winRect.y1)
-      win.size = (winRect.w, winRect.h)
+    if workAreaRect.contains(win.rect):
+      # nothing to do
+      return
     else:
-      # Center window to the primary monitor
-      let currMonitor = win.findCurrentMonitor
-      let workAreaRect = currMonitor.workAreaRect
+      var winRect = win.rect
+      let
+        overlap = workAreaRect.intersect(winRect)
+        percentOverlap =
+          if overlap.isSome:
+            overlap.get.area / winRect.area * 100
+          else:
+            0
 
-      if win.rect.w > workAreaRect.w or win.rect.h > workAreaRect.h:
-        win.size = (DefaultWindowWidth, DefaultWindowHeight)
+      if percentOverlap >= 70:
+        # Try to fit the window to the work area by shifting it firt
+        if winRect.x2 > workAreaRect.x2:
+          winRect.shiftHoriz(workAreaRect.x2 - winRect.x2)
 
-      let (cx, cy) = (
-        workAreaRect.x1 + (workAreaRect.w div 2),
-        workAreaRect.y1 + (workAreaRect.h div 2),
-      )
+        if winRect.y2 > workAreaRect.y2:
+          winRect.shiftVert(workAreaRect.y2 - winRect.y2)
 
-      win.pos = (cx - (win.size.w div 2), cy - (win.size.h div 2))
+        if winRect.x1 < workAreaRect.x1:
+          winRect.shiftHoriz(workAreaRect.x1 - winRect.x1)
+
+        if winRect.y1 < workAreaRect.y1:
+          winRect.shiftVert(workAreaRect.y1 - winRect.y1)
+
+        # Chop off the rest
+        let r = winRect.intersect(workAreaRect)
+        if r.isSome:
+          winRect = r.get
+
+        win.pos = (winRect.x1, winRect.y1)
+        win.size = (winRect.w, winRect.h)
+      else:
+        # Center window to the primary monitor
+        let currMonitor = win.findCurrentMonitor
+        let workAreaRect = currMonitor.workAreaRect
+
+        if win.rect.w > workAreaRect.w or win.rect.h > workAreaRect.h:
+          win.size = (DefaultWindowWidth, DefaultWindowHeight)
+
+        let (cx, cy) = (
+          workAreaRect.x1 + (workAreaRect.w div 2),
+          workAreaRect.y1 + (workAreaRect.h div 2),
+        )
+
+        win.pos = (cx - (win.size.w div 2), cy - (win.size.h div 2))
 
 # }}}
 
@@ -303,22 +330,26 @@ proc `theme=`*(win; s: WindowTheme) =
 proc newCSDWindow*(): CSDWindow =
   result = new CSDWindow
 
-  var cfg = defaultWgpuWindowConfig("Gridmonger", 640, 480)
-  cfg.resizable = false
-  cfg.visible = false
-  cfg.decorated = false
+  when defined(gridmongerBackendWayland):
+    result.w = newKoiWaylandApp("Gridmonger", 640, 480)
+  else:
+    var cfg = defaultWgpuWindowConfig("Gridmonger", 640, 480)
+    cfg.resizable = false
+    cfg.visible = false
+    cfg.decorated = false
 
-  result.w = newWgpuWindow(cfg)
+    result.w = newWgpuWindow(cfg)
   result.setTheme(DefaultCSDWindowTheme)
   result.showTitleBar = true
 
-  setMonitorCb:
-    proc(m: Monitor, connected: bool) =
-      let state = if connected: "connected" else: "disconnected"
-      log.info(fmt"Monitor '{m.name}' has been {state}")
+  when not defined(gridmongerBackendWayland):
+    setMonitorCb:
+      proc(m: Monitor, connected: bool) =
+        let state = if connected: "connected" else: "disconnected"
+        log.info(fmt"Monitor '{m.name}' has been {state}")
 
-      if not connected:
-        snapWindowToVisibleArea(g_window)
+        if not connected:
+          snapWindowToVisibleArea(g_window)
 
 # }}}
 # {{{ showTitleBar*
@@ -727,8 +758,9 @@ proc `renderFrameCb=`*(win; p: RenderFrameProc) =
 
 # }}}
 # {{{ contentScaleCb=*
-proc `contentScaleCb=`*(win; cb: WindowContentScaleCb) =
-  win.w.windowContentScaleCb = cb
+when not defined(gridmongerBackendWayland):
+  proc `contentScaleCb=`*(win; cb: WindowContentScaleCb) =
+    win.w.windowContentScaleCb = cb
 
 # }}}
 

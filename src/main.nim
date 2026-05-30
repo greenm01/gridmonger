@@ -23,10 +23,12 @@ import std/times
 import std/unicode
 
 # Libraries
-import glfw
-
 import koi
-import koi/backends/glfw_wgpu
+when defined(gridmongerBackendWayland):
+  import koi/backends/wayland_app
+else:
+  from glfw as glfwLib import nil
+  import koi/backends/glfw_wgpu
 import koi/backends/wgpu_renderer
 from koi/rect import rect
 from koi/utils import lerp, invLerp, remap
@@ -864,7 +866,10 @@ type
     activeTab: Natural
 
   Splash = object
-    win: Window
+    when defined(gridmongerBackendWayland):
+      win: KoiWaylandApp
+    else:
+      win: Window
     vg: NVGContext
     backend: KoiWgpuBackend
     show: bool
@@ -10853,7 +10858,7 @@ proc closeSplash(a)
 proc loadSplashImages(a)
 
 proc useMainWindowSplash(a): bool =
-  when defined(linux) and defined(wayland):
+  when defined(gridmongerBackendWayland):
     a.splash.show and a.splash.win == nil and not a.layout.showThemeEditor
   else:
     false
@@ -11012,7 +11017,7 @@ proc renderFrameCb(a) =
     else:
       handleGlobalKeyEvents_NoLevels(a)
   else:
-    if not themeEditorShown and a.win.glfwWin.focused:
+    if not themeEditorShown and a.win.focused:
       closeSplash(a)
       a.win.focus
 
@@ -11037,10 +11042,15 @@ proc renderFrameSplash(a) =
 
   let cfg = a.theme.config
 
-  let
-    (winWidth, winHeight) = s.win.size
-    (fbWidth, fbHeight) = s.win.framebufferSize
-    pxRatio = fbWidth.float / winWidth.float
+  when defined(gridmongerBackendWayland):
+    let
+      (winWidth, winHeight) = s.win.size
+      (fbWidth, fbHeight) = s.win.framebufferSize
+  else:
+    let
+      (winWidth, winHeight) = glfwLib.size(s.win)
+      (fbWidth, fbHeight) = glfwLib.framebufferSize(s.win)
+  let pxRatio = fbWidth.float / winWidth.float
 
   s.backend.resizeKoiWgpuBackend(fbWidth.uint32, fbHeight.uint32)
 
@@ -11097,7 +11107,12 @@ proc renderFrameSplash(a) =
 
   vg.endFrame
 
-  if not a.layout.showThemeEditor and a.splash.win.shouldClose:
+  let splashShouldClose =
+    when defined(gridmongerBackendWayland):
+      a.splash.win.shouldClose
+    else:
+      glfwLib.shouldClose(a.splash.win)
+  if not a.layout.showThemeEditor and splashShouldClose:
     closeSplash(a)
     a.win.focus
     return
@@ -11116,9 +11131,22 @@ proc renderFrameSplash(a) =
         else:
           false
 
-      a.splash.dismissRequested or w.isKeyDown(keyEscape) or w.isKeyDown(keySpace) or
-        w.isKeyDown(keyEnter) or w.isKeyDown(keyKpEnter) or w.mouseButtonDown(mbLeft) or
-        w.mouseButtonDown(mbRight) or w.mouseButtonDown(mbMiddle) or autoClose
+      when defined(gridmongerBackendWayland):
+        a.splash.dismissRequested or w.isKeyDown(keyEscape) or w.isKeyDown(keySpace) or
+          w.isKeyDown(keyEnter) or w.isKeyDown(keyKpEnter) or w.mouseButtonDown(mbLeft) or
+          w.mouseButtonDown(mbRight) or w.mouseButtonDown(mbMiddle) or autoClose
+      else:
+        {.push warning[HoleEnumConv]: off.}
+        let dismissedByInput =
+          glfwLib.isKeyDown(w, glfwLib.Key(ord(keyEscape))) or
+          glfwLib.isKeyDown(w, glfwLib.Key(ord(keySpace))) or
+          glfwLib.isKeyDown(w, glfwLib.Key(ord(keyEnter))) or
+          glfwLib.isKeyDown(w, glfwLib.Key(ord(keyKpEnter))) or
+          glfwLib.mouseButtonDown(w, glfwLib.MouseButton(ord(mbLeft))) or
+          glfwLib.mouseButtonDown(w, glfwLib.MouseButton(ord(mbRight))) or
+          glfwLib.mouseButtonDown(w, glfwLib.MouseButton(ord(mbMiddle)))
+        {.pop.}
+        a.splash.dismissRequested or dismissedByInput or autoClose
 
   if shouldCloseSplash(a):
     closeSplash(a)
@@ -11129,81 +11157,95 @@ proc renderFrameSplash(a) =
 # {{{ Init & cleanup
 
 # {{{ createSplashWindow()
-proc createSplashWindow(mousePassthrough: bool = false, a) =
-  alias(s, a.splash)
+when defined(gridmongerBackendWayland):
+  proc createSplashWindow(mousePassthrough: bool = false, a) =
+    discard mousePassthrough
+    discard a
 
-  var cfg = defaultWgpuWindowConfig("Gridmonger Splash Image", 640, 480)
-  cfg.visible = false
-  cfg.resizable = false
-  cfg.transparentFramebuffer = false
-  cfg.decorated = false
-  cfg.floating = true
-  cfg.mousePassthrough = mousePassthrough
-  when defined(linux) and defined(wayland):
-    cfg.focused = false
-    cfg.focusOnShow = false
-    cfg.mousePassthrough = true
+else:
+  proc createSplashWindow(mousePassthrough: bool = false, a) =
+    alias(s, a.splash)
 
-  when defined(windows):
-    cfg.hideFromTaskbar = true
+    var cfg = defaultWgpuWindowConfig("Gridmonger Splash Image", 640, 480)
+    cfg.visible = false
+    cfg.resizable = false
+    cfg.transparentFramebuffer = false
+    cfg.decorated = false
+    cfg.floating = true
+    cfg.mousePassthrough = mousePassthrough
+    when defined(linux) and defined(wayland):
+      cfg.focused = false
+      cfg.focusOnShow = false
+      cfg.mousePassthrough = true
 
-  s.win = newWgpuWindow(cfg, callbacks = true)
-  s.win.title = "Gridmonger Splash Image"
-  s.win.keyCb = proc(
-      window: Window,
-      key: Key,
-      scanCode: int32,
-      action: KeyAction,
-      mods: set[ModifierKey],
-  ) =
-    if action != kaUp:
+    when defined(windows):
+      cfg.hideFromTaskbar = true
+
+    s.win = newWgpuWindow(cfg, callbacks = true)
+    glfwLib.`title=`(s.win, "Gridmonger Splash Image")
+    s.win.keyCb = proc(
+        window: glfwLib.Window,
+        key: glfwLib.Key,
+        scanCode: int32,
+        action: glfwLib.KeyAction,
+        mods: set[glfwLib.ModifierKey],
+    ) =
+      if action != glfwLib.kaUp:
+        g_app.splash.dismissRequested = true
+        koi.setFramesLeft()
+    s.win.charCb = proc(window: glfwLib.Window, codePoint: Rune) =
       g_app.splash.dismissRequested = true
       koi.setFramesLeft()
-  s.win.charCb = proc(window: Window, codePoint: Rune) =
-    g_app.splash.dismissRequested = true
-    koi.setFramesLeft()
-  s.win.mouseButtonCb = proc(
-      window: Window, button: MouseButton, pressed: bool, mods: set[ModifierKey]
-  ) =
-    if pressed:
+    s.win.mouseButtonCb = proc(
+        window: glfwLib.Window,
+        button: glfwLib.MouseButton,
+        pressed: bool,
+        mods: set[glfwLib.ModifierKey],
+    ) =
+      if pressed:
+        g_app.splash.dismissRequested = true
+        koi.setFramesLeft()
+    s.win.windowCloseCb = proc(window: glfwLib.Window) =
       g_app.splash.dismissRequested = true
+      glfwLib.`shouldClose=`(window, false)
       koi.setFramesLeft()
-  s.win.windowCloseCb = proc(window: Window) =
-    g_app.splash.dismissRequested = true
-    window.shouldClose = false
-    koi.setFramesLeft()
-  s.win.windowSizeCb = proc(window: Window, size: tuple[w, h: int32]) =
-    koi.setFramesLeft()
-  s.win.framebufferSizeCb = proc(window: Window, size: tuple[w, h: int32]) =
-    koi.setFramesLeft()
+    s.win.windowSizeCb = proc(window: glfwLib.Window, size: tuple[w, h: int32]) =
+      koi.setFramesLeft()
+    s.win.framebufferSizeCb = proc(window: glfwLib.Window, size: tuple[w, h: int32]) =
+      koi.setFramesLeft()
 
 # }}}
 # {{{ showSplash()
-proc showSplash(a) =
-  alias(s, g_app.splash)
+when defined(gridmongerBackendWayland):
+  proc showSplash(a) =
+    discard a
 
-  let (_, _, maxWidth, maxHeight) = g_app.win.findCurrentMonitor().workArea
-  let w = (maxWidth * 0.6).int
-  let h = (w / s.logo.width * s.logo.height).int
+else:
+  proc showSplash(a) =
+    alias(s, g_app.splash)
 
-  s.win.size = (w, h)
-  s.win.pos = ((maxWidth - w) div 2, (maxHeight - h) div 2)
-  s.win.show
-  when defined(linux) and defined(wayland):
-    for _ in 0 ..< 4:
-      glfw.waitEventsTimeout(0.05)
-  else:
-    glfw.pollEvents()
-  let (width, height) = s.win.surfaceSize()
-  s.backend.initKoiWgpuBackendWithSurface(s.win.wgpuSurfaceHandle(), width, height)
-  s.vg = s.backend.createNanoVgContext({nifStencilStrokes, nifAntialias})
+    let (_, _, maxWidth, maxHeight) = glfwLib.workArea(g_app.win.findCurrentMonitor())
+    let w = (maxWidth * 0.6).int
+    let h = (w / s.logo.width * s.logo.height).int
 
-  when defined(linux) and defined(wayland):
-    a.win.focus
-    glfw.pollEvents()
+    glfwLib.`size=`(s.win, (w, h))
+    glfwLib.`pos=`(s.win, ((maxWidth - w) div 2, (maxHeight - h) div 2))
+    glfwLib.show(s.win)
+    when defined(linux) and defined(wayland):
+      for _ in 0 ..< 4:
+        glfwLib.waitEventsTimeout(0.05)
+    else:
+      glfwLib.pollEvents()
+    let (width, height) = s.win.surfaceSize()
+    s.backend.initKoiWgpuBackendWithSurface(s.win.wgpuSurfaceHandle(), width, height)
+    s.vg = s.backend.createNanoVgContext({nifStencilStrokes, nifAntialias})
 
-  if not a.layout.showThemeEditor:
-    koi.setFocusCaptured(true)
+    when defined(linux) and defined(wayland):
+      a.win.focus
+      glfwLib.pollEvents()
+
+    if not a.layout.showThemeEditor:
+      koi.setFocusCaptured(true)
 
 # }}}
 # {{{ closeSplash()
@@ -11228,9 +11270,10 @@ proc closeSplash(a) =
     deleteNanoVgContext(s.vg)
     s.vg = nil
 
-  if s.win != nil:
-    s.win.destroy
-    s.win = nil
+  when not defined(gridmongerBackendWayland):
+    if s.win != nil:
+      glfwLib.destroy(s.win)
+      s.win = nil
 
   s.show = false
   s.dismissRequested = false
@@ -11241,29 +11284,34 @@ proc closeSplash(a) =
 # }}}
 
 # {{{ loadAndSetIcon()
-proc loadAndSetIcon(a) =
-  alias(p, a.paths)
+when defined(gridmongerBackendWayland):
+  proc loadAndSetIcon(a) =
+    discard a
 
-  var icons: array[5, IconImageObj]
+else:
+  proc loadAndSetIcon(a) =
+    alias(p, a.paths)
 
-  proc add(idx: Natural, img: ImageData) =
-    icons[idx].width = img.width.int32
-    icons[idx].height = img.height.int32
-    icons[idx].pixels = cast[ptr uint8](img.data)
+    var icons: array[5, glfwLib.IconImageObj]
 
-  var icon32 = loadImage(p.dataDir / "icon32.png")
-  var icon48 = loadImage(p.dataDir / "icon48.png")
-  var icon64 = loadImage(p.dataDir / "icon64.png")
-  var icon128 = loadImage(p.dataDir / "icon128.png")
-  var icon256 = loadImage(p.dataDir / "icon256.png")
+    proc add(idx: Natural, img: ImageData) =
+      icons[idx].width = img.width.int32
+      icons[idx].height = img.height.int32
+      icons[idx].pixels = cast[ptr uint8](img.data)
 
-  add(0, icon32)
-  add(1, icon48)
-  add(2, icon64)
-  add(3, icon128)
-  add(4, icon256)
+    var icon32 = loadImage(p.dataDir / "icon32.png")
+    var icon48 = loadImage(p.dataDir / "icon48.png")
+    var icon64 = loadImage(p.dataDir / "icon64.png")
+    var icon128 = loadImage(p.dataDir / "icon128.png")
+    var icon256 = loadImage(p.dataDir / "icon256.png")
 
-  a.win.glfwWin.icons = icons
+    add(0, icon32)
+    add(1, icon48)
+    add(2, icon64)
+    add(3, icon128)
+    add(4, icon256)
+
+    glfwLib.`icons=`(a.win.glfwWin, icons)
 
 # }}}
 # {{{ loadFonts()
@@ -11311,16 +11359,18 @@ proc loadAboutLogoImage(a) =
 
 # {{{ initGfx()
 proc initGfx(a) =
-  glfw.initialize()
+  when not defined(gridmongerBackendWayland):
+    glfwLib.initialize()
+
   let win = newCSDWindow()
 
-  when defined(linux) and defined(wayland):
+  when defined(linux) and defined(wayland) and not defined(gridmongerBackendWayland):
     # Wayland requires the xdg_surface configure handshake before a buffer is
     # attached. Pump the first events before creating the WebGPU surface, or
     # Vulkan presentation can fail with "xdg_surface has never been configured".
     win.show
     for _ in 0 ..< 4:
-      glfw.waitEventsTimeout(0.05)
+      glfwLib.waitEventsTimeout(0.05)
 
   let (width, height) = win.glfwWin.surfaceSize()
   a.backend.initKoiWgpuBackendWithSurface(
@@ -11328,8 +11378,11 @@ proc initGfx(a) =
   )
   let vg = a.backend.createNanoVgContext({nifStencilStrokes, nifAntialias})
 
-  useWindow(win.glfwWin)
-  koi.init(vg, getProcAddress)
+  when defined(gridmongerBackendWayland):
+    koi.init(vg, noGlfwProcAddress)
+  else:
+    useWindow(win.glfwWin)
+    koi.init(vg, glfwLib.getProcAddress)
   log.info("GPU info: Koi wgpu backend initialised")
 
   a.win = win
@@ -11472,9 +11525,15 @@ proc restoreLayoutsFromConfig(cfg: HoconNode, a) =
         )
 
     # Default to displaying the window centered on the primary monitor
-    let
-      (_, _, defaultMaxWidth, defaultMaxHeight) = glfw.getPrimaryMonitor().workArea
+    when defined(gridmongerBackendWayland):
+      let
+        defaultMaxWidth = DefaultWindowWidth
+        defaultMaxHeight = DefaultWindowHeight
+    else:
+      let (_, _, defaultMaxWidth, defaultMaxHeight) =
+        glfwLib.workArea(glfwLib.getPrimaryMonitor())
 
+    let
       cx = (defaultMaxWidth - w) div 2
       cy = (defaultMaxHeight - h) div 2
 
@@ -11536,7 +11595,8 @@ proc initVersionChecking(a) =
 
 # }}}
 # {{{ initApp()
-proc dropCb(window: Window, paths: PathDropInfo)
+when not defined(gridmongerBackendWayland):
+  proc dropCb(window: Window, paths: glfwLib.PathDropInfo)
 
 proc initApp(
     configFile: Option[string],
@@ -11619,13 +11679,15 @@ proc initApp(
   a.win.renderFrameCb = proc(win: CSDWindow) =
     renderFrameCb(g_app)
 
-  when not defined(macosx):
+  when not defined(macosx) and not defined(gridmongerBackendWayland):
     a.win.contentScaleCb = windowContentScaleCb
 
-  a.win.dropCb = dropCb
-  a.win.glfwWin.windowCloseCb = proc(window: Window) =
-    g_app.win.shouldClose = true
-    koi.setFramesLeft()
+  when not defined(gridmongerBackendWayland):
+    a.win.dropCb = dropCb
+  when not defined(gridmongerBackendWayland):
+    a.win.glfwWin.windowCloseCb = proc(window: Window) =
+      g_app.win.shouldClose = true
+      koi.setFramesLeft()
 
   restoreLayoutsFromConfig(cfg, a)
   applyWindowConfigOverrides(winCfg, a)
@@ -11645,11 +11707,12 @@ proc cleanup(a) =
   if a.splash.vg != nil:
     deleteNanoVgContext(a.splash.vg)
 
-  a.win.glfwWin.destroy
-  if a.splash.win != nil:
-    a.splash.win.destroy
+  a.win.destroy
+  when not defined(gridmongerBackendWayland):
+    if a.splash.win != nil:
+      glfwLib.destroy(a.splash.win)
 
-  glfw.terminate()
+    glfwLib.terminate()
 
   log.info("Cleanup successful, bye!")
 
@@ -11743,10 +11806,11 @@ proc handleVersionUpdateEvent(event: AppEvent, a) =
 # }}}
 
 # {{{ dropCb()
-proc dropCb(window: Window, paths: PathDropInfo) =
-  if paths.len > 0:
-    let path = paths.items.toSeq[0]
-    handleOpenFileEvent(AppEvent(kind: aeOpenFile, path: $path), g_app)
+when not defined(gridmongerBackendWayland):
+  proc dropCb(window: Window, paths: glfwLib.PathDropInfo) =
+    if glfwLib.len(paths) > 0:
+      let path = glfwLib.items(paths).toSeq[0]
+      handleOpenFileEvent(AppEvent(kind: aeOpenFile, path: $path), g_app)
 
 # }}}
 
@@ -11838,10 +11902,13 @@ proc main() =
         koi.setFramesLeft()
 
       # Poll/wait for events
-      if koi.shouldRenderNextFrame():
-        glfw.pollEvents()
+      when defined(gridmongerBackendWayland):
+        a.win.glfwWin.pollEvents()
       else:
-        glfw.waitEvents()
+        if koi.shouldRenderNextFrame():
+          glfwLib.pollEvents()
+        else:
+          glfwLib.waitEvents()
 
     cleanup(a)
   except CatchableError as e:

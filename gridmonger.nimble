@@ -92,6 +92,11 @@ proc koiSrcPath(): string =
     return envPath
   result = parentDir(getCurrentDir()) / "koi-webgpu"
 
+proc koiWaylandLinkFlags(): string =
+  let waylandDir = koiSrcPath() / "koi" / "wayland"
+  " --passL:\"-L" & waylandDir / "zig-out" / "lib" & " -lkoi_wayland\" " &
+    "--passL:\"-lwayland-client -lxkbcommon\" --passC:-I" & quoteShell(waylandDir)
+
 proc detectedLinuxBackend(): string =
   let requested = getEnv("GRIDMONGER_BACKEND").toLowerAscii()
   case requested
@@ -134,7 +139,8 @@ proc validateBackend(backend: string) =
 proc backendFlags(backend: string): string =
   case backend
   of "wayland":
-    "-d:wayland -d:gridmongerBackendWayland"
+    "-d:wayland -d:waylandBackend -d:glfwJustCdecl -d:gridmongerBackendWayland" &
+      koiWaylandLinkFlags()
   of "x11":
     "-d:gridmongerBackendX11"
   of "mac":
@@ -151,8 +157,9 @@ proc commonFlags(backend: string): string =
     "-d:nimPreviewFloatRoundtrip -d:wgpu -d:wgvkWGSL -d:NoGLFW " &
     "-d:koiWebGpu --passC:-Wno-incompatible-pointer-types --passC:-D_GNU_SOURCE " &
     "--path:" & quoteShell(koiSrcPath()) & " " & "--path:" &
-    quoteShell(packageSrcPath("webgpu")) & " " &
-    "--nimcache:/tmp/gridmonger_nimcache --hint:Name:off " & backendFlags(backend)
+    quoteShell(packageSrcPath("webgpu")) & " " & "--nimcache:" &
+    quoteShell("/tmp/gridmonger_nimcache_" & backend) & " --hint:Name:off " &
+    backendFlags(backend)
 
   when hostOS == "linux":
     result.add " -d:osdialogGtk3"
@@ -169,6 +176,9 @@ proc modeFlags(mode: BuildMode): string =
 proc compileGridmonger(
     mode: BuildMode, backend = hostBackend(), outPath = ExeName, extraFlags = ""
 ) =
+  if backend == "wayland":
+    sh "zig build -Doptimize=Debug --build-file " &
+      quoteShell(koiSrcPath() / "koi" / "wayland" / "build.zig")
   let flags = commonFlags(backend) & " " & modeFlags(mode) & " " & extraFlags
   echo "Building " & outPath & " (" & backend & ")"
   sh "nim c " & flags & " --out:" & quoteShell(outPath) & " " & quoteShell("src/main")

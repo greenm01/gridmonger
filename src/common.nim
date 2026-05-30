@@ -6,7 +6,8 @@ import std/strformat
 import std/strutils
 import std/tables
 
-import glfw
+when not defined(gridmongerBackendWayland):
+  import glfw
 import koi
 import nanovg
 import semver
@@ -533,7 +534,8 @@ var g_appEventCh*: Channel[AppEvent]
 proc sendAppEvent*(event: AppEvent) =
   g_appEventCh.send(event)
   # Main event loop might be stuck at waitEvents(), so wake it up
-  glfw.postEmptyEvent()
+  when not defined(gridmongerBackendWayland):
+    glfw.postEmptyEvent()
 
 # }}}
 
