@@ -67,24 +67,29 @@ proc projectVersion(): string =
 proc gitHash(): string =
   gorge("git rev-parse --short=5 HEAD").strip()
 
-proc packageSrcPath(pkg: string): string =
+proc packageRootPath(pkg: string): string =
   let envPath = getEnv(pkg.toUpperAscii & "_PATH")
   if envPath.len > 0:
     return
       if envPath.lastPathPart == "src":
-        envPath
+        envPath.parentDir()
       else:
-        envPath / "src"
+        envPath
 
   when hostOS == "windows":
-    result = gorge("nimble path " & pkg).strip() / "src"
+    result = gorge("nimble path " & pkg).strip()
   else:
-    result =
-      gorge(
+    result = gorge(
         "find \"$HOME/.nimble/pkgs2\" -maxdepth 1 -type d -name '" & pkg &
           "-*' | sort | tail -n 1"
       )
-      .strip() / "src"
+      .strip()
+
+proc packageSrcPath(pkg: string): string =
+  packageRootPath(pkg) / "src"
+
+proc glfwIncludePath(): string =
+  packageRootPath("glfw") / "glfw" / "include"
 
 proc koiSrcPath(): string =
   let envPath = getEnv("KOI_PATH")
@@ -156,10 +161,10 @@ proc commonFlags(backend: string): string =
     "--mm:orc --threads:on --deepcopy:on -d:ssl " &
     "-d:nimPreviewFloatRoundtrip -d:wgpu -d:wgvkWGSL -d:NoGLFW " &
     "-d:koiWebGpu --passC:-Wno-incompatible-pointer-types --passC:-D_GNU_SOURCE " &
-    "--path:" & quoteShell(koiSrcPath()) & " " & "--path:" &
-    quoteShell(packageSrcPath("webgpu")) & " " & "--nimcache:" &
-    quoteShell("/tmp/gridmonger_nimcache_" & backend) & " --hint:Name:off " &
-    backendFlags(backend)
+    "--passC:-I" & quoteShell(glfwIncludePath()) & " " & "--path:" &
+    quoteShell(koiSrcPath()) & " " & "--path:" & quoteShell(packageSrcPath("webgpu")) &
+    " " & "--nimcache:" & quoteShell("/tmp/gridmonger_nimcache_" & backend) &
+    " --hint:Name:off " & backendFlags(backend)
 
   when hostOS == "linux":
     result.add " -d:osdialogGtk3"

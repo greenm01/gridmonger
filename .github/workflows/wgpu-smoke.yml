@@ -52,6 +52,11 @@ jobs:
           repository: KhronosGroup/SPIRV-Headers
           path: spirv-headers
 
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libvulkan-dev libwayland-dev libx11-dev libxkbcommon-dev libglfw3-dev pkg-config zig
+
       - name: Install Nim
         uses: iffy/install-nim@v5
         with:
@@ -70,7 +75,7 @@ jobs:
 
       - name: Compile
         working-directory: gridmonger-koi
-        run: nim -f ${{ matrix.task }}
+        run: nimble -y ${{ matrix.task }}
 
   macos:
     name: macOS
@@ -103,6 +108,9 @@ jobs:
           repository: KhronosGroup/SPIRV-Headers
           path: spirv-headers
 
+      - name: Install macOS dependencies
+        run: brew install vulkan-loader
+
       - name: Install Nim
         uses: iffy/install-nim@v5
         with:
@@ -121,7 +129,7 @@ jobs:
 
       - name: Compile
         working-directory: gridmonger-koi
-        run: nim -f releaseMac
+        run: nimble -y releaseMac
 
   windows:
     name: Windows
@@ -172,4 +180,4 @@ jobs:
 
       - name: Compile
         working-directory: gridmonger-koi
-        run: nim -f releaseWin
+        run: nimble -y releaseWin
