@@ -7151,7 +7151,12 @@ template toggleOnOffOption(opt: untyped, icon, msg: string, a) =
   toggleOption(opt, icon, msg, on = "on", off = "off", a)
 
 proc toggleThemeEditor(a) =
+  let closing = a.layout.showThemeEditor
   toggleShowOption(a.layout.showThemeEditor, NoIcon, "Theme editor pane", a)
+  if closing:
+    koi.closePopup()
+    koi.setFocusCaptured(false)
+    a.themeEditor.focusCaptured = false
 
 proc showQuickReference(a) =
   a.ui.showQuickReference = true
@@ -11364,6 +11369,9 @@ proc initGfx(a) =
 
   let win = newCSDWindow()
 
+  when defined(gridmongerBackendWayland):
+    win.glfwWin.waitUntilConfigured()
+
   when defined(linux) and defined(wayland) and not defined(gridmongerBackendWayland):
     # Wayland requires the xdg_surface configure handshake before a buffer is
     # attached. Pump the first events before creating the WebGPU surface, or
@@ -11515,20 +11523,21 @@ proc restoreLayoutsFromConfig(cfg: HoconNode, a) =
       showThemeEditor: cfg.getBoolOrDefault("show-theme-editor", false),
     )
 
-    let
-      w = cfg.getNaturalOrDefault("window.size.0", DefaultWindowWidth).limit(
-          WindowWidthLimits
-        )
-
-      h = cfg.getNaturalOrDefault("window.size.1", DefaultWindowHeight).limit(
-          WindowHeightLimits
-        )
+    var w = cfg.getNaturalOrDefault("window.size.0", DefaultWindowWidth).limit(
+        WindowWidthLimits
+      )
+    var h = cfg.getNaturalOrDefault("window.size.1", DefaultWindowHeight).limit(
+        WindowHeightLimits
+      )
 
     # Default to displaying the window centered on the primary monitor
     when defined(gridmongerBackendWayland):
       let
         defaultMaxWidth = DefaultWindowWidth
         defaultMaxHeight = DefaultWindowHeight
+      if w > defaultMaxWidth or h > defaultMaxHeight:
+        w = DefaultWindowWidth
+        h = DefaultWindowHeight
     else:
       let (_, _, defaultMaxWidth, defaultMaxHeight) =
         glfwLib.workArea(glfwLib.getPrimaryMonitor())
@@ -11864,6 +11873,9 @@ proc main() =
     a.win.show
 
     while not a.shouldClose:
+      when defined(gridmongerBackendWayland):
+        a.win.glfwWin.pollEvents()
+
       let (width, height) = a.win.glfwWin.surfaceSize()
       a.backend.resizeKoiWgpuBackend(width, height)
 
@@ -11903,7 +11915,8 @@ proc main() =
 
       # Poll/wait for events
       when defined(gridmongerBackendWayland):
-        a.win.glfwWin.pollEvents()
+        if not koi.shouldRenderNextFrame():
+          a.win.glfwWin.pollEvents()
       else:
         if koi.shouldRenderNextFrame():
           glfwLib.pollEvents()

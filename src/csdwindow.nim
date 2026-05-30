@@ -331,7 +331,9 @@ proc newCSDWindow*(): CSDWindow =
   result = new CSDWindow
 
   when defined(gridmongerBackendWayland):
-    result.w = newKoiWaylandApp("Gridmonger", 640, 480)
+    result.w = newKoiWaylandApp("Gridmonger", DefaultWindowWidth, DefaultWindowHeight)
+    result.w.setAppId("gridmonger")
+    result.w.setFixedSize(true)
   else:
     var cfg = defaultWgpuWindowConfig("Gridmonger", 640, 480)
     cfg.resizable = false
