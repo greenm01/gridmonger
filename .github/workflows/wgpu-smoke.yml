@@ -9,6 +9,8 @@ env:
   NIM_VERSION: binary:2.2.4
   KOI_REPOSITORY: greenm01/koi
   KOI_REF: master
+  WEBGPU_REPOSITORY: greenm01/webgpu-nim
+  WEBGPU_REF: wgvk-stencil-render-pass
 
 jobs:
   linux:
@@ -36,6 +38,13 @@ jobs:
           ref: ${{ env.KOI_REF }}
           path: koi-webgpu
 
+      - name: Checkout webgpu-nim
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.WEBGPU_REPOSITORY }}
+          ref: ${{ env.WEBGPU_REF }}
+          path: webgpu-nim
+
       - name: Install Nim
         uses: iffy/install-nim@v5
         with:
@@ -44,11 +53,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install dependencies
-        run: nimble -y install webgpu glfw nanovg riff semver with
+        run: nimble -y install glfw nanovg riff semver with
 
       - name: Export dependency paths
         shell: bash
-        run: echo "WEBGPU_PATH=$(nimble path webgpu)" >> "$GITHUB_ENV"
+        run: echo "WEBGPU_PATH=$GITHUB_WORKSPACE/webgpu-nim" >> "$GITHUB_ENV"
 
       - name: Compile
         working-directory: gridmonger-koi
@@ -71,6 +80,13 @@ jobs:
           ref: ${{ env.KOI_REF }}
           path: koi-webgpu
 
+      - name: Checkout webgpu-nim
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.WEBGPU_REPOSITORY }}
+          ref: ${{ env.WEBGPU_REF }}
+          path: webgpu-nim
+
       - name: Install Nim
         uses: iffy/install-nim@v5
         with:
@@ -79,11 +95,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install dependencies
-        run: nimble -y install webgpu glfw nanovg riff semver osdialog with
+        run: nimble -y install glfw nanovg riff semver osdialog with
 
       - name: Export dependency paths
         shell: bash
-        run: echo "WEBGPU_PATH=$(nimble path webgpu)" >> "$GITHUB_ENV"
+        run: echo "WEBGPU_PATH=$GITHUB_WORKSPACE/webgpu-nim" >> "$GITHUB_ENV"
 
       - name: Compile
         working-directory: gridmonger-koi
@@ -106,6 +122,13 @@ jobs:
           ref: ${{ env.KOI_REF }}
           path: koi-webgpu
 
+      - name: Checkout webgpu-nim
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.WEBGPU_REPOSITORY }}
+          ref: ${{ env.WEBGPU_REF }}
+          path: webgpu-nim
+
       - name: Install Nim
         uses: iffy/install-nim@v5
         with:
@@ -114,11 +137,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install dependencies
-        run: nimble -y install webgpu glfw nanovg riff semver osdialog winim with
+        run: nimble -y install glfw nanovg riff semver osdialog winim with
 
       - name: Export dependency paths
         shell: bash
-        run: echo "WEBGPU_PATH=$(nimble path webgpu)" >> "$GITHUB_ENV"
+        run: echo "WEBGPU_PATH=$GITHUB_WORKSPACE/webgpu-nim" >> "$GITHUB_ENV"
 
       - name: Compile
         working-directory: gridmonger-koi
