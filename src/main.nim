@@ -110,11 +110,7 @@ proc createHostedRenderContext(
     backend: OkysVulkanHost, flags: set[RenderInitFlag]
 ): KoiRenderContext =
   result = createRenderContext(flags)
-  let depthFormat =
-    if rifSparseStrip in flags:
-      wgtfNone
-    else:
-      wgtfDepthStencil
+  let depthFormat = if rifSparseStrip in flags: wgtfNone else: wgtfDepthStencil
   result.setupVulkan(
     backend.okysInstanceHandle(),
     backend.okysPhysicalDeviceHandle(),
@@ -406,7 +402,7 @@ type
     llmCurrentCell = (1, "Current cell")
     llmAlways = (2, "Always")
 
-  Preferences = object               # Startup tab
+  Preferences = object # Startup tab
     loadLastMap: bool
     autosave*: bool
     autosaveFreqMins: Natural
@@ -1003,16 +999,12 @@ func mkQuickRefGeneral(a): seq[seq[QuickRefItem]] =
     @[
       scShowAboutDialog.sc, "Show about dialog".desc, scToggleQuickReference.sc,
       "Toggle quick keyboard reference".desc, scOpenUserManual.sc,
-      "Open user manual in browser".desc, scEditPreferences.sc,
-      "Preferences".desc,
-      scQuit.sc, "Quit".desc, QuickRefSepa, scNewMap.sc, "New map".desc,
-      scOpenMap.sc,
+      "Open user manual in browser".desc, scEditPreferences.sc, "Preferences".desc,
+      scQuit.sc, "Quit".desc, QuickRefSepa, scNewMap.sc, "New map".desc, scOpenMap.sc,
       "Open map".desc, scSaveMap.sc, "Save map".desc, scSaveMapAs.sc,
-      "Save map as".desc, scEditMapProps.sc, "Edit map properties".desc,
-      QuickRefSepa,
+      "Save map as".desc, scEditMapProps.sc, "Edit map properties".desc, QuickRefSepa,
       scNewLevel.sc, "New level".desc, scEditLevelProps.sc,
-      "Edit level properties".desc, scEditRegionProps.sc,
-      "Edit region properties".desc,
+      "Edit level properties".desc, scEditRegionProps.sc, "Edit region properties".desc,
       scDeleteLevel.sc, "Delete level".desc, QuickRefSepa, scPreviousLevel.sc,
       "Previous level".desc, scNextLevel.sc, "Next level".desc,
     ],
@@ -1087,33 +1079,33 @@ func mkQuickRefEditing(a): seq[seq[QuickRefItem]] =
       @[
         KeyShortcut(key: key1, mods: {a.keys.primaryModKey}),
         KeyShortcut(key: key9, mods: {}),
-    ].sc(sepa = '-'),
-    "Set floor colour 1-9".desc,
-    scSelectFloorColor10.sc,
-    "Set floor colour 10".desc,
-    QuickRefSepa,
-    scEraseTrail.sc,
-    "Erase trail".desc,
-    scToggleDrawTrail.sc,
-    "Toggle trail mode".desc,
-    scExcavateTrail.sc,
-    "Excavate trail in current level".desc,
-    scClearTrail.sc,
-    "Clear trail in current level".desc,
-    QuickRefSepa,
-    scMarkSelection.sc,
-    "Enter select (mark) mode".desc,
-    scPaste.sc,
-    "Paste copy buffer contents".desc,
-    scPastePreview.sc,
-    "Enter paste preview mode".desc,
-    QuickRefSepa,
-    scEditNote.sc,
-    "Add or edit note".desc,
-    scEraseNote.sc,
-    "Erase note".desc,
-    QuickRefSepa,
-  ],
+      ].sc(sepa = '-'),
+      "Set floor colour 1-9".desc,
+      scSelectFloorColor10.sc,
+      "Set floor colour 10".desc,
+      QuickRefSepa,
+      scEraseTrail.sc,
+      "Erase trail".desc,
+      scToggleDrawTrail.sc,
+      "Toggle trail mode".desc,
+      scExcavateTrail.sc,
+      "Excavate trail in current level".desc,
+      scClearTrail.sc,
+      "Clear trail in current level".desc,
+      QuickRefSepa,
+      scMarkSelection.sc,
+      "Enter select (mark) mode".desc,
+      scPaste.sc,
+      "Paste copy buffer contents".desc,
+      scPastePreview.sc,
+      "Enter paste preview mode".desc,
+      QuickRefSepa,
+      scEditNote.sc,
+      "Add or edit note".desc,
+      scEraseNote.sc,
+      "Erase note".desc,
+      QuickRefSepa,
+    ],
     @[
       scEditLabel.sc,
       "Add or edit label".desc,
@@ -1125,56 +1117,56 @@ func mkQuickRefEditing(a): seq[seq[QuickRefItem]] =
       scLinkCell.sc,
       "Set link destination".desc,
 
-      # TODO
+        # TODO
         #      scUnlinkCell.sc,          "Unlink cell".desc,
-    QuickRefSepa,
-    scResizeLevel.sc,
-    "Resize level".desc,
-    scNudgePreview.sc,
-    "Nudge level".desc,
-    QuickRefSepa,
-    @[scCycleFloorGroup1Forward, scCycleFloorGroup1Backward].sc(a = a),
-    "Cycle door".desc,
-    @[scCycleFloorGroup2Forward, scCycleFloorGroup2Backward].sc(a = a),
-    "Cycle special door".desc,
-    @[scCycleFloorGroup3Forward, scCycleFloorGroup3Backward].sc(a = a),
-    "Cycle pressure plate".desc,
-    @[scCycleFloorGroup4Forward, scCycleFloorGroup4Backward].sc(a = a),
-    "Cycle pit".desc,
-    @[scCycleFloorGroup5Forward, scCycleFloorGroup5Backward].sc(a = a),
-    "Cycle special".desc,
-    @[scCycleFloorGroup6Forward, scCycleFloorGroup6Backward].sc(a = a),
-    "Cycle entry/exit".desc,
-    @[scCycleFloorGroup7Forward, scCycleFloorGroup7Backward].sc(a = a),
-    "Cycle bridge/arrow".desc,
-    @[scCycleFloorGroup8Forward, scCycleFloorGroup8Backward].sc(a = a),
-    "Cycle column/statue".desc,
-    QuickRefSepa,
-    scSelectSpecialWall1.sc,
-    "Set special wall: Open door".desc,
-    scSelectSpecialWall2.sc,
-    "Set special wall: Locked door".desc,
-    scSelectSpecialWall3.sc,
-    "Set special wall: Archway".desc,
-    scSelectSpecialWall4.sc,
-    "Set special wall: Secret door".desc,
-    scSelectSpecialWall5.sc,
-    "Set special wall: One-way door".desc,
-    scSelectSpecialWall6.sc,
-    "Set special wall: Illusory wall".desc,
-    scSelectSpecialWall7.sc,
-    "Set special wall: Invisible wall".desc,
-    scSelectSpecialWall8.sc,
-    "Set special wall: Lever".desc,
-    scSelectSpecialWall9.sc,
-    "Set special wall: Niche".desc,
-    scSelectSpecialWall10.sc,
-    "Set special wall: Statue".desc,
-    scSelectSpecialWall11.sc,
-    "Set special wall: Keyhole".desc,
-    scSelectSpecialWall12.sc,
-    "Set special wall: Writing".desc,
-  ],
+      QuickRefSepa,
+      scResizeLevel.sc,
+      "Resize level".desc,
+      scNudgePreview.sc,
+      "Nudge level".desc,
+      QuickRefSepa,
+      @[scCycleFloorGroup1Forward, scCycleFloorGroup1Backward].sc(a = a),
+      "Cycle door".desc,
+      @[scCycleFloorGroup2Forward, scCycleFloorGroup2Backward].sc(a = a),
+      "Cycle special door".desc,
+      @[scCycleFloorGroup3Forward, scCycleFloorGroup3Backward].sc(a = a),
+      "Cycle pressure plate".desc,
+      @[scCycleFloorGroup4Forward, scCycleFloorGroup4Backward].sc(a = a),
+      "Cycle pit".desc,
+      @[scCycleFloorGroup5Forward, scCycleFloorGroup5Backward].sc(a = a),
+      "Cycle special".desc,
+      @[scCycleFloorGroup6Forward, scCycleFloorGroup6Backward].sc(a = a),
+      "Cycle entry/exit".desc,
+      @[scCycleFloorGroup7Forward, scCycleFloorGroup7Backward].sc(a = a),
+      "Cycle bridge/arrow".desc,
+      @[scCycleFloorGroup8Forward, scCycleFloorGroup8Backward].sc(a = a),
+      "Cycle column/statue".desc,
+      QuickRefSepa,
+      scSelectSpecialWall1.sc,
+      "Set special wall: Open door".desc,
+      scSelectSpecialWall2.sc,
+      "Set special wall: Locked door".desc,
+      scSelectSpecialWall3.sc,
+      "Set special wall: Archway".desc,
+      scSelectSpecialWall4.sc,
+      "Set special wall: Secret door".desc,
+      scSelectSpecialWall5.sc,
+      "Set special wall: One-way door".desc,
+      scSelectSpecialWall6.sc,
+      "Set special wall: Illusory wall".desc,
+      scSelectSpecialWall7.sc,
+      "Set special wall: Invisible wall".desc,
+      scSelectSpecialWall8.sc,
+      "Set special wall: Lever".desc,
+      scSelectSpecialWall9.sc,
+      "Set special wall: Niche".desc,
+      scSelectSpecialWall10.sc,
+      "Set special wall: Statue".desc,
+      scSelectSpecialWall11.sc,
+      "Set special wall: Keyhole".desc,
+      scSelectSpecialWall12.sc,
+      "Set special wall: Writing".desc,
+    ],
   ]
 
 # }}}
@@ -1184,33 +1176,30 @@ func mkQuickRefInterface(a): seq[seq[QuickRefItem]] =
     @[
       @[fmt"Ctrl{HairSp}+{HairSp}{IconArrowsHoriz}"].csc,
       "Move between tabs in dialog".desc,
-      @[KeyShortcut(key: key1, mods: {mkCtrl}), KeyShortcut(key: key9, mods: {
-          })].sc(
+      @[KeyShortcut(key: key1, mods: {mkCtrl}), KeyShortcut(key: key9, mods: {})].sc(
         sepa = '-'
-    ),
-    "Select tab 1-9 in dialog".desc,
-    QuickRefSepa,
-    KeyShortcut(key: keyTab, mods: {mkShift}).sc,
-    "Previous text input field".desc,
-    scNextTextField.sc,
-    "Next text input field".desc,
-    QuickRefSepa,
-    @[fmt"{IconArrowsAll}"].csc,
-    "Change radio button selection".desc,
-    QuickRefSepa,
-    scAccept.sc,
-    "Confirm (OK, Save, etc.)".desc,
-    scCancel.sc,
-    "Cancel".desc,
-    scDiscard.sc,
-    "Discard".desc,
-  ],
+      ),
+      "Select tab 1-9 in dialog".desc,
+      QuickRefSepa,
+      KeyShortcut(key: keyTab, mods: {mkShift}).sc,
+      "Previous text input field".desc,
+      scNextTextField.sc,
+      "Next text input field".desc,
+      QuickRefSepa,
+      @[fmt"{IconArrowsAll}"].csc,
+      "Change radio button selection".desc,
+      QuickRefSepa,
+      scAccept.sc,
+      "Confirm (OK, Save, etc.)".desc,
+      scCancel.sc,
+      "Cancel".desc,
+      scDiscard.sc,
+      "Discard".desc,
+    ],
     @[
       scSaveLayout1.sc, "Save window layout 1".desc, scSaveLayout2.sc,
-      "Save window layout 2".desc, scSaveLayout3.sc,
-      "Save window layout 3".desc,
-      scSaveLayout4.sc, "Save window layout 4".desc, QuickRefSepa,
-      scRestoreLayout1.sc,
+      "Save window layout 2".desc, scSaveLayout3.sc, "Save window layout 3".desc,
+      scSaveLayout4.sc, "Save window layout 4".desc, QuickRefSepa, scRestoreLayout1.sc,
       "Restore window layout 1".desc, scRestoreLayout2.sc,
       "Restore window layout 2".desc, scRestoreLayout3.sc,
       "Restore window layout 3".desc, scRestoreLayout4.sc,
@@ -1333,8 +1322,7 @@ let DefaultAppShortcuts = {
   # General
   scNextTextField: @[mkKeyShortcut(keyTab, {})],
   scAccept: @[mkKeyShortcut(keyEnter, {}), mkKeyShortcut(keyKpEnter, {})],
-  scCancel: @[mkKeyShortcut(keyEscape, {}), mkKeyShortcut(keyLeftBracket, {
-      mkCtrl})],
+  scCancel: @[mkKeyShortcut(keyEscape, {}), mkKeyShortcut(keyLeftBracket, {mkCtrl})],
   scDiscard: @[mkKeyShortcut(keyD, {mkAlt})],
   scQuit: @[mkKeyShortcut(keyQ, {mkCtrl})],
   scUndo:
@@ -1413,8 +1401,7 @@ let DefaultAppShortcuts = {
   scSelectFloorColor10: @[mkKeyShortcut(key0, {mkCtrl})],
   scDrawWall: @[mkKeyShortcut(keyW, {})],
   scDrawSpecialWall: @[mkKeyShortcut(keyR, {})],
-  scDrawWallRepeat: @[mkKeyShortcut(keyLeftShift, {}), mkKeyShortcut(
-      keyRightShift, {})],
+  scDrawWallRepeat: @[mkKeyShortcut(keyLeftShift, {}), mkKeyShortcut(keyRightShift, {})],
   scPreviousSpecialWall: @[mkKeyShortcut(keyLeftBracket, {})],
   scNextSpecialWall: @[mkKeyShortcut(keyRightBracket, {})],
   scSelectSpecialWall1: @[mkKeyShortcut(key1, {mkAlt})],
@@ -1461,8 +1448,7 @@ let DefaultAppShortcuts = {
       mkKeyShortcut(keyKpEnter, {}),
     ],
   scEditNote: @[mkKeyShortcut(keyN, {}), mkKeyShortcut(keySemicolon, {})],
-  scEraseNote: @[mkKeyShortcut(keyN, {mkShift}), mkKeyShortcut(keySemicolon, {
-      mkShift})],
+  scEraseNote: @[mkKeyShortcut(keyN, {mkShift}), mkKeyShortcut(keySemicolon, {mkShift})],
   scEditLabel: @[mkKeyShortcut(keyT, {mkCtrl})],
   scEraseLabel: @[mkKeyShortcut(keyT, {mkShift})],
   scShowNoteTooltip: @[mkKeyShortcut(keySpace, {})],
@@ -1561,8 +1547,7 @@ proc mapCtrlToSuper(sc: var Table[AppShortcut, seq[KeyShortcut]]) =
 # }}}
 # {{{ addStandardMacShortcuts()
 proc addStandardMacShortcuts(sc: var Table[AppShortcut, seq[KeyShortcut]]) =
-  template addUniqueShortcut(appShortcut: AppShortcut,
-      keyShortcut: KeyShortcut) =
+  template addUniqueShortcut(appShortcut: AppShortcut, keyShortcut: KeyShortcut) =
     if keyShortcut notin sc[appShortcut]:
       sc[appShortcut].add(keyShortcut)
 
@@ -2101,8 +2086,7 @@ proc setCursor(newCur: Location, a) =
       ui.drawTrail = false
 
     if ui.drawTrail and newCur != ui.cursor:
-      actions.drawTrail(doc.map, loc = newCur, undoLoc = ui.prevCursor,
-          doc.undoManager)
+      actions.drawTrail(doc.map, loc = newCur, undoLoc = ui.prevCursor, doc.undoManager)
 
     let l = doc.map.levels[newCur.levelId]
 
@@ -2201,9 +2185,8 @@ proc moveCursorDiagonal(dir: Direction, steps: Natural = 1, a) =
   var cur = a.ui.cursor
   for i in 0 ..< steps:
     if not a.prefs.movementWraparound:
-      if (dirN in dir and cur.row == 0) or (dirS in dir and cur.row == l.rows -
-          1) or(dirW in dir and cur.col == 0) or (dirE in dir and cur.col ==
-              l.cols - 1):
+      if (dirN in dir and cur.row == 0) or (dirS in dir and cur.row == l.rows - 1) or
+          (dirW in dir and cur.col == 0) or (dirE in dir and cur.col == l.cols - 1):
         return
 
     for d in dir:
@@ -2272,8 +2255,7 @@ proc locationAtMouse(clampToBounds = false, a): Option[Location] =
   else:
     if mouseViewRow >= 0 and mouseRow < dp.viewStartRow + dp.viewRows and
         mouseViewCol >= 0 and mouseCol < dp.viewStartCol + dp.viewCols:
-      result = Location(levelId: a.ui.cursor.levelId, row: mouseRow,
-          col: mouseCol).some
+      result = Location(levelId: a.ui.cursor.levelId, row: mouseRow, col: mouseCol).some
     else:
       result = Location.none
 
@@ -2414,8 +2396,7 @@ proc copySelection(buf: var Option[SelectionBuffer], a): Option[Rect[Natural]] =
 
     buf = some(
       SelectionBuffer(
-        selection: newSelectionFrom(sel, bbox), level: newLevelFrom(currLevel(
-            a), bbox)
+        selection: newSelectionFrom(sel, bbox), level: newLevelFrom(currLevel(a), bbox)
       )
     )
 
@@ -2492,8 +2473,9 @@ proc createPattern(
 
 # }}}
 # {{{ textBoxBounds()
-proc textBoxBounds(vg: KoiRenderContext, x, y, breakWidth: float,
-    text: string): Bounds =
+proc textBoxBounds(
+    vg: KoiRenderContext, x, y, breakWidth: float, text: string
+): Bounds =
   let rows = text.textBreakLines(breakWidth)
   let metrics = vg.textMetrics()
   var width = 0.0
@@ -2607,8 +2589,7 @@ proc isKeyDown(
 
   ev.action in a and ev.key in keys and eventMods == mods
 
-proc isKeyDown(ev: Event, key: Key, mods: set[ModifierKey] = {},
-    repeat = false): bool =
+proc isKeyDown(ev: Event, key: Key, mods: set[ModifierKey] = {}, repeat = false): bool =
   isKeyDown(ev, {key}, mods, repeat)
 
 # }}}
@@ -2635,8 +2616,7 @@ proc checkShortcut(
 # }}}
 # {{{ isShortcutDown()
 proc isShortcutDown(
-    ev: Event, shortcuts: set[AppShortcut], a; repeat = false,
-        ignoreMods = false
+    ev: Event, shortcuts: set[AppShortcut], a; repeat = false, ignoreMods = false
 ): bool =
   let actions =
     if repeat:
@@ -2728,11 +2708,9 @@ proc buildThemeList(a) =
       let idx = findThemeWithName(name)
       if idx >= 0:
         themeNames.del(idx)
-        themeNames.add(ThemeName(name: name, userTheme: userTheme,
-            override: true))
+        themeNames.add(ThemeName(name: name, userTheme: userTheme, override: true))
       else:
-        themeNames.add(ThemeName(name: name, userTheme: userTheme,
-            override: false))
+        themeNames.add(ThemeName(name: name, userTheme: userTheme, override: false))
 
   addThemeNames(a.paths.themesDir, userTheme = false)
   addThemeNames(a.paths.userThemesDir, userTheme = true)
@@ -2742,7 +2720,7 @@ proc buildThemeList(a) =
 
   themeNames.sort(
     proc(a, b: ThemeName): int =
-    cmpNaturalIgnoreCase(a.name.toRunes, b.name.toRunes)
+      cmpNaturalIgnoreCase(a.name.toRunes, b.name.toRunes)
   )
 
   a.theme.themeNames = themeNames
@@ -2964,8 +2942,7 @@ proc updateWidgetStyles(a) =
     bgCornerRadius = w.getFloatOrDefault("corner-radius")
     bgFillColor = w.getColorOrDefault("background.normal")
 
-    bgFillColorHover = lerp(bgFillColor, w.getColorOrDefault(
-        "background.hover"), 0.5)
+    bgFillColorHover = lerp(bgFillColor, w.getColorOrDefault("background.hover"), 0.5)
 
     bgFillColorActive = t.getColorOrDefault("edit.background")
     textColor = w.getColorOrDefault("foreground.normal")
@@ -3199,11 +3176,9 @@ proc updateTheme(a) =
 
   updateWidgetStyles(a)
 
-  a.theme.statusBarTheme = cfg.getObjectOrEmpty(
-      "ui.status-bar").toStatusBarTheme
+  a.theme.statusBarTheme = cfg.getObjectOrEmpty("ui.status-bar").toStatusBarTheme
 
-  a.theme.toolbarPaneTheme = cfg.getObjectOrEmpty(
-      "pane.toolbar").toToolbarPaneTheme
+  a.theme.toolbarPaneTheme = cfg.getObjectOrEmpty("pane.toolbar").toToolbarPaneTheme
 
   a.theme.currentNotePaneTheme =
     cfg.getObjectOrEmpty("pane.current-note").toCurrentNotePaneTheme
@@ -3346,8 +3321,7 @@ proc saveAppConfig(a) =
   cfg.set(p & "editing.movement-wraparound", a.prefs.movementWraparound)
   cfg.set(p & "editing.yubn-movement-keys", a.prefs.yubnMovementKeys)
 
-  cfg.set(p & "editing.walk-cursor-mode", enumToDashCase(
-      $a.prefs.walkCursorMode))
+  cfg.set(p & "editing.walk-cursor-mode", enumToDashCase($a.prefs.walkCursorMode))
 
   cfg.set(p & "editing.open-ended-excavate", a.prefs.openEndedExcavate)
 
@@ -3362,8 +3336,7 @@ proc saveAppConfig(a) =
 
   # Last state
   p = "last-state."
-  cfg.set(p & "last-document", if a.doc.path ==
-      "": a.doc.lastSavePath else: a.doc.path)
+  cfg.set(p & "last-document", if a.doc.path == "": a.doc.lastSavePath else: a.doc.path)
 
   cfg.set(p & "theme-name", a.currThemeName.name)
 
@@ -3511,13 +3484,13 @@ proc saveMap(path: string, autosave, createBackup: bool, a) =
     currFloorColor: a.ui.currFloorColor,
     currSpecialWall: a.ui.currSpecialWall,
     notesListPaneState:
-    AppStateNotesListPane(
-      filter: nls.currFilter,
-      linkCursor: nls.linkCursor,
-      viewStartY: nls.viewStartY.Natural,
-      levelSections: nls.levelSections,
-      regionSections: nls.regionSections,
-    ).some,
+      AppStateNotesListPane(
+        filter: nls.currFilter,
+        linkCursor: nls.linkCursor,
+        viewStartY: nls.viewStartY.Natural,
+        levelSections: nls.levelSections,
+        regionSections: nls.regionSections,
+      ).some,
   )
 
   log.info(fmt"Saving map to '{path}'")
@@ -3617,21 +3590,18 @@ template coordinateFields() =
   group:
     koi.label("Origin", style = a.theme.labelStyle)
     koi.radioButtons(
-      labels = @["Northwest", "Southwest"], dlg.origin,
-          style = a.theme.radioButtonStyle
+      labels = @["Northwest", "Southwest"], dlg.origin, style = a.theme.radioButtonStyle
     )
 
   group:
     koi.label("Column style", style = a.theme.labelStyle)
     koi.radioButtons(
-      labels = @["Number", "Letter"], dlg.columnStyle,
-          style = a.theme.radioButtonStyle
+      labels = @["Number", "Letter"], dlg.columnStyle, style = a.theme.radioButtonStyle
     )
 
     koi.label("Row style", style = a.theme.labelStyle)
     koi.radioButtons(
-      labels = @["Number", "Letter"], dlg.rowStyle,
-          style = a.theme.radioButtonStyle
+      labels = @["Number", "Letter"], dlg.rowStyle, style = a.theme.radioButtonStyle
     )
 
   group:
@@ -3644,11 +3614,11 @@ template coordinateFields() =
       dlg.columnStart,
       activate = dlg.activateFirstTextField,
       constraint =
-      TextFieldConstraint(
-        kind: tckInteger,
-        minInt: CoordColumnStartLimits.minInt,
-        maxInt: CoordColumnStartLimits.maxInt,
-      ).some,
+        TextFieldConstraint(
+          kind: tckInteger,
+          minInt: CoordColumnStartLimits.minInt,
+          maxInt: CoordColumnStartLimits.maxInt,
+        ).some,
       style = a.theme.textFieldStyle,
     )
 
@@ -3673,11 +3643,11 @@ template coordinateFields() =
     koi.textField(
       dlg.rowStart,
       constraint =
-      TextFieldConstraint(
-        kind: tckInteger,
-        minInt: CoordRowStartLimits.minInt,
-        maxInt: CoordRowStartLimits.maxInt,
-      ).some,
+        TextFieldConstraint(
+          kind: tckInteger,
+          minInt: CoordRowStartLimits.minInt,
+          maxInt: CoordRowStartLimits.maxInt,
+        ).some,
       style = a.theme.textFieldStyle,
     )
     if CoordinateStyle(dlg.rowStyle) == csLetter:
@@ -3712,11 +3682,11 @@ template regionFields() =
           dlg.colsPerRegion,
           activate = dlg.activateFirstTextField,
           constraint =
-          TextFieldConstraint(
-            kind: tckInteger,
-            minInt: RegionColumnLimits.minInt,
-            maxInt: RegionColumnLimits.maxInt,
-          ).some,
+            TextFieldConstraint(
+              kind: tckInteger,
+              minInt: RegionColumnLimits.minInt,
+              maxInt: RegionColumnLimits.maxInt,
+            ).some,
           style = a.theme.textFieldStyle,
         )
 
@@ -3726,11 +3696,11 @@ template regionFields() =
         koi.textField(
           dlg.rowsPerRegion,
           constraint =
-          TextFieldConstraint(
-            kind: tckInteger,
-            minInt: RegionRowLimits.minInt,
-            maxInt: RegionRowLimits.maxInt,
-          ).some,
+            TextFieldConstraint(
+              kind: tckInteger,
+              minInt: RegionRowLimits.minInt,
+              maxInt: RegionRowLimits.maxInt,
+            ).some,
           style = a.theme.textFieldStyle,
         )
 
@@ -3766,11 +3736,11 @@ template commonLevelFields(dimensionsDisabled: bool) =
       dlg.locationName,
       activate = dlg.activateFirstTextField,
       constraint =
-      TextFieldConstraint(
-        kind: tckString,
-        minLen: LevelLocationNameLimits.minRuneLen,
-        maxLen: LevelLocationNameLimits.maxRuneLen.some,
-      ).some,
+        TextFieldConstraint(
+          kind: tckString,
+          minLen: LevelLocationNameLimits.minRuneLen,
+          maxLen: LevelLocationNameLimits.maxRuneLen.some,
+        ).some,
       style = a.theme.textFieldStyle,
     )
 
@@ -3779,11 +3749,11 @@ template commonLevelFields(dimensionsDisabled: bool) =
     koi.textField(
       dlg.levelName,
       constraint =
-      TextFieldConstraint(
-        kind: tckString,
-        minLen: LevelNameLimits.minRuneLen,
-        maxLen: LevelNameLimits.maxRuneLen.some,
-      ).some,
+        TextFieldConstraint(
+          kind: tckString,
+          minLen: LevelNameLimits.minRuneLen,
+          maxLen: LevelNameLimits.maxRuneLen.some,
+        ).some,
       style = a.theme.textFieldStyle,
     )
 
@@ -3794,11 +3764,11 @@ template commonLevelFields(dimensionsDisabled: bool) =
     koi.textField(
       dlg.elevation,
       constraint =
-      TextFieldConstraint(
-        kind: tckInteger,
-        minInt: LevelElevationLimits.minInt,
-        maxInt: LevelElevationLimits.maxInt,
-      ).some,
+        TextFieldConstraint(
+          kind: tckInteger,
+          minInt: LevelElevationLimits.minInt,
+          maxInt: LevelElevationLimits.maxInt,
+        ).some,
       style = a.theme.textFieldStyle,
     )
 
@@ -3809,11 +3779,11 @@ template commonLevelFields(dimensionsDisabled: bool) =
     koi.textField(
       dlg.cols,
       constraint =
-      TextFieldConstraint(
-        kind: tckInteger,
-        minInt: LevelColumnsLimits.minInt,
-        maxInt: LevelColumnsLimits.maxInt,
-      ).some,
+        TextFieldConstraint(
+          kind: tckInteger,
+          minInt: LevelColumnsLimits.minInt,
+          maxInt: LevelColumnsLimits.maxInt,
+        ).some,
       disabled = dimensionsDisabled,
       style = a.theme.textFieldStyle,
     )
@@ -3824,11 +3794,11 @@ template commonLevelFields(dimensionsDisabled: bool) =
     koi.textField(
       dlg.rows,
       constraint =
-      TextFieldConstraint(
-        kind: tckInteger,
-        minInt: LevelRowsLimits.minInt,
-        maxInt: LevelRowsLimits.maxInt,
-      ).some,
+        TextFieldConstraint(
+          kind: tckInteger,
+          minInt: LevelRowsLimits.minInt,
+          maxInt: LevelRowsLimits.maxInt,
+        ).some,
       disabled = dimensionsDisabled,
       style = a.theme.textFieldStyle,
     )
@@ -3858,11 +3828,11 @@ template commonGeneralMapFields(map: Map, displayCreationTime: bool) =
       dlg.title,
       activate = dlg.activateFirstTextField,
       constraint =
-      TextFieldConstraint(
-        kind: tckString,
-        minLen: MapTitleLimits.minRuneLen,
-        maxLen: MapTitleLimits.maxRuneLen.some,
-      ).some,
+        TextFieldConstraint(
+          kind: tckString,
+          minLen: MapTitleLimits.minRuneLen,
+          maxLen: MapTitleLimits.maxRuneLen.some,
+        ).some,
       style = a.theme.textFieldStyle,
     )
 
@@ -3871,11 +3841,11 @@ template commonGeneralMapFields(map: Map, displayCreationTime: bool) =
     koi.textField(
       dlg.game,
       constraint =
-      TextFieldConstraint(
-        kind: tckString,
-        minLen: MapGameLimits.minRuneLen,
-        maxLen: MapGameLimits.maxRuneLen.some,
-      ).some,
+        TextFieldConstraint(
+          kind: tckString,
+          minLen: MapGameLimits.minRuneLen,
+          maxLen: MapGameLimits.maxRuneLen.some,
+        ).some,
       style = a.theme.textFieldStyle,
     )
 
@@ -3884,19 +3854,18 @@ template commonGeneralMapFields(map: Map, displayCreationTime: bool) =
     koi.textField(
       dlg.author,
       constraint =
-      TextFieldConstraint(
-        kind: tckString,
-        minLen: MapAuthorLimits.minRuneLen,
-        maxLen: MapAuthorLimits.maxRuneLen.some,
-      ).some,
+        TextFieldConstraint(
+          kind: tckString,
+          minLen: MapAuthorLimits.minRuneLen,
+          maxLen: MapAuthorLimits.maxRuneLen.some,
+        ).some,
       style = a.theme.textFieldStyle,
     )
 
     if displayCreationTime:
       koi.label("Creation time", style = a.theme.labelStyle)
 
-      koi.textField(map.creationTime, disabled = true,
-          style = a.theme.textFieldStyle)
+      koi.textField(map.creationTime, disabled = true, style = a.theme.textFieldStyle)
 
 # }}}
 # {{{ validateCommonGeneralMapFields()
@@ -4294,11 +4263,11 @@ proc preferencesDialog(dlg: var PreferencesDialogParams, a) =
         activate = dlg.activateFirstTextField,
         disabled = autosaveDisabled,
         constraint =
-        TextFieldConstraint(
-          kind: tckInteger,
-          minInt: AutosaveFreqMinsLimits.minInt,
-          maxInt: AutosaveFreqMinsLimits.maxInt,
-        ).some,
+          TextFieldConstraint(
+            kind: tckInteger,
+            minInt: AutosaveFreqMinsLimits.minInt,
+            maxInt: AutosaveFreqMinsLimits.maxInt,
+          ).some,
         style = a.theme.textFieldStyle,
       )
 
@@ -4361,11 +4330,11 @@ proc preferencesDialog(dlg: var PreferencesDialogParams, a) =
         activate = dlg.activateFirstTextField,
         disabled = disabled,
         constraint =
-        TextFieldConstraint(
-          kind: tckInteger,
-          minInt: SplashTimeoutSecsLimits.minInt,
-          maxInt: SplashTimeoutSecsLimits.maxInt,
-        ).some,
+          TextFieldConstraint(
+            kind: tckInteger,
+            minInt: SplashTimeoutSecsLimits.minInt,
+            maxInt: SplashTimeoutSecsLimits.maxInt,
+          ).some,
         style = a.theme.textFieldStyle,
       )
 
@@ -4392,8 +4361,7 @@ proc preferencesDialog(dlg: var PreferencesDialogParams, a) =
       koi.label("")
       koi.nextItemWidth(170)
       koi.label(
-        fmt"{scResetUIScaling.toStr(a)} resets scaling",
-        style = a.theme.labelStyle
+        fmt"{scResetUIScaling.toStr(a)} resets scaling", style = a.theme.labelStyle
       )
 
     group:
@@ -4402,8 +4370,7 @@ proc preferencesDialog(dlg: var PreferencesDialogParams, a) =
         koi.nextItemWidth(135)
 
         var items =
-          @[fmt"Ctrl, Ctrl{HairSp}+{HairSp}Alt",
-              fmt"Cmd, Cmd{HairSp}+{HairSp}Shift"]
+          @[fmt"Ctrl, Ctrl{HairSp}+{HairSp}Alt", fmt"Cmd, Cmd{HairSp}+{HairSp}Shift"]
         koi.dropDown(items, dlg.modifierKeyMode, style = a.theme.dropDownStyle)
 
   koi.endView()
@@ -4545,14 +4512,12 @@ proc saveDiscardMapDialog(dlg: var SaveDiscardMapDialogParams, a) =
   var y = DlgTopPad
 
   koi.label(
-    x, y, DlgWidth, h, "You have made change to the map.",
-    style = a.theme.labelStyle
+    x, y, DlgWidth, h, "You have made change to the map.", style = a.theme.labelStyle
   )
 
   y += h
   koi.label(
-    x, y, DlgWidth, h, "Do you want to save the map?",
-    style = a.theme.labelStyle
+    x, y, DlgWidth, h, "Do you want to save the map?", style = a.theme.labelStyle
   )
 
   proc okAction(dlg: SaveDiscardMapDialogParams, a) =
@@ -4580,15 +4545,13 @@ proc saveDiscardMapDialog(dlg: var SaveDiscardMapDialogParams, a) =
 
   x += DlgButtonWidth + DlgButtonPad
   if koi.button(
-    x, y, DlgButtonWidth, h, fmt"{IconTrash} Discard",
-    style = a.theme.buttonStyle
+    x, y, DlgButtonWidth, h, fmt"{IconTrash} Discard", style = a.theme.buttonStyle
   ):
     discardAction(dlg, a)
 
   x += DlgButtonWidth + DlgButtonPad
   if koi.button(
-    x, y, DlgButtonWidth, h, fmt"{IconClose} Cancel",
-    style = a.theme.buttonStyle
+    x, y, DlgButtonWidth, h, fmt"{IconClose} Cancel", style = a.theme.buttonStyle
   ):
     cancelAction(a)
 
@@ -4875,8 +4838,7 @@ proc editMapPropsDialog(dlg: var EditMapPropsDialogParams, a) =
     )
 
     actions.setMapProperties(
-      a.doc.map, a.ui.cursor, dlg.title, dlg.game, dlg.author, coordOpts,
-      dlg.notes,
+      a.doc.map, a.ui.cursor, dlg.title, dlg.game, dlg.author, coordOpts, dlg.notes,
       a.doc.undoManager,
     )
 
@@ -5081,7 +5043,7 @@ proc newLevelDialog(dlg: var LevelPropertiesDialogParams, a) =
       rows = rows,
       cols = cols,
       fillFloorColor =
-      if dlg.fillWithEmptyFloors: a.ui.currFloorColor.Natural.some else: Natural.none,
+        if dlg.fillWithEmptyFloors: a.ui.currFloorColor.Natural.some else: Natural.none,
       dlg.overrideCoordOpts,
       coordOpts = CoordinateOptions(
         origin: CoordinateOrigin(dlg.origin),
@@ -5286,8 +5248,7 @@ proc editLevelPropsDialog(dlg: var LevelPropertiesDialogParams, a) =
 
     actions.setLevelProperties(
       a.doc.map, a.ui.cursor, dlg.locationName, dlg.levelName, elevation,
-      dlg.overrideCoordOpts, coordOpts, regionOpts, dlg.notes,
-      a.doc.undoManager,
+      dlg.overrideCoordOpts, coordOpts, regionOpts, dlg.notes, a.doc.undoManager,
     )
 
     setStatusMessage(IconFile, fmt"Level properties updated", a)
@@ -5385,11 +5346,11 @@ proc resizeLevelDialog(dlg: var ResizeLevelDialogParams, a) =
     dlg.cols,
     activate = dlg.activateFirstTextField,
     constraint =
-    TextFieldConstraint(
-      kind: tckInteger,
-      minInt: LevelColumnsLimits.minInt,
-      maxInt: LevelColumnsLimits.maxInt,
-    ).some,
+      TextFieldConstraint(
+        kind: tckInteger,
+        minInt: LevelColumnsLimits.minInt,
+        maxInt: LevelColumnsLimits.maxInt,
+      ).some,
     style = a.theme.textFieldStyle,
   )
 
@@ -5402,10 +5363,9 @@ proc resizeLevelDialog(dlg: var ResizeLevelDialogParams, a) =
     h,
     dlg.rows,
     constraint =
-    TextFieldConstraint(
-      kind: tckInteger, minInt: LevelRowsLimits.minInt,
-      maxInt: LevelRowsLimits.maxInt
-    ).some,
+      TextFieldConstraint(
+        kind: tckInteger, minInt: LevelRowsLimits.minInt, maxInt: LevelRowsLimits.maxInt
+      ).some,
     style = a.theme.textFieldStyle,
   )
 
@@ -5413,8 +5373,7 @@ proc resizeLevelDialog(dlg: var ResizeLevelDialogParams, a) =
 
   const AnchorIcons =
     @[
-      IconArrowUpLeft, IconArrowUp, IconArrowUpRight, IconArrowLeft,
-      IconCircleInv,
+      IconArrowUpLeft, IconArrowUp, IconArrowUpRight, IconArrowLeft, IconCircleInv,
       IconArrowRight, IconArrowDownLeft, IconArrowDown, IconArrowDownRight,
     ]
 
@@ -5494,8 +5453,7 @@ proc resizeLevelDialog(dlg: var ResizeLevelDialogParams, a) =
 
   x += DlgButtonWidth + DlgButtonPad
   if koi.button(
-    x, y, DlgButtonWidth, h, fmt"{IconClose} Cancel",
-    style = a.theme.buttonStyle
+    x, y, DlgButtonWidth, h, fmt"{IconClose} Cancel", style = a.theme.buttonStyle
   ):
     cancelAction(a)
 
@@ -5574,15 +5532,13 @@ proc deleteLevelDialog(a) =
   (x, y) = dialogButtonsStartPos(DlgWidth, DlgHeight, 2)
 
   if koi.button(
-    x, y, DlgButtonWidth, h, fmt"{IconCheck} Delete",
-    style = a.theme.buttonStyle
+    x, y, DlgButtonWidth, h, fmt"{IconCheck} Delete", style = a.theme.buttonStyle
   ):
     okAction(a)
 
   x += DlgButtonWidth + DlgButtonPad
   if koi.button(
-    x, y, DlgButtonWidth, h, fmt"{IconClose} Cancel",
-    style = a.theme.buttonStyle
+    x, y, DlgButtonWidth, h, fmt"{IconClose} Cancel", style = a.theme.buttonStyle
   ):
     cancelAction(a)
 
@@ -5720,11 +5676,11 @@ proc editNoteDialog(dlg: var EditNoteDialogParams, a) =
       h,
       dlg.customId,
       constraint =
-      TextFieldConstraint(
-        kind: tckString,
-        minLen: NoteCustomIdLimits.minRuneLen,
-        maxLen: NoteCustomIdLimits.maxRuneLen.some,
-      ).some,
+        TextFieldConstraint(
+          kind: tckString,
+          minLen: NoteCustomIdLimits.minRuneLen,
+          maxLen: NoteCustomIdLimits.maxRuneLen.some,
+        ).some,
       style = a.theme.textFieldStyle,
     )
   of akIcon:
@@ -5810,8 +5766,7 @@ proc editNoteDialog(dlg: var EditNoteDialogParams, a) =
 
   x += DlgButtonWidth + DlgButtonPad
   if koi.button(
-    x, y, DlgButtonWidth, h, fmt"{IconClose} Cancel",
-    style = a.theme.buttonStyle
+    x, y, DlgButtonWidth, h, fmt"{IconClose} Cancel", style = a.theme.buttonStyle
   ):
     cancelAction(a)
 
@@ -5819,8 +5774,7 @@ proc editNoteDialog(dlg: var EditNoteDialogParams, a) =
     let ke = koi.currEvent()
     var eventHandled = true
 
-    dlg.kind = AnnotationKind(handleTabNavigation(ke, ord(dlg.kind), ord(
-        akIcon), a))
+    dlg.kind = AnnotationKind(handleTabNavigation(ke, ord(dlg.kind), ord(akIcon), a))
 
     case dlg.kind
     of akComment, akCustomId, akLabel:
@@ -5937,8 +5891,7 @@ proc editLabelDialog(dlg: var EditLabelDialogParams, a) =
   y += 44
 
   if validationError != "":
-    koi.label(x, y, DlgWidth, h, validationError,
-        style = a.theme.errorLabelStyle)
+    koi.label(x, y, DlgWidth, h, validationError, style = a.theme.errorLabelStyle)
     y += h
 
   (x, y) = dialogButtonsStartPos(DlgWidth, DlgHeight, 2)
@@ -5970,8 +5923,7 @@ proc editLabelDialog(dlg: var EditLabelDialogParams, a) =
 
   x += DlgButtonWidth + DlgButtonPad
   if koi.button(
-    x, y, DlgButtonWidth, h, fmt"{IconClose} Cancel",
-    style = a.theme.buttonStyle
+    x, y, DlgButtonWidth, h, fmt"{IconClose} Cancel", style = a.theme.buttonStyle
   ):
     cancelAction(a)
 
@@ -6042,11 +5994,11 @@ proc editRegionPropsDialog(dlg: var EditRegionPropsParams, a) =
     dlg.name,
     activate = dlg.activateFirstTextField,
     constraint =
-    TextFieldConstraint(
-      kind: tckString,
-      minLen: RegionNameLimits.minRuneLen,
-      maxLen: RegionNameLimits.maxRuneLen.some,
-    ).some,
+      TextFieldConstraint(
+        kind: tckString,
+        minLen: RegionNameLimits.minRuneLen,
+        maxLen: RegionNameLimits.maxRuneLen.some,
+      ).some,
     style = a.theme.textFieldStyle,
   )
 
@@ -6080,8 +6032,7 @@ proc editRegionPropsDialog(dlg: var EditRegionPropsParams, a) =
   y += 172
 
   if validationError != "":
-    koi.label(x, y, DlgWidth, h, validationError,
-        style = a.theme.errorLabelStyle)
+    koi.label(x, y, DlgWidth, h, validationError, style = a.theme.errorLabelStyle)
     y += h
 
   proc okAction(dlg: EditRegionPropsParams, a) =
@@ -6091,8 +6042,7 @@ proc editRegionPropsDialog(dlg: var EditRegionPropsParams, a) =
     let regionCoords = map.getRegionCoords(cur)
     let region = initRegion(name = dlg.name, notes = dlg.notes)
 
-    actions.setRegionProperties(map, cur, regionCoords, region,
-        a.doc.undoManager)
+    actions.setRegionProperties(map, cur, regionCoords, region, a.doc.undoManager)
 
     setStatusMessage(IconFile, "Region properties updated", a)
     closeDialog(a)
@@ -6174,14 +6124,12 @@ proc saveDiscardThemeDialog(dlg: SaveDiscardThemeDialogParams, a) =
   var y = DlgTopPad
 
   koi.label(
-    x, y, DlgWidth, h, "You have made changes to the theme.",
-    style = a.theme.labelStyle
+    x, y, DlgWidth, h, "You have made changes to the theme.", style = a.theme.labelStyle
   )
 
   y += h
   koi.label(
-    x, y, DlgWidth, h, "Do you want to save the theme?",
-    style = a.theme.labelStyle
+    x, y, DlgWidth, h, "Do you want to save the theme?", style = a.theme.labelStyle
   )
 
   proc okAction(dlg: SaveDiscardThemeDialogParams, a) =
@@ -6207,15 +6155,13 @@ proc saveDiscardThemeDialog(dlg: SaveDiscardThemeDialogParams, a) =
 
   x += DlgButtonWidth + DlgButtonPad
   if koi.button(
-    x, y, DlgButtonWidth, h, fmt"{IconTrash} Discard",
-    style = a.theme.buttonStyle
+    x, y, DlgButtonWidth, h, fmt"{IconTrash} Discard", style = a.theme.buttonStyle
   ):
     discardAction(dlg, a)
 
   x += DlgButtonWidth + DlgButtonPad
   if koi.button(
-    x, y, DlgButtonWidth, h, fmt"{IconClose} Cancel",
-    style = a.theme.buttonStyle
+    x, y, DlgButtonWidth, h, fmt"{IconClose} Cancel", style = a.theme.buttonStyle
   ):
     cancelAction(a)
 
@@ -6281,8 +6227,7 @@ proc overwriteThemeDialog(dlg: OverwriteThemeDialogParams, a) =
 
   y += h
   koi.label(
-    x, y, DlgWidth, h, "Do you want to overwrite it?",
-    style = a.theme.labelStyle
+    x, y, DlgWidth, h, "Do you want to overwrite it?", style = a.theme.labelStyle
   )
 
   proc okAction(dlg: OverwriteThemeDialogParams, a) =
@@ -6308,8 +6253,7 @@ proc overwriteThemeDialog(dlg: OverwriteThemeDialogParams, a) =
   x += 20
   x += DlgButtonWidth + DlgButtonPad
   if koi.button(
-    x, y, DlgButtonWidth, h, fmt"{IconClose} Cancel",
-    style = a.theme.buttonStyle
+    x, y, DlgButtonWidth, h, fmt"{IconClose} Cancel", style = a.theme.buttonStyle
   ):
     cancelAction(a)
 
@@ -6441,8 +6385,7 @@ proc copyThemeDialog(dlg: var CopyThemeDialogParams, a) =
 
   x += DlgButtonWidth + DlgButtonPad
   if koi.button(
-    x, y, DlgButtonWidth, h, fmt"{IconClose} Cancel",
-    style = a.theme.buttonStyle
+    x, y, DlgButtonWidth, h, fmt"{IconClose} Cancel", style = a.theme.buttonStyle
   ):
     cancelAction(a)
 
@@ -6576,8 +6519,7 @@ proc renameThemeDialog(dlg: var RenameThemeDialogParams, a) =
 
   x += DlgButtonWidth + DlgButtonPad
   if koi.button(
-    x, y, DlgButtonWidth, h, fmt"{IconClose} Cancel",
-    style = a.theme.buttonStyle
+    x, y, DlgButtonWidth, h, fmt"{IconClose} Cancel", style = a.theme.buttonStyle
   ):
     cancelAction(a)
 
@@ -6648,15 +6590,13 @@ proc deleteThemeDialog(a) =
   (x, y) = dialogButtonsStartPos(DlgWidth, DlgHeight, 2)
 
   if koi.button(
-    x, y, DlgButtonWidth, h, fmt"{IconCheck} Delete",
-    style = a.theme.buttonStyle
+    x, y, DlgButtonWidth, h, fmt"{IconCheck} Delete", style = a.theme.buttonStyle
   ):
     okAction(a)
 
   x += DlgButtonWidth + DlgButtonPad
   if koi.button(
-    x, y, DlgButtonWidth, h, fmt"{IconClose} Cancel",
-    style = a.theme.buttonStyle
+    x, y, DlgButtonWidth, h, fmt"{IconClose} Cancel", style = a.theme.buttonStyle
   ):
     cancelAction(a)
 
@@ -6740,8 +6680,7 @@ proc setFloorAction(f: Floor, a) =
       Horiz
 
   actions.setFloor(
-    a.doc.map, a.ui.cursor, f, orientation, a.ui.currFloorColor,
-    a.doc.undoManager
+    a.doc.map, a.ui.cursor, f, orientation, a.ui.currFloorColor, a.doc.undoManager
   )
 
   setStatusMessage(fmt"Set floor type – {f}", a)
@@ -6792,8 +6731,7 @@ proc startExcavateTunnelAction(a) =
 proc startEraseCellsAction(a) =
   let cur = a.ui.cursor
   actions.eraseCell(
-    a.doc.map, loc = cur, undoLoc = cur, a.doc.undoManager,
-    groupWithPrev = false
+    a.doc.map, loc = cur, undoLoc = cur, a.doc.undoManager, groupWithPrev = false
   )
 
   setStatusMessage(IconEraser, "Erase cell", @[IconArrowsAll, "erase"], a)
@@ -7159,8 +7097,7 @@ proc handleLevelMouseEvents(a) =
       else:
         moveLevelView(North, -rowSteps, a)
 
-    if ui.editMode == emPanLevel and ui.prevEditMode in {emPastePreview,
-        emMovePreview}:
+    if ui.editMode == emPanLevel and ui.prevEditMode in {emPastePreview, emMovePreview}:
       dp.selStartRow = ui.cursor.row
       dp.selStartCol = ui.cursor.col
 
@@ -7283,8 +7220,7 @@ proc setSelectJumpToLinkSrcActionMessage(a) =
 
   setStatusMessage(
     IconLink,
-    fmt"Select {linkFloorToString(floor)} " &
-    fmt"source ({currIdx} of {count})",
+    fmt"Select {linkFloorToString(floor)} " & fmt"source ({currIdx} of {count})",
     @[IconArrowsAll, "next/prev", "Enter/Esc", "exit"],
     a,
   )
@@ -7589,11 +7525,10 @@ proc handleGlobalKeyEvents(a) =
       if not (ke.key == keySpace) and not (ke.action == kaUp) and
           not (
             ke.key in {
-              keyLeftControl, keyLeftShift, keyLeftAlt, keyRightControl,
-              keyRightShift,
+              keyLeftControl, keyLeftShift, keyLeftAlt, keyRightControl, keyRightShift,
               keyRightAlt,
-        }
-      ):
+            }
+          ):
         resetManualNoteTooltip(a)
 
       if ui.walkMode:
@@ -7630,21 +7565,17 @@ proc handleGlobalKeyEvents(a) =
         )
 
         actions.drawClearFloor(
-          map, loc = cur, undoLoc = cur, ui.currFloorColor, um,
-          groupWithPrev = false
+          map, loc = cur, undoLoc = cur, ui.currFloorColor, um, groupWithPrev = false
         )
-      elif ke.isShortcutDown({scRotateFloorClockwise,
-          scRotateFloorAntiClockwise}, a):
+      elif ke.isShortcutDown({scRotateFloorClockwise, scRotateFloorAntiClockwise}, a):
         let floor = map.getFloor(cur)
 
         if floor in HorizVertFloors:
           if map.getFloorOrientation(cur).isHoriz:
-            setStatusMessage(IconArrowsHoriz,
-                "Floor orientation set to horizontal", a)
+            setStatusMessage(IconArrowsHoriz, "Floor orientation set to horizontal", a)
             actions.setFloorOrientation(map, cur, dirN, um)
           else:
-            setStatusMessage(IconArrowsVert,
-                "Floor orientation set to vertical", a)
+            setStatusMessage(IconArrowsVert, "Floor orientation set to vertical", a)
             actions.setFloorOrientation(map, cur, dirE, um)
         elif floor in RotatableFloors:
           let
@@ -7672,8 +7603,7 @@ proc handleGlobalKeyEvents(a) =
 
         if not map.isEmpty(cur):
           actions.setFloorColor(
-            map, loc = cur, undoLoc = cur, ui.currFloorColor, um,
-            groupWithPrev = false
+            map, loc = cur, undoLoc = cur, ui.currFloorColor, um, groupWithPrev = false
           )
       elif not ui.wasdMode and ke.isShortcutDown(scDrawWall, a):
         enterDrawWallMode(specialWall = false, a)
@@ -7868,8 +7798,7 @@ proc handleGlobalKeyEvents(a) =
             ui.jumpToSrcLocationIdx = oldIdx
 
           ui.jumpToDestLocation = cur
-          ui.lastJumpToSrcLocation = ui.jumpToSrcLocations[
-              ui.jumpToSrcLocationIdx]
+          ui.lastJumpToSrcLocation = ui.jumpToSrcLocations[ui.jumpToSrcLocationIdx]
           ui.wasDrawingTrail = ui.drawTrail
           ui.drawTrail = false
 
@@ -7998,8 +7927,7 @@ proc handleGlobalKeyEvents(a) =
       elif ke.isShortcutDown(scToggleCellCoords, a):
         toggleShowOption(a.ui.showCellCoords, NoIcon, "Cell coordinates", a)
       elif ke.isShortcutDown(scToggleCurrentNotePane, a):
-        toggleShowOption(a.layout.showCurrentNotePane, NoIcon,
-            "Current note pane", a)
+        toggleShowOption(a.layout.showCurrentNotePane, NoIcon, "Current note pane", a)
       elif ke.isShortcutDown(scToggleNotesListPane, a):
         toggleShowOption(a.layout.showNotesListPane, NoIcon, "Note list pane", a)
       elif ke.isShortcutDown(scToggleToolsPane, a):
@@ -8055,8 +7983,7 @@ proc handleGlobalKeyEvents(a) =
               if ui.walkMode:
                 ui.cursorOrient.some
               else:
-                moveKeyToCardinalDir(ke, allowWasdKeys = true,
-                    allowRepeat = true)
+                moveKeyToCardinalDir(ke, allowWasdKeys = true, allowRepeat = true)
 
             actions.excavateTunnel(
               map,
@@ -8080,8 +8007,7 @@ proc handleGlobalKeyEvents(a) =
             )
         elif ui.editMode == emEraseCell:
           actions.eraseCell(
-            map, loc = cur, undoLoc = ui.prevCursor, um,
-            groupWithPrev = ui.drawTrail
+            map, loc = cur, undoLoc = ui.prevCursor, um, groupWithPrev = ui.drawTrail
           )
         elif ui.editMode == emEraseTrail:
           actions.eraseTrail(map, loc = cur, undoLoc = cur, um)
@@ -8208,8 +8134,7 @@ proc handleGlobalKeyEvents(a) =
             if dir in {dirN, dirE}:
               curSpecWall = wWritingNE
 
-          let w = if map.getWall(cur, dir) ==
-              curSpecWall: wNone else: curSpecWall
+          let w = if map.getWall(cur, dir) == curSpecWall: wNone else: curSpecWall
 
           ui.drawWallRepeatAction = if w == wNone: dwaClear else: dwaSet
           ui.drawWallRepeatWall = w
@@ -8322,8 +8247,7 @@ proc handleGlobalKeyEvents(a) =
           ui.pasteUndoLocation = bboxTopLeft
 
           actions.cutSelection(
-            map, bboxTopLeft, bbox, selection,
-            linkDestLevelId = MoveBufferLevelId, um
+            map, bboxTopLeft, bbox, selection, linkDestLevelId = MoveBufferLevelId, um
           )
           exitSelectMode(a)
 
@@ -8358,8 +8282,7 @@ proc handleGlobalKeyEvents(a) =
         let selection = ui.selection.get
         let bbox = selection.boundingBox
         if bbox.isSome:
-          actions.surroundSelectionWithWalls(map, cur.levelId, selection,
-              bbox.get, um)
+          actions.surroundSelectionWithWalls(map, cur.levelId, selection, bbox.get, um)
           exitSelectMode(a)
           setStatusMessage(IconBorders, "Surrounded selection with walls", a)
       elif ke.isShortcutDown(scSelectionSetFloorColorArea, a):
@@ -8667,8 +8590,7 @@ proc handleGlobalKeyEvents(a) =
           destIdx = ui.jumpToSrcLocationIdx - 1
 
         ui.jumpToSrcLocationIdx = destIdx.floorMod(ui.jumpToSrcLocations.len)
-        ui.lastJumpToSrcLocation = ui.jumpToSrcLocations[
-            ui.jumpToSrcLocationIdx]
+        ui.lastJumpToSrcLocation = ui.jumpToSrcLocations[ui.jumpToSrcLocationIdx]
 
         moveCursorTo(ui.lastJumpToSrcLocation, a)
         setSelectJumpToLinkSrcActionMessage(a)
@@ -8684,8 +8606,7 @@ proc handleGlobalKeyEvents(a) =
       if ke.isShortcutDown(scAccept, a) or ke.isShortcutDown(scCancel, a):
         ui.editMode = emNormal
         if ui.wasDrawingTrail:
-          actions.drawTrail(map, loc = ui.cursor,
-              undoLoc = ui.jumpToDestLocation, um)
+          actions.drawTrail(map, loc = ui.cursor, undoLoc = ui.jumpToDestLocation, um)
           ui.drawTrail = true
         clearStatusMessage(a)
       elif ke.isShortcutDown(scJumpToLinkedCell, a):
@@ -8766,8 +8687,8 @@ proc handleQuickRefKeyEvents(a) =
       openUserManual(a)
     elif ke.isShortcutDown(scToggleThemeEditor, a):
       toggleThemeEditor(a)
-    elif ke.isShortcutDown(scToggleQuickReference, a) or ke.isShortcutDown(
-        scAccept, a) or ke.isShortcutDown(scCancel, a) or isKeyDown(keySpace):
+    elif ke.isShortcutDown(scToggleQuickReference, a) or ke.isShortcutDown(scAccept, a) or
+        ke.isShortcutDown(scCancel, a) or isKeyDown(keySpace):
       a.ui.showQuickReference = false
       clearStatusMessage(a)
 
@@ -8930,14 +8851,12 @@ proc renderNoteTooltip(
       noteBoxY -= offs
       textY -= offs
 
-    vg.drawShadow(noteBoxX, noteBoxY, noteBoxW, noteBoxH,
-        lt.noteTooltipShadowStyle)
+    vg.drawShadow(noteBoxX, noteBoxY, noteBoxW, noteBoxH, lt.noteTooltipShadowStyle)
 
     vg.fillColor(a.theme.levelTheme.noteTooltipBackgroundColor)
     vg.beginPath
     vg.roundedRect(
-      noteBoxX, noteBoxY, noteBoxW, noteBoxH,
-      radius = lt.noteTooltipCornerRadius
+      noteBoxX, noteBoxY, noteBoxW, noteBoxH, radius = lt.noteTooltipCornerRadius
     )
     vg.fill
 
@@ -8981,8 +8900,7 @@ proc renderLevel(x, y, w, h: float, levelDrawWidth, levelDrawHeight: float, a) =
     dp.selectionWraparound = (ui.pasteWraparound and ui.editMode != emNudgePreview)
 
     if ui.walkMode and (
-      (ui.editMode in {emNormal, emExcavateTunnel, emEraseCell,
-          emDrawClearFloor}) or
+      (ui.editMode in {emNormal, emExcavateTunnel, emEraseCell, emDrawClearFloor}) or
       (ui.editMode == emPanLevel and ui.prevEditMode == emNormal)
     ):
       dp.cursorOrient = ui.cursorOrient.some
@@ -8994,8 +8912,7 @@ proc renderLevel(x, y, w, h: float, levelDrawWidth, levelDrawHeight: float, a) =
 
     dp.selectionBuffer = (
       if ui.editMode == emPastePreview or
-          (ui.editMode == emPanLevel and ui.prevEditMode ==
-              emPastePreview): ui.copyBuf
+          (ui.editMode == emPanLevel and ui.prevEditMode == emPastePreview): ui.copyBuf
       elif ui.editMode in {emMovePreview, emNudgePreview} or
         (
           ui.editMode == emPanLevel and
@@ -9039,8 +8956,7 @@ proc renderLevel(x, y, w, h: float, levelDrawWidth, levelDrawHeight: float, a) =
   var mouseOverCellWithNote = false
   var note: Option[Annotation]
 
-  if koi.isHot(id) and ui.editMode == emNormal and not (ui.wasdMode and
-      isActive(id)) and
+  if koi.isHot(id) and ui.editMode == emNormal and not (ui.wasdMode and isActive(id)) and
       (
         koi.mx() != ui.manualNoteTooltipState.mx or
         koi.my() != ui.manualNoteTooltipState.my
@@ -9120,8 +9036,7 @@ proc specialWallDrawProc(
       savedForegroundLightNormalColor = lt.foregroundLightNormalColor
       savedBackgroundImage = dp.backgroundImage
 
-    lt.floorBackgroundColor[0] = lerp(lt.backgroundColor, bgCol,
-        bgCol.a).withAlpha(1.0)
+    lt.floorBackgroundColor[0] = lerp(lt.backgroundColor, bgCol, bgCol.a).withAlpha(1.0)
     if active:
       lt.foregroundNormalNormalColor = lt.foregroundNormalCursorColor
       lt.foregroundLightNormalColor = lt.foregroundLightCursorColor
@@ -9232,8 +9147,7 @@ proc renderToolsPane(x, y, w, h: float, a) =
     labels = newSeq[string](SpecialWalls.len),
     ui.currSpecialWall,
     tooltips = SpecialWallTooltips,
-    layout = RadioButtonsLayout(kind: rblGridVert,
-        itemsPerColumn: toolItemsPerColumn),
+    layout = RadioButtonsLayout(kind: rblGridVert, itemsPerColumn: toolItemsPerColumn),
     drawProc = specialWallDrawProc(
       a.theme.levelTheme, a.theme.toolbarPaneTheme, ui.toolbarDrawParams
     ).some,
@@ -9252,8 +9166,7 @@ proc renderToolsPane(x, y, w, h: float, a) =
     labels = newSeq[string](lt.floorBackgroundColor.len),
     ui.currFloorColor,
     tooltips = @[],
-    layout = RadioButtonsLayout(kind: rblGridVert,
-        itemsPerColumn: colorItemsPerColum),
+    layout = RadioButtonsLayout(kind: rblGridVert, itemsPerColumn: colorItemsPerColum),
     drawProc = colorRadioButtonDrawProc(floorColors, lt.cursorColor).some,
   )
 
@@ -9466,8 +9379,10 @@ proc rebuildNotesListCache(textW: float, a) =
     searchTerms = nls.currFilter.searchTerm.strip.toLower.splitWhitespace
 
   proc maybeAddCacheEntry(
-      s: var seq[NotesListCacheEntry], loc: Location, note: Annotation,
-          vg: KoiRenderContext
+      s: var seq[NotesListCacheEntry],
+      loc: Location,
+      note: Annotation,
+      vg: KoiRenderContext,
   ) =
     if note.kind in annotationKindFilter and
         (searchTerms.len == 0 or searchTerms.anyIt(note.text.toLower.contains(it))):
@@ -9477,11 +9392,9 @@ proc rebuildNotesListCache(textW: float, a) =
         textBounds = vg.textBoxBounds(0, 0, textW, note.text)
         height = textBounds.y2 - textBounds.y1 + NoteVertPad
 
-      s.add(NotesListCacheEntry(kind: nckNote, id: id, location: loc,
-          height: height))
+      s.add(NotesListCacheEntry(kind: nckNote, id: id, location: loc, height: height))
 
-  proc sortCacheEntries(s: var seq[NotesListCacheEntry],
-      orderBy: NoteOrdering) =
+  proc sortCacheEntries(s: var seq[NotesListCacheEntry], orderBy: NoteOrdering) =
     case orderBy
     of noType:
       s.sort(sortByTypeTextLocation)
@@ -9511,8 +9424,7 @@ proc rebuildNotesListCache(textW: float, a) =
     for regionCoords, region in l.regions.sortedRegions:
       let s = collectRegionNotes(l, regionCoords, a)
       if s.len > 0:
-        result.add(NotesListCacheEntry(kind: nckRegion,
-            regionCoords: regionCoords))
+        result.add(NotesListCacheEntry(kind: nckRegion, regionCoords: regionCoords))
         result.add(s)
 
   case nls.currFilter.scope
@@ -9668,10 +9580,10 @@ proc renderNotesListPane(x, y, w, h: float, a) =
     wh,
     nls.currFilter.scope,
     tooltips =
-    @[
-      "All map levels, group by level", "Current level only",
-      "Current level only, group by region",
-    ],
+      @[
+        "All map levels, group by level", "Current level only",
+        "Current level only, group by region",
+      ],
     style = a.theme.radioButtonStyle,
   )
 
@@ -9737,11 +9649,11 @@ proc renderNotesListPane(x, y, w, h: float, a) =
     wh,
     nls.currFilter.searchTerm,
     constraint =
-    TextFieldConstraint(
-      kind: tckString,
-      minLen: NotesListSearchTermLimits.minRuneLen,
-      maxLen: NotesListSearchTermLimits.maxRuneLen.some,
-    ).some,
+      TextFieldConstraint(
+        kind: tckString,
+        minLen: NotesListSearchTermLimits.minRuneLen,
+        maxLen: NotesListSearchTermLimits.maxRuneLen.some,
+      ).some,
     style = a.theme.textFieldStyle,
   )
 
@@ -9751,8 +9663,7 @@ proc renderNotesListPane(x, y, w, h: float, a) =
   koi.label(wx + 1, wy, 60, wh, "Order by", style = a.theme.labelStyle)
 
   koi.dropDown(
-    wx + 64, wy, w = 65, wh, nls.currFilter.orderBy,
-    style = a.theme.dropDownStyle
+    wx + 64, wy, w = 65, wh, nls.currFilter.orderBy, style = a.theme.dropDownStyle
   )
 
   # Expand/collapse all
@@ -9821,8 +9732,7 @@ proc renderNotesListPane(x, y, w, h: float, a) =
   var cacheRebuilt = false
 
   if map.levelsDirty or l.dirty or l.annotations.dirty or
-      nls.currFilter != nls.prevFilter or ui.cursor.levelId !=
-          ui.prevCursor.levelId or (
+      nls.currFilter != nls.prevFilter or ui.cursor.levelId != ui.prevCursor.levelId or (
     l.regionOpts.enabled and
     map.getRegionCoords(ui.cursor) != map.getRegionCoords(ui.prevCursor)
   ):
@@ -9900,8 +9810,7 @@ proc renderNotesListPane(x, y, w, h: float, a) =
   let syncToCursor =
     nls.linkCursor and (
       cacheRebuilt or
-      (currNote.isSome and (ui.cursor != ui.prevCursor or
-          not nls.prevLinkCursor))
+      (currNote.isSome and (ui.cursor != ui.prevCursor or not nls.prevLinkCursor))
     )
 
   let currNoteInCache = nls.cache.anyIt(it.kind == nckNote and it.location == ui.cursor)
@@ -10456,8 +10365,7 @@ proc renderThemeEditorPane(x, y, w, h: float, a) =
   titleStyle.align = haCenter
 
   cy += 6.0
-  koi.label(cx, cy, w, wh, "T  H  E  M  E       E  D  I  T  O  R",
-      style = titleStyle)
+  koi.label(cx, cy, w, wh, "T  H  E  M  E       E  D  I  T  O  R", style = titleStyle)
 
   # Theme name & action buttons
   vg.beginPath
@@ -10586,8 +10494,7 @@ proc renderCommand(x, y: float, command: string, a): float =
   let s = a.theme.statusBarTheme
 
   renderCommand(
-    x, y, command, bgColor = s.commandBackgroundColor,
-    textColor = s.commandTextColor, a
+    x, y, command, bgColor = s.commandBackgroundColor, textColor = s.commandTextColor, a
   )
 
 # }}}
@@ -10717,8 +10624,7 @@ proc renderQuickReference(x, y, w, h: float, a) =
         var ys = y
         for sc in shortcuts:
           let shortcut = sc.toStr
-          discard renderCommand(x, ys, shortcut, commandBgColor,
-              commandTextColor, a)
+          discard renderCommand(x, ys, shortcut, commandBgColor, commandTextColor, a)
           ys += RowHeight
           heightInc += RowHeight
         if shortcuts.len > 1:
@@ -10728,8 +10634,7 @@ proc renderQuickReference(x, y, w, h: float, a) =
         var sx = x
         for idx, sc in item.keyShortcuts:
           let shortcut = sc.toStr
-          var xa = renderCommand(sx, y, shortcut, commandBgColor,
-              commandTextColor, a)
+          var xa = renderCommand(sx, y, shortcut, commandBgColor, commandTextColor, a)
           if idx < item.keyShortcuts.high:
             sx += xa + 13
             vg.fillColor(textColor)
@@ -10740,8 +10645,7 @@ proc renderQuickReference(x, y, w, h: float, a) =
       of qkCustomShortcuts:
         var sx = x
         for idx, shortcut in item.customShortcuts:
-          var xa = renderCommand(sx, y, shortcut, commandBgColor,
-              commandTextColor, a)
+          var xa = renderCommand(sx, y, shortcut, commandBgColor, commandTextColor, a)
           if idx < item.customShortcuts.high:
             sx += xa + 13
             vg.fillColor(textColor)
@@ -10905,8 +10809,7 @@ proc renderUI(a) =
     if not map.hasLevels:
       renderEmptyMap(a)
     else:
-      koi.beginView(x = mainPane.x1, y = mainPane.y1, w = mainPane.w,
-          h = mainPane.h)
+      koi.beginView(x = mainPane.x1, y = mainPane.y1, w = mainPane.w, h = mainPane.h)
 
       # About button
       if button(
@@ -10963,8 +10866,7 @@ proc renderUI(a) =
         let totalNotePaneHeight =
           CurrentNotePaneHeight + CurrentNotePaneTopPad + CurrentNotePaneBottomPad
 
-        if mainPane.h - toolsPaneHeight - ToolsPaneTopPad <
-            totalNotePaneHeight - 30:
+        if mainPane.h - toolsPaneHeight - ToolsPaneTopPad < totalNotePaneHeight - 30:
           paneWidth -= toolsPaneWidth(a)
 
         renderCurrentNotePane(
@@ -11094,12 +10996,10 @@ proc renderMainWindowSplash(a) =
     x = (canvasWidth - splashWidth) / 2
     y = (canvasHeight - splashHeight) / 2 - canvasHeight * 0.07
 
-  s.logoPaint = createPattern(vg, s.logoImage, xoffs = x, yoffs = y, scale = scale)
-
   let
     backgroundColor = a.theme.windowTheme.backgroundColor
     textColor = cfg.getColorOrDefault("ui.splash-image.outline")
-    logoPaint = s.logoPaint
+    logoImage = s.logoImage
 
   koi.addDrawLayer(layerGlobalOverlay, vg):
     vg.beginPath
@@ -11107,10 +11007,7 @@ proc renderMainWindowSplash(a) =
     vg.fillColor(backgroundColor)
     vg.fill
 
-    vg.beginPath
-    vg.rect(x, y, splashWidth, splashHeight)
-    vg.fillPaint(logoPaint)
-    vg.fill
+    vg.drawImage(logoImage, x, y, splashWidth, splashHeight)
 
     vg.fillColor(textColor)
     vg.setFont(24, "sans-black", horizAlign = haCenter, vertAlign = vaMiddle)
@@ -11341,10 +11238,8 @@ proc renderFrameSplash(a) =
           false
 
       when defined(gridmongerBackendWayland):
-        a.splash.dismissRequested or w.isKeyDown(keyEscape) or w.isKeyDown(
-            keySpace) or
-          w.isKeyDown(keyEnter) or w.isKeyDown(keyKpEnter) or w.mouseButtonDown(
-              mbLeft) or
+        a.splash.dismissRequested or w.isKeyDown(keyEscape) or w.isKeyDown(keySpace) or
+          w.isKeyDown(keyEnter) or w.isKeyDown(keyKpEnter) or w.mouseButtonDown(mbLeft) or
           w.mouseButtonDown(mbRight) or w.mouseButtonDown(mbMiddle) or autoClose
       else:
         {.push warning[HoleEnumConv]: off.}
@@ -11435,8 +11330,7 @@ else:
   proc showSplash(a) =
     alias(s, g_app.splash)
 
-    let (_, _, maxWidth, maxHeight) = glfwLib.workArea(
-        g_app.win.findCurrentMonitor())
+    let (_, _, maxWidth, maxHeight) = glfwLib.workArea(g_app.win.findCurrentMonitor())
     let w = (maxWidth * 0.6).int
     let h = (w / s.logo.width * s.logo.height).int
 
@@ -11679,8 +11573,7 @@ proc initPreferences(cfg: HoconNode, a) =
     loadLastMap = prefs.getBoolOrDefault("load-last-map", true)
 
     autosave = prefs.getBoolOrDefault("auto-save.enabled", true)
-    autosaveFreqMins = prefs.getNaturalOrDefault("auto-save.frequency-mins",
-        2).limit(
+    autosaveFreqMins = prefs.getNaturalOrDefault("auto-save.frequency-mins", 2).limit(
         AutosaveFreqMinsLimits
       )
 
@@ -11830,8 +11723,7 @@ proc initApp(
   initPreferences(cfg, a)
 
   if a.prefs.autosave:
-    appEvents.setAutoSaveTimeout(initDuration(
-        minutes = a.prefs.autosaveFreqMins))
+    appEvents.setAutoSaveTimeout(initDuration(minutes = a.prefs.autosaveFreqMins))
   else:
     appEvents.disableAutoSave()
 
@@ -11851,8 +11743,7 @@ proc initApp(
   const DefaultThemeName = "Default"
 
   var themeIndex =
-    findThemeIndex(cfg.getStringOrDefault("last-state.theme-name",
-        DefaultThemeName), a)
+    findThemeIndex(cfg.getStringOrDefault("last-state.theme-name", DefaultThemeName), a)
   if themeIndex.isNone:
     themeIndex = findThemeIndex(DefaultThemeName, a)
 
@@ -11867,8 +11758,7 @@ proc initApp(
 
   # Init map & load last map, or map from command line
   a.doc.map = newMap(
-    "Untitled Map", game = "", author = "",
-    creationTime = currentLocalDatetimeString()
+    "Untitled Map", game = "", author = "", creationTime = currentLocalDatetimeString()
   )
 
   let mapFileName =
@@ -12003,8 +11893,7 @@ proc handleAutoSaveEvent(event: AppEvent, a) =
     var path = if a.doc.path == "": a.doc.lastSavePath else: a.doc.path
     if path == "":
       path =
-        findUniquePath(dir = a.paths.autosaveDir, name = UntitledName,
-            ext = MapFileExt)
+        findUniquePath(dir = a.paths.autosaveDir, name = UntitledName, ext = MapFileExt)
 
     saveMap(path, autosave = true, createBackup = true, a)
 
@@ -12077,16 +11966,13 @@ proc main() =
 
       let event = appEvents.tryRecv()
       if event.isSome and event.get.kind == aeOpenFile:
-        initApp(configFile, mapFile = event.get.path.some, winCfg,
-            hideSplash = true, a)
+        initApp(configFile, mapFile = event.get.path.some, winCfg, hideSplash = true, a)
       else:
         initApp(
-          configFile, mapFile, winCfg, hideSplash = winCfg.hideSplash.get(
-              false), a
+          configFile, mapFile, winCfg, hideSplash = winCfg.hideSplash.get(false), a
         )
     else: # Windows, Linux
-      initApp(configFile, mapFile, winCfg, hideSplash = winCfg.hideSplash.get(
-          false), a)
+      initApp(configFile, mapFile, winCfg, hideSplash = winCfg.hideSplash.get(false), a)
 
     a.win.show
 

@@ -163,11 +163,11 @@ proc commonFlags(backend: string): string =
   result =
     "--mm:orc --threads:on --deepcopy:on -d:ssl " &
     "-d:nimPreviewFloatRoundtrip -d:NoGLFW -d:koiVulkan " &
-    "--passC:-Wno-incompatible-pointer-types --passC:-D_GNU_SOURCE " &
-    "--passC:-I" & quoteShell(glfwIncludePath()) & " " & "--path:" &
-    quoteShell(koiSrcPath()) & " " & "--path:" & quoteShell(packageSrcPath("webgpu")) &
-    " " & "--nimcache:" & quoteShell("/tmp/gridmonger_nimcache_" & backend) &
-    " --hint:Name:off " & backendFlags(backend)
+    "--passC:-Wno-incompatible-pointer-types --passC:-D_GNU_SOURCE " & "--passC:-I" &
+    quoteShell(glfwIncludePath()) & " " & "--path:" & quoteShell(koiSrcPath()) & " " &
+    "--path:" & quoteShell(packageSrcPath("webgpu")) & " " & "--nimcache:" &
+    quoteShell("/tmp/gridmonger_nimcache_" & backend) & " --hint:Name:off " &
+    backendFlags(backend)
 
   when hostOS == "linux":
     result.add " -d:osdialogGtk3"
