@@ -931,6 +931,7 @@ type
     backend: OkysVulkanHost
     show: bool
     dismissRequested: bool
+    mainWindowFrames: Natural
     t0: MonoTime
 
     logo: ImageData
@@ -11054,7 +11055,7 @@ proc loadSplashImages(a)
 
 proc useMainWindowSplash(a): bool =
   when defined(gridmongerBackendWayland):
-    a.splash.show and a.splash.win == nil and not a.layout.showThemeEditor
+    a.splash.show and a.splash.win == nil
   else:
     false
 
@@ -11062,95 +11063,81 @@ proc renderMainWindowSplash(a) =
   alias(s, a.splash)
   alias(vg, a.vg)
 
+  if not s.logo.hasData or s.logo.width > 1024 or s.logo.height > 1024:
+    s.logo = loadImage(a.paths.dataDir / "logo-small.png")
+    createAlpha(s.logo)
+    if s.logoImage != NoImage:
+      vg.deleteImage(s.logoImage)
+      s.logoImage = NoImage
+    s.updateLogoImage = true
   if not s.logo.hasData:
-    loadSplashImages(a)
+    return
+  if s.logo.width == 0 or s.logo.height == 0:
+    return
 
   let cfg = a.theme.config
 
   if s.logoImage == NoImage or s.updateLogoImage:
-    colorImage(s.logo, cfg.getColorOrDefault("ui.splash-image.logo"))
+    colorImage(s.logo, cfg.getColorOrDefault("ui.splash-image.outline"))
     if s.logoImage == NoImage:
       s.logoImage = createImage(s.logo)
     else:
       vg.updateImage(s.logoImage, s.logo.dataPtr)
     s.updateLogoImage = false
 
-  if s.outlineImage == NoImage or s.updateOutlineImage:
-    colorImage(s.outline, cfg.getColorOrDefault("ui.splash-image.outline"))
-    if s.outlineImage == NoImage:
-      s.outlineImage = createImage(s.outline)
-    else:
-      vg.updateImage(s.outlineImage, s.outline.dataPtr)
-    s.updateOutlineImage = false
-
-  if s.shadowImage == NoImage or s.updateShadowImage:
-    colorImage(s.shadow, black())
-    if s.shadowImage == NoImage:
-      s.shadowImage = createImage(s.shadow)
-    else:
-      vg.updateImage(s.shadowImage, s.shadow.dataPtr)
-    s.updateShadowImage = false
-
   let
     canvasWidth = koi.winWidth()
     canvasHeight = koi.winHeight()
-    splashWidth = min(canvasWidth * 0.78, s.logo.width * 1.5)
-    scale = splashWidth / s.logo.width
+    scale = min(canvasWidth * 0.58 / s.logo.width, canvasHeight * 0.48 / s.logo.height)
+    splashWidth = s.logo.width * scale
     splashHeight = s.logo.height * scale
     x = (canvasWidth - splashWidth) / 2
-    y = (canvasHeight - splashHeight) / 2
+    y = (canvasHeight - splashHeight) / 2 - canvasHeight * 0.07
 
   s.logoPaint = createPattern(vg, s.logoImage, xoffs = x, yoffs = y, scale = scale)
-  s.outlinePaint =
-    createPattern(vg, s.outlineImage, xoffs = x, yoffs = y, scale = scale)
-  s.shadowPaint = createPattern(
-    vg,
-    s.shadowImage,
-    alpha = cfg.getFloatOrDefault("ui.splash-image.shadow-alpha"),
-    xoffs = x,
-    yoffs = y,
-    scale = scale,
-  )
 
-  vg.beginPath
-  vg.rect(0, 0, canvasWidth, canvasHeight)
-  vg.fillColor(a.theme.windowTheme.backgroundColor)
-  vg.fill
+  let
+    backgroundColor = a.theme.windowTheme.backgroundColor
+    textColor = cfg.getColorOrDefault("ui.splash-image.outline")
+    logoPaint = s.logoPaint
 
-  vg.beginPath
-  vg.rect(x, y, splashWidth, splashHeight)
-  vg.fillPaint(s.shadowPaint)
-  vg.fill
+  koi.addDrawLayer(layerGlobalOverlay, vg):
+    vg.beginPath
+    vg.rect(0, 0, canvasWidth, canvasHeight)
+    vg.fillColor(backgroundColor)
+    vg.fill
 
-  vg.fillPaint(s.outlinePaint)
-  vg.fill
+    vg.beginPath
+    vg.rect(x, y, splashWidth, splashHeight)
+    vg.fillPaint(logoPaint)
+    vg.fill
 
-  vg.fillPaint(s.logoPaint)
-  vg.fill
+    vg.fillColor(textColor)
+    vg.setFont(24, "sans-black", horizAlign = haCenter, vertAlign = vaMiddle)
+    discard vg.text(canvasWidth * 0.5, y + splashHeight + 46, "GRIDMONGER")
+
+  inc s.mainWindowFrames
 
 proc shouldCloseMainWindowSplash(a): bool =
-  if a.layout.showThemeEditor:
-    not a.splash.show
-  else:
-    let autoClose =
-      if a.prefs.autoCloseSplash:
-        let dt = getMonoTime() - a.splash.t0
-        koi.setFramesLeft()
-        dt > initDuration(seconds = a.prefs.splashTimeoutSecs)
-      else:
-        false
+  let autoClose =
+    if a.prefs.autoCloseSplash:
+      let dt = getMonoTime() - a.splash.t0
+      koi.setFramesLeft()
+      dt > initDuration(seconds = a.prefs.splashTimeoutSecs)
+    else:
+      false
 
-    var inputDismiss = false
-    if koi.hasEvent():
-      let ev = koi.currEvent()
-      inputDismiss =
-        (ev.kind == ekKey and ev.action != kaUp) or
-        (ev.kind == ekMouseButton and ev.pressed)
+  var inputDismiss = false
+  if a.splash.mainWindowFrames > 0 and koi.hasEvent():
+    let ev = koi.currEvent()
+    inputDismiss =
+      (ev.kind == ekKey and ev.action != kaUp) or
+      (ev.kind == ekMouseButton and ev.pressed)
 
-      if inputDismiss:
-        koi.markEventHandled()
+    if inputDismiss:
+      koi.markEventHandled()
 
-    a.splash.dismissRequested or inputDismiss or autoClose
+  a.splash.dismissRequested or inputDismiss or autoClose
 
 proc renderFrameCb(a) =
   proc displayThemeLoadedMessage(a) =
@@ -11503,6 +11490,7 @@ proc closeSplash(a) =
 
   s.show = false
   s.dismissRequested = false
+  s.mainWindowFrames = 0
 
   if not a.layout.showThemeEditor:
     koi.setFocusCaptured(false)
