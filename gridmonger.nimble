@@ -7,7 +7,7 @@ license = "GPL-3.0-or-later"
 
 # Dependencies
 
-requires "nim >= 2.2.4", "osdialog", "riff", "semver", "with"
+requires "nim >= 2.2.4", "osdialog", "riff", "semver", "stb_image", "with"
 
 when hostOS == "windows":
   requires "winim"
@@ -97,6 +97,9 @@ proc koiSrcPath(): string =
     return envPath
   result = parentDir(getCurrentDir()) / "koi-webgpu"
 
+proc okysSrcPath(): string =
+  parentDir(koiSrcPath()) / "okys"
+
 proc koiWaylandLinkFlags(): string =
   let waylandDir = koiSrcPath() / "koi" / "wayland"
   " --passL:\"-L" & waylandDir / "zig-out" / "lib" & " -lkoi_wayland\" " &
@@ -159,8 +162,8 @@ proc commonFlags(backend: string): string =
   validateBackend(backend)
   result =
     "--mm:orc --threads:on --deepcopy:on -d:ssl " &
-    "-d:nimPreviewFloatRoundtrip -d:wgpu -d:wgvkWGSL -d:NoGLFW " &
-    "-d:koiWebGpu --passC:-Wno-incompatible-pointer-types --passC:-D_GNU_SOURCE " &
+    "-d:nimPreviewFloatRoundtrip -d:NoGLFW -d:koiVulkan " &
+    "--passC:-Wno-incompatible-pointer-types --passC:-D_GNU_SOURCE " &
     "--passC:-I" & quoteShell(glfwIncludePath()) & " " & "--path:" &
     quoteShell(koiSrcPath()) & " " & "--path:" & quoteShell(packageSrcPath("webgpu")) &
     " " & "--nimcache:" & quoteShell("/tmp/gridmonger_nimcache_" & backend) &
@@ -184,6 +187,9 @@ proc isReleaseMode(mode: BuildMode): bool =
 proc zigOptimizeMode(mode: BuildMode): string =
   if mode.isReleaseMode: "ReleaseFast" else: "Debug"
 
+proc okysOptimizeMode(mode: BuildMode): string =
+  if mode.isReleaseMode: "ReleaseFast" else: "ReleaseFast"
+
 proc stripBinary(path: string) =
   when hostOS == "macosx":
     sh "strip -S " & quoteShell(path)
@@ -192,9 +198,16 @@ proc stripBinary(path: string) =
   else:
     sh "strip " & quoteShell(path)
 
+proc buildOkysVulkan(mode: BuildMode) =
+  let cmd =
+    "zig build -Dbackend=vulkan -Doptimize=" & okysOptimizeMode(mode) & " --build-file " &
+    quoteShell(okysSrcPath() / "build.zig")
+  sh cmd
+
 proc compileGridmonger(
     mode: BuildMode, backend = hostBackend(), outPath = ExeName, extraFlags = ""
 ) =
+  buildOkysVulkan(mode)
   if backend == "wayland":
     sh "zig build -Doptimize=" & zigOptimizeMode(mode) & " --build-file " &
       quoteShell(koiSrcPath() / "koi" / "wayland" / "build.zig")

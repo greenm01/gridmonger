@@ -12,7 +12,7 @@ when defined(gridmongerBackendWayland):
 else:
   import glfw
   import koi/backends/glfw_wgpu
-import nanovg
+import koi/okys
 import with
 
 import common
@@ -432,7 +432,7 @@ proc snapToRight*(win) =
 # }}}
 
 # {{{ renderTitleBar()
-proc renderTitleBar(win; vg: NVGContext, canvasWidth: float) =
+proc renderTitleBar(win; vg: KoiRenderContext, canvasWidth: float) =
   alias(s, win.theme)
 
   let (bgColor, textColor, modifiedFlagColor, buttonStyle) =
@@ -710,7 +710,7 @@ type RenderFrameProc = proc(win: CSDWindow)
 var g_renderFramePreProc: RenderFramePreProc
 var g_renderFrameProc: RenderFrameProc
 
-proc renderFrame*(win: CSDWindow, vg: NVGContext) =
+proc renderFrame*(win: CSDWindow, vg: KoiRenderContext) =
   if win.w.iconified:
     return
 

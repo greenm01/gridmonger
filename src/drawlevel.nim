@@ -5,7 +5,7 @@ import std/sets
 import std/tables
 
 import koi
-import nanovg
+import koi/okys
 
 import annotations
 import cellgrid
@@ -50,7 +50,7 @@ type
   DrawLevelContext* = object
     lt*: LevelTheme
     dp*: DrawLevelParams
-    vg*: NVGContext
+    vg*: KoiRenderContext
 
   DrawLevelParams* = ref object
     startX*: float
@@ -437,7 +437,7 @@ proc formatRowCoord*(
 # {{{ renderLineHatchPatterns()
 proc renderLineHatchPatterns(
     dp;
-    vg: NVGContext,
+    vg: KoiRenderContext,
     scaleFactor, pxRatio: float,
     strokeColor: Color,
     lineHatchPatterns: var LineHatchPatterns,
@@ -487,7 +487,7 @@ proc renderLineHatchPatterns(
 
 # }}}
 # {{{ initDrawLevelParams
-proc initDrawLevelParams*(dp; lt; vg: NVGContext, scaleFactor, pxRatio: float) =
+proc initDrawLevelParams*(dp; lt; vg: KoiRenderContext, scaleFactor, pxRatio: float) =
   for paint in dp.cellLineHatchPatterns:
     if paint.image != NoImage:
       vg.deleteImage(paint.image)
@@ -1110,7 +1110,7 @@ proc drawIcon(
     gridSize: float,
     color: Color,
     fontSizeFactor: float,
-    vg: NVGContext,
+    vg: KoiRenderContext,
 ) =
   vg.setFont(gridSize * fontSizeFactor)
   vg.fillColor(color)

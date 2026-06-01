@@ -9,7 +9,7 @@ import std/tables
 when not defined(gridmongerBackendWayland):
   import glfw
 import koi
-import nanovg
+import koi/okys
 import semver
 
 import utils/rect

@@ -75,13 +75,9 @@ proc setCommonCompileParams(useWayland = false) =
   --d:
     nimPreviewFloatRoundtrip
   --d:
-    wgpu
-  --d:
-    wgvkWGSL
-  --d:
     NoGLFW
   --d:
-    koiWebGpu
+    koiVulkan
   switch "passC", "-Wno-incompatible-pointer-types"
   switch "passC", "-D_GNU_SOURCE"
   switch "path", "../koi-webgpu"

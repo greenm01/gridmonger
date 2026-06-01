@@ -5,7 +5,7 @@ import std/strformat
 import std/strutils
 import std/unicode
 
-import nanovg
+import koi/okys
 
 import fieldlimits
 import utils/hocon

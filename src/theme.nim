@@ -4,7 +4,7 @@ import std/strformat
 import std/strutils
 
 import koi
-import nanovg
+import koi/okys
 
 import cfghelper
 import common
