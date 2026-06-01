@@ -8,8 +8,8 @@ import std/tables
 
 when not defined(gridmongerBackendWayland):
   import glfw
-import koi
-import koi/okys
+import ops
+import ops/okys
 import semver
 
 import utils/rect

@@ -24,17 +24,17 @@ import std/unicode
 import stb_image/read as stbi
 
 # Libraries
-import koi
+import ops
 when defined(gridmongerBackendWayland):
-  import koi/backends/wayland_app
+  import ops/backends/wayland_app
 else:
   from glfw as glfwLib import nil
-  import koi/backends/glfw_wgpu
-import koi/backends/okys_vulkan_host
-from koi/rect import rect
-from koi/utils import lerp, invLerp, remap
+  import ops/backends/glfw_wgpu
+import ops/backends/okys_vulkan_host
+from ops/rect import rect
+from ops/utils import lerp, invLerp, remap
 
-import koi/okys
+import ops/okys
 
 when not defined(DEBUG):
   import osdialog
@@ -108,7 +108,7 @@ proc okysTextureFormat(backend: OkysVulkanHost): WebGPUTextureFormat =
 
 proc createHostedRenderContext(
     backend: OkysVulkanHost, flags: set[RenderInitFlag]
-): KoiRenderContext =
+): OpsRenderContext =
   result = createRenderContext(flags)
   let depthFormat = if rifSparseStrip in flags: wgtfNone else: wgtfDepthStencil
   result.setupVulkan(
@@ -364,7 +364,7 @@ type AppShortcut = enum
 type
   AppContext = ref object
     win: CSDWindow
-    vg: KoiRenderContext
+    vg: OpsRenderContext
     backend: OkysVulkanHost
 
     prefs: Preferences
@@ -920,10 +920,10 @@ type
 
   Splash = object
     when defined(gridmongerBackendWayland):
-      win: KoiWaylandApp
+      win: OpsWaylandApp
     else:
       win: Window
-    vg: KoiRenderContext
+    vg: OpsRenderContext
     backend: OkysVulkanHost
     show: bool
     dismissRequested: bool
@@ -1809,7 +1809,7 @@ proc setStatusMessage(icon, msg: string, commands: seq[string], a) =
   if s.warning.overwrite:
     s.warning.message = ""
 
-  koi.setFramesLeft()
+  ops.setFramesLeft()
 
 proc setStatusMessage(icon, msg: string, a) =
   setStatusMessage(icon, msg, commands = @[], a = a)
@@ -1845,7 +1845,7 @@ proc setWarningMessage(
   s.warning.overwrite = overwrite
   s.warning.keepMessage = keepStatusMessage
 
-  koi.setFramesLeft()
+  ops.setFramesLeft()
 
 # }}}
 # {{{ setErrorMessage()
@@ -1861,7 +1861,7 @@ proc setErrorMessage(msg: string, a) =
   s.warning.timeout = InfiniteDuration
   s.warning.keepMessage = false
 
-  koi.setFramesLeft()
+  ops.setFramesLeft()
 
 # }}}
 # {{{ setSelectModeSelectMessage()
@@ -1999,7 +1999,7 @@ proc setMovePreviewModeMessage(a) =
 proc mainPaneRect(a): Rect[int] =
   var
     x1 = 0
-    x2 = koi.winWidth()
+    x2 = ops.winWidth()
 
   if a.layout.showThemeEditor:
     x2 -= ThemePaneWidth
@@ -2009,7 +2009,7 @@ proc mainPaneRect(a): Rect[int] =
 
   let
     y1 = a.win.titleBarHeight
-    y2 = koi.winHeight() - StatusBarHeight
+    y2 = ops.winHeight() - StatusBarHeight
 
   coordRect(x1.int, y1.int, x2.clampMin(x1 + 1).int, y2.clampMin(y1 + 1).int)
 
@@ -2239,8 +2239,8 @@ proc locationAtMouse(clampToBounds = false, a): Option[Location] =
   alias(dp, a.ui.drawLevelParams)
 
   let
-    mouseViewRow = ((koi.my() - dp.startY) / dp.gridSize).int
-    mouseViewCol = ((koi.mx() - dp.startX) / dp.gridSize).int
+    mouseViewRow = ((ops.my() - dp.startY) / dp.gridSize).int
+    mouseViewCol = ((ops.mx() - dp.startX) / dp.gridSize).int
 
     mouseRow = dp.viewStartRow + mouseViewRow
     mouseCol = dp.viewStartCol + mouseViewCol
@@ -2459,7 +2459,7 @@ template createImage(d: var ImageData): Image =
 # }}}
 # {{{ createPattern()
 proc createPattern(
-    vg: KoiRenderContext,
+    vg: OpsRenderContext,
     img: var Image,
     alpha: float = 1.0,
     xoffs: float = 0,
@@ -2474,7 +2474,7 @@ proc createPattern(
 # }}}
 # {{{ textBoxBounds()
 proc textBoxBounds(
-    vg: KoiRenderContext, x, y, breakWidth: float, text: string
+    vg: OpsRenderContext, x, y, breakWidth: float, text: string
 ): Bounds =
   let rows = text.textBreakLines(breakWidth)
   let metrics = vg.textMetrics()
@@ -2532,7 +2532,7 @@ proc getFinalUIScaleFactor(a): float =
 # }}}
 # {{{ updateUIScaleFactor()
 proc updateUIScaleFactor(a) =
-  koi.setScale(getFinalUIScaleFactor(a))
+  ops.setScale(getFinalUIScaleFactor(a))
   a.theme.updateTheme = true
 
 # }}}
@@ -2567,7 +2567,7 @@ proc updateShortcuts(a) =
 # }}}
 # {{{ hasKeyEvent()
 proc hasKeyEvent(): bool =
-  koi.hasEvent() and koi.currEvent().kind == ekKey
+  ops.hasEvent() and ops.currEvent().kind == ekKey
 
 # }}}
 # {{{ isKeyDown()
@@ -2642,9 +2642,9 @@ proc isShortcutUp(ev: Event, shortcut: AppShortcut, a): bool =
 # {{{ primaryModDown()
 proc primaryModDown(a): bool =
   if a.keys.primaryModKey == mkCtrl:
-    koi.ctrlDown()
+    ops.ctrlDown()
   elif a.keys.primaryModKey == mkSuper:
-    koi.superDown()
+    ops.superDown()
   else:
     false
 
@@ -2838,11 +2838,11 @@ proc updateWidgetStyles(a) =
   alias(cfg, a.theme.config)
 
   # Button
-  a.theme.buttonStyle = koi.getDefaultButtonStyle()
+  a.theme.buttonStyle = ops.getDefaultButtonStyle()
 
   let w = cfg.getObjectOrEmpty("ui.widget")
 
-  var labelStyle = koi.getDefaultLabelStyle()
+  var labelStyle = ops.getDefaultLabelStyle()
   with labelStyle:
     color = w.getColorOrDefault("foreground.normal")
     colorHover = color
@@ -2863,7 +2863,7 @@ proc updateWidgetStyles(a) =
     label.align = haCenter
 
   # Radio button
-  a.theme.radioButtonStyle = koi.getDefaultRadioButtonsStyle()
+  a.theme.radioButtonStyle = ops.getDefaultRadioButtonsStyle()
 
   with a.theme.radioButtonStyle:
     buttonCornerRadius = w.getFloatOrDefault("corner-radius")
@@ -2877,7 +2877,7 @@ proc updateWidgetStyles(a) =
     label.align = haCenter
 
   # Icon radio button
-  a.theme.iconRadioButtonsStyle = koi.getDefaultRadioButtonsStyle()
+  a.theme.iconRadioButtonsStyle = ops.getDefaultRadioButtonsStyle()
 
   with a.theme.iconRadioButtonsStyle:
     buttonPadHoriz = 4.0
@@ -2896,7 +2896,7 @@ proc updateWidgetStyles(a) =
     label.align = haCenter
 
   # Drop down
-  a.theme.dropDownStyle = koi.getDefaultDropDownStyle()
+  a.theme.dropDownStyle = ops.getDefaultDropDownStyle()
 
   let dd = cfg.getObjectOrEmpty("ui.drop-down")
 
@@ -2918,7 +2918,7 @@ proc updateWidgetStyles(a) =
     item.colorHover = w.getColorOrDefault("foreground.active")
 
   # Text field
-  a.theme.textFieldStyle = koi.getDefaultTextFieldStyle()
+  a.theme.textFieldStyle = ops.getDefaultTextFieldStyle()
 
   let t = cfg.getObjectOrEmpty("ui.text-field")
 
@@ -2936,7 +2936,7 @@ proc updateWidgetStyles(a) =
     selectionColor = t.getColorOrDefault("selection")
 
   # Text area
-  a.theme.textAreaStyle = koi.getDefaultTextAreaStyle()
+  a.theme.textAreaStyle = ops.getDefaultTextAreaStyle()
 
   with a.theme.textAreaStyle:
     bgCornerRadius = w.getFloatOrDefault("corner-radius")
@@ -2964,7 +2964,7 @@ proc updateWidgetStyles(a) =
       thumbFillColorDown = c.withAlpha(0.6)
 
   # Default check box (for the theme editor)
-  var cbs = koi.getDefaultCheckBoxStyle()
+  var cbs = ops.getDefaultCheckBoxStyle()
   with cbs:
     fillColorActive = black(0.3)
     fillColorDown = fillColorActive
@@ -2975,10 +2975,10 @@ proc updateWidgetStyles(a) =
     iconActive = IconCheck
     iconInactive = NoIcon
 
-  koi.setDefaultCheckboxStyle(cbs)
+  ops.setDefaultCheckboxStyle(cbs)
 
   # Check box
-  a.theme.checkBoxStyle = koi.getDefaultCheckBoxStyle()
+  a.theme.checkBoxStyle = ops.getDefaultCheckBoxStyle()
 
   with a.theme.checkBoxStyle:
     cornerRadius = w.getFloatOrDefault("corner-radius")
@@ -3000,7 +3000,7 @@ proc updateWidgetStyles(a) =
     iconInactive = NoIcon
 
   # Slider
-  a.theme.sliderStyle = koi.getDefaultSliderStyle()
+  a.theme.sliderStyle = ops.getDefaultSliderStyle()
 
   with a.theme.sliderStyle:
     trackFillColor = w.getColorOrDefault("background.normal")
@@ -3018,7 +3018,7 @@ proc updateWidgetStyles(a) =
     value.align = haCenter
 
   # Dialog style
-  a.theme.dialogStyle = koi.getDefaultDialogStyle()
+  a.theme.dialogStyle = ops.getDefaultDialogStyle()
 
   let d = cfg.getObjectOrEmpty("ui.dialog")
 
@@ -3044,7 +3044,7 @@ proc updateWidgetStyles(a) =
   a.theme.aboutDialogStyle.drawTitleBar = false
 
   # Label
-  a.theme.labelStyle = koi.getDefaultLabelStyle()
+  a.theme.labelStyle = ops.getDefaultLabelStyle()
 
   with a.theme.labelStyle:
     fontSize = 14
@@ -3053,14 +3053,14 @@ proc updateWidgetStyles(a) =
     align = haLeft
 
   # Warning label
-  a.theme.warningLabelStyle = koi.getDefaultLabelStyle()
+  a.theme.warningLabelStyle = ops.getDefaultLabelStyle()
 
   with a.theme.warningLabelStyle:
     color = d.getColorOrDefault("warning")
     multiLine = true
 
   # Error label
-  a.theme.errorLabelStyle = koi.getDefaultLabelStyle()
+  a.theme.errorLabelStyle = ops.getDefaultLabelStyle()
 
   with a.theme.errorLabelStyle:
     color = d.getColorOrDefault("error")
@@ -3069,7 +3069,7 @@ proc updateWidgetStyles(a) =
   # Level drop down
   let ld = cfg.getObjectOrEmpty("level.level-drop-down")
 
-  a.theme.levelDropDownStyle = koi.getDefaultDropDownStyle()
+  a.theme.levelDropDownStyle = ops.getDefaultDropDownStyle()
 
   with a.theme.levelDropDownStyle:
     buttonCornerRadius = ld.getFloatOrDefault("corner-radius")
@@ -3095,7 +3095,7 @@ proc updateWidgetStyles(a) =
     itemListFillColor = ld.getColorOrDefault("item-list-background")
     itemBackgroundColorHover = w.getColorOrDefault("background.active")
 
-    var ss = koi.getDefaultShadowStyle()
+    var ss = ops.getDefaultShadowStyle()
     ss.color = ld.getColorOrDefault("shadow.color")
     ss.cornerRadius = buttonCornerRadius * 1.6
     shadow = ss
@@ -3103,7 +3103,7 @@ proc updateWidgetStyles(a) =
   # About button
   let ab = cfg.getObjectOrEmpty("ui.about-button")
 
-  a.theme.aboutButtonStyle = koi.getDefaultButtonStyle()
+  a.theme.aboutButtonStyle = ops.getDefaultButtonStyle()
 
   with a.theme.aboutButtonStyle:
     strokeWidth = 0
@@ -3120,7 +3120,7 @@ proc updateWidgetStyles(a) =
   # Current note pane
   let pn = cfg.getObjectOrEmpty("pane.current-note")
 
-  a.theme.noteTextAreaStyle = koi.getDefaultTextAreaStyle()
+  a.theme.noteTextAreaStyle = ops.getDefaultTextAreaStyle()
 
   with a.theme.noteTextAreaStyle:
     bgFillColor = black(0)
@@ -3144,7 +3144,7 @@ proc updateWidgetStyles(a) =
   # Notes list pane
   let nlp = cfg.getObjectOrEmpty("pane.notes-list")
 
-  a.theme.notesListScrollViewStyle = koi.getDefaultScrollViewStyle()
+  a.theme.notesListScrollViewStyle = ops.getDefaultScrollViewStyle()
 
   with a.theme.notesListScrollViewStyle:
     with scrollBarStyle:
@@ -3153,7 +3153,7 @@ proc updateWidgetStyles(a) =
       thumbFillColorHover = c.withAlpha(0.5)
       thumbFillColorDown = c.withAlpha(0.6)
 
-  a.theme.notesListLevelSectionStyle = koi.getDefaultSectionHeaderStyle()
+  a.theme.notesListLevelSectionStyle = ops.getDefaultSectionHeaderStyle()
 
   with a.theme.notesListLevelSectionStyle:
     backgroundColor = nlp.getColorOrDefault("level-section.background")
@@ -3161,7 +3161,7 @@ proc updateWidgetStyles(a) =
     triangleColor = nlp.getColorOrDefault("level-section.text")
     separatorColor = nlp.getColorOrDefault("section-separator")
 
-  a.theme.notesListRegionSectionStyle = koi.getDefaultSubSectionHeaderStyle()
+  a.theme.notesListRegionSectionStyle = ops.getDefaultSubSectionHeaderStyle()
 
   with a.theme.notesListRegionSectionStyle:
     backgroundColor = nlp.getColorOrDefault("region-section.background")
@@ -3195,7 +3195,7 @@ proc updateTheme(a) =
     a.theme.levelTheme,
     a.vg,
     scaleFactor = getFinalUIScaleFactor(a),
-    pxRatio = koi.getPxRatio(),
+    pxRatio = ops.getPxRatio(),
   )
 
 # }}}
@@ -3588,29 +3588,29 @@ template coordinateFields() =
   const LetterLabelWidth = 100
 
   group:
-    koi.label("Origin", style = a.theme.labelStyle)
-    koi.radioButtons(
+    ops.label("Origin", style = a.theme.labelStyle)
+    ops.radioButtons(
       labels = @["Northwest", "Southwest"], dlg.origin, style = a.theme.radioButtonStyle
     )
 
   group:
-    koi.label("Column style", style = a.theme.labelStyle)
-    koi.radioButtons(
+    ops.label("Column style", style = a.theme.labelStyle)
+    ops.radioButtons(
       labels = @["Number", "Letter"], dlg.columnStyle, style = a.theme.radioButtonStyle
     )
 
-    koi.label("Row style", style = a.theme.labelStyle)
-    koi.radioButtons(
+    ops.label("Row style", style = a.theme.labelStyle)
+    ops.radioButtons(
       labels = @["Number", "Letter"], dlg.rowStyle, style = a.theme.radioButtonStyle
     )
 
   group:
-    koi.label("Column start", style = a.theme.labelStyle)
-    var y = koi.autoLayoutNextY()
-    let letterLabelX = koi.autoLayoutNextX() + DlgNumberWidth + 14
+    ops.label("Column start", style = a.theme.labelStyle)
+    var y = ops.autoLayoutNextY()
+    let letterLabelX = ops.autoLayoutNextX() + DlgNumberWidth + 14
 
-    koi.nextItemWidth(DlgNumberWidth)
-    koi.textField(
+    ops.nextItemWidth(DlgNumberWidth)
+    ops.textField(
       dlg.columnStart,
       activate = dlg.activateFirstTextField,
       constraint =
@@ -3625,7 +3625,7 @@ template coordinateFields() =
     if CoordinateStyle(dlg.columnStyle) == csLetter:
       try:
         let i = parseInt(dlg.columnStart)
-        koi.label(
+        ops.label(
           letterLabelX,
           y,
           LetterLabelWidth,
@@ -3636,11 +3636,11 @@ template coordinateFields() =
       except ValueError:
         discard
 
-    koi.label("Row start", style = a.theme.labelStyle)
-    y = koi.autoLayoutNextY()
+    ops.label("Row start", style = a.theme.labelStyle)
+    y = ops.autoLayoutNextY()
 
-    koi.nextItemWidth(DlgNumberWidth)
-    koi.textField(
+    ops.nextItemWidth(DlgNumberWidth)
+    ops.textField(
       dlg.rowStart,
       constraint =
         TextFieldConstraint(
@@ -3653,7 +3653,7 @@ template coordinateFields() =
     if CoordinateStyle(dlg.rowStyle) == csLetter:
       try:
         let i = parseInt(dlg.rowStart)
-        koi.label(
+        ops.label(
           letterLabelX,
           y,
           LetterLabelWidth,
@@ -3668,17 +3668,17 @@ template coordinateFields() =
 # {{{ regionFields()
 template regionFields() =
   group:
-    koi.label("Enable regions", style = a.theme.labelStyle)
+    ops.label("Enable regions", style = a.theme.labelStyle)
 
-    koi.nextItemHeight(DlgCheckBoxSize)
-    koi.checkBox(dlg.enableRegions, style = a.theme.checkBoxStyle)
+    ops.nextItemHeight(DlgCheckBoxSize)
+    ops.checkBox(dlg.enableRegions, style = a.theme.checkBoxStyle)
 
     if dlg.enableRegions:
       group:
-        koi.label("Region columns", style = a.theme.labelStyle)
+        ops.label("Region columns", style = a.theme.labelStyle)
 
-        koi.nextItemWidth(DlgNumberWidth)
-        koi.textField(
+        ops.nextItemWidth(DlgNumberWidth)
+        ops.textField(
           dlg.colsPerRegion,
           activate = dlg.activateFirstTextField,
           constraint =
@@ -3690,10 +3690,10 @@ template regionFields() =
           style = a.theme.textFieldStyle,
         )
 
-        koi.label("Region rows", style = a.theme.labelStyle)
+        ops.label("Region rows", style = a.theme.labelStyle)
 
-        koi.nextItemWidth(DlgNumberWidth)
-        koi.textField(
+        ops.nextItemWidth(DlgNumberWidth)
+        ops.textField(
           dlg.rowsPerRegion,
           constraint =
             TextFieldConstraint(
@@ -3705,17 +3705,17 @@ template regionFields() =
         )
 
       group:
-        koi.label("Per-region coordinates", style = a.theme.labelStyle)
+        ops.label("Per-region coordinates", style = a.theme.labelStyle)
 
-        koi.nextItemHeight(DlgCheckBoxSize)
-        koi.checkBox(dlg.perRegionCoords, style = a.theme.checkBoxStyle)
+        ops.nextItemHeight(DlgCheckBoxSize)
+        ops.checkBox(dlg.perRegionCoords, style = a.theme.checkBoxStyle)
 
 # }}}
 # {{{ noteFields()
 template noteFields(dlgWidth: float) =
-  koi.label("Notes", style = a.theme.labelStyle)
+  ops.label("Notes", style = a.theme.labelStyle)
 
-  koi.textArea(
+  ops.textArea(
     x = 0,
     y = 28,
     w = dlgWidth - 60,
@@ -3730,9 +3730,9 @@ template noteFields(dlgWidth: float) =
 # {{{ commonLevelFields()
 template commonLevelFields(dimensionsDisabled: bool) =
   group:
-    koi.label("Location name", style = a.theme.labelStyle)
+    ops.label("Location name", style = a.theme.labelStyle)
 
-    koi.textField(
+    ops.textField(
       dlg.locationName,
       activate = dlg.activateFirstTextField,
       constraint =
@@ -3744,9 +3744,9 @@ template commonLevelFields(dimensionsDisabled: bool) =
       style = a.theme.textFieldStyle,
     )
 
-    koi.label("Level name", style = a.theme.labelStyle)
+    ops.label("Level name", style = a.theme.labelStyle)
 
-    koi.textField(
+    ops.textField(
       dlg.levelName,
       constraint =
         TextFieldConstraint(
@@ -3758,10 +3758,10 @@ template commonLevelFields(dimensionsDisabled: bool) =
     )
 
   group:
-    koi.label("Elevation", style = a.theme.labelStyle)
+    ops.label("Elevation", style = a.theme.labelStyle)
 
-    koi.nextItemWidth(DlgNumberWidth)
-    koi.textField(
+    ops.nextItemWidth(DlgNumberWidth)
+    ops.textField(
       dlg.elevation,
       constraint =
         TextFieldConstraint(
@@ -3773,10 +3773,10 @@ template commonLevelFields(dimensionsDisabled: bool) =
     )
 
   group:
-    koi.label("Columns", style = a.theme.labelStyle)
+    ops.label("Columns", style = a.theme.labelStyle)
 
-    koi.nextItemWidth(DlgNumberWidth)
-    koi.textField(
+    ops.nextItemWidth(DlgNumberWidth)
+    ops.textField(
       dlg.cols,
       constraint =
         TextFieldConstraint(
@@ -3788,10 +3788,10 @@ template commonLevelFields(dimensionsDisabled: bool) =
       style = a.theme.textFieldStyle,
     )
 
-    koi.label("Rows", style = a.theme.labelStyle)
+    ops.label("Rows", style = a.theme.labelStyle)
 
-    koi.nextItemWidth(DlgNumberWidth)
-    koi.textField(
+    ops.nextItemWidth(DlgNumberWidth)
+    ops.textField(
       dlg.rows,
       constraint =
         TextFieldConstraint(
@@ -3822,9 +3822,9 @@ template validateLevelFields(dlg, map, validationError: untyped) =
 # {{{ commonGeneralMapFields()
 template commonGeneralMapFields(map: Map, displayCreationTime: bool) =
   group:
-    koi.label("Title", style = a.theme.labelStyle)
+    ops.label("Title", style = a.theme.labelStyle)
 
-    koi.textField(
+    ops.textField(
       dlg.title,
       activate = dlg.activateFirstTextField,
       constraint =
@@ -3836,9 +3836,9 @@ template commonGeneralMapFields(map: Map, displayCreationTime: bool) =
       style = a.theme.textFieldStyle,
     )
 
-    koi.label("Game", style = a.theme.labelStyle)
+    ops.label("Game", style = a.theme.labelStyle)
 
-    koi.textField(
+    ops.textField(
       dlg.game,
       constraint =
         TextFieldConstraint(
@@ -3849,9 +3849,9 @@ template commonGeneralMapFields(map: Map, displayCreationTime: bool) =
       style = a.theme.textFieldStyle,
     )
 
-    koi.label("Author", style = a.theme.labelStyle)
+    ops.label("Author", style = a.theme.labelStyle)
 
-    koi.textField(
+    ops.textField(
       dlg.author,
       constraint =
         TextFieldConstraint(
@@ -3863,9 +3863,9 @@ template commonGeneralMapFields(map: Map, displayCreationTime: bool) =
     )
 
     if displayCreationTime:
-      koi.label("Creation time", style = a.theme.labelStyle)
+      ops.label("Creation time", style = a.theme.labelStyle)
 
-      koi.textField(map.creationTime, disabled = true, style = a.theme.textFieldStyle)
+      ops.textField(map.creationTime, disabled = true, style = a.theme.textFieldStyle)
 
 # }}}
 # {{{ validateCommonGeneralMapFields()
@@ -3879,7 +3879,7 @@ template validateCommonGeneralMapFields(dlg: untyped): string =
 
 # {{{ calcDialogX()
 proc calcDialogX(dlgWidth: float, a): float =
-  var w = koi.winWidth()
+  var w = ops.winWidth()
 
   if a.layout.showThemeEditor:
     w -= ThemePaneWidth
@@ -3971,7 +3971,7 @@ proc colorRadioButtonDrawProc(
     colors: seq[Color], cursorColor: Color
 ): RadioButtonsDrawProc =
   return proc(
-      vg: KoiRenderContext,
+      vg: OpsRenderContext,
       id: ItemId,
       x, y, w, h: float,
       buttonIdx, numButtons: Natural,
@@ -4020,20 +4020,20 @@ proc colorRadioButtonDrawProc(
 
 # {{{ closeDialog()
 proc closeDialog(a) =
-  koi.closeDialog()
+  ops.closeDialog()
   a.dialogs.activeDialog = dlgNone
 
 proc releaseThemeEditorModalState(a) =
   if a.layout.showThemeEditor:
     a.themeEditor.focusCaptured = false
-    koi.setFocusCaptured(false)
-    koi.closePopup()
-    koi.g_uiState.activeItem = 0
-    koi.g_uiState.hotItem = 0
-    koi.g_uiState.dialogState.widgetInsidePopupCapturedFocus = false
-    koi.g_uiState.colorPickerState.opened = false
-    koi.g_uiState.colorPickerState.mouseMode = cmmNormal
-    koi.g_uiState.colorPickerState.activeItem = 0
+    ops.setFocusCaptured(false)
+    ops.closePopup()
+    ops.g_uiState.activeItem = 0
+    ops.g_uiState.hotItem = 0
+    ops.g_uiState.dialogState.widgetInsidePopupCapturedFocus = false
+    ops.g_uiState.colorPickerState.opened = false
+    ops.g_uiState.colorPickerState.mouseMode = cmmNormal
+    ops.g_uiState.colorPickerState.activeItem = 0
 
 # }}}
 
@@ -4061,11 +4061,11 @@ proc aboutDialog(dlg: var AboutDialogParams, a) =
 
   let
     dialogX = floor(calcDialogX(DlgWidth, a))
-    dialogY = floor((koi.winHeight() - DlgHeight) * 0.5)
+    dialogY = floor((ops.winHeight() - DlgHeight) * 0.5)
 
   let logoColor = a.theme.config.getColorOrDefault("ui.about-dialog.logo")
 
-  koi.beginDialog(
+  ops.beginDialog(
     DlgWidth,
     DlgHeight,
     fmt"{IconQuestion}  About Gridmonger",
@@ -4100,16 +4100,16 @@ proc aboutDialog(dlg: var AboutDialogParams, a) =
     scale = scale,
   )
 
-  koi.image(0, 0, DlgWidth, DlgHeight, al.logoPaint)
+  ops.image(0, 0, DlgWidth, DlgHeight, al.logoPaint)
 
   var labelStyle = a.theme.labelStyle.deepCopy
   labelStyle.align = haCenter
 
   y += 275
-  koi.label(0, y, w, h, VersionString, style = labelStyle)
+  ops.label(0, y, w, h, VersionString, style = labelStyle)
 
   y += 25
-  koi.label(0, y, w, h, DevelopedBy, style = labelStyle)
+  ops.label(0, y, w, h, DevelopedBy, style = labelStyle)
 
   # Check for updates
   if a.prefs.checkForUpdates:
@@ -4130,18 +4130,18 @@ proc aboutDialog(dlg: var AboutDialogParams, a) =
         msg = "Error fetching version information"
 
       st.color = a.theme.warningLabelStyle.color
-      koi.label(0, y, w, h, msg, style = st)
+      ops.label(0, y, w, h, msg, style = st)
 
   # Buttons
   x = (DlgWidth - (2 * DlgButtonWidth + 1 * DlgButtonPad)) * 0.5
   y += 40
-  if koi.button(
+  if ops.button(
     x, y, DlgButtonWidth, DlgItemHeight, "Manual", style = a.theme.buttonStyle
   ):
     openUserManual(a)
 
   x += DlgButtonWidth + DlgButtonPad
-  if koi.button(
+  if ops.button(
     x, y, DlgButtonWidth, DlgItemHeight, "Website", style = a.theme.buttonStyle
   ):
     openWebsite(a)
@@ -4152,13 +4152,13 @@ proc aboutDialog(dlg: var AboutDialogParams, a) =
 
   # HACK, HACK, HACK!
   if not a.layout.showThemeEditor:
-    if not koi.hasHotItem() and koi.hasEvent():
-      let ev = koi.currEvent()
+    if not ops.hasHotItem() and ops.hasEvent():
+      let ev = ops.currEvent()
       if ev.kind == ekMouseButton and ev.button == mbLeft and ev.pressed:
         closeAction(a)
 
   if hasKeyEvent():
-    let ke = koi.currEvent()
+    let ke = ops.currEvent()
     var eventHandled = true
 
     if ke.isShortcutDown(scCancel, a) or ke.isShortcutDown(scAccept, a):
@@ -4169,7 +4169,7 @@ proc aboutDialog(dlg: var AboutDialogParams, a) =
     if eventHandled:
       setEventHandled()
 
-  koi.endDialog()
+  ops.endDialog()
 
 # }}}
 # {{{ Preferences dialog
@@ -4203,7 +4203,7 @@ proc preferencesDialog(dlg: var PreferencesDialogParams, a) =
     DlgHeight = 420.0
     TabWidth = 380.0
 
-  koi.beginDialog(
+  ops.beginDialog(
     DlgWidth,
     DlgHeight,
     fmt"{IconCog}  Preferences",
@@ -4218,7 +4218,7 @@ proc preferencesDialog(dlg: var PreferencesDialogParams, a) =
 
   let tabLabels = @["General", "Editing", "Interface"]
 
-  koi.radioButtons(
+  ops.radioButtons(
     (DlgWidth - TabWidth) * 0.5,
     y,
     TabWidth,
@@ -4230,35 +4230,35 @@ proc preferencesDialog(dlg: var PreferencesDialogParams, a) =
 
   y += DlgTabBottomPad
 
-  koi.beginView(x, y, w = 1000, h = 1000)
+  ops.beginView(x, y, w = 1000, h = 1000)
 
   var lp = DialogLayoutParams
   lp.labelWidth = 220
-  koi.initAutoLayout(lp)
+  ops.initAutoLayout(lp)
 
   if dlg.activeTab == 0: # General
     group:
-      koi.label("Load last map", style = a.theme.labelStyle)
+      ops.label("Load last map", style = a.theme.labelStyle)
 
-      koi.nextItemHeight(DlgCheckBoxSize)
-      koi.checkBox(dlg.loadLastMap, style = a.theme.checkBoxStyle)
+      ops.nextItemHeight(DlgCheckBoxSize)
+      ops.checkBox(dlg.loadLastMap, style = a.theme.checkBoxStyle)
 
     group:
       let autosaveDisabled = not dlg.autosave
 
-      koi.label("Autosave", style = a.theme.labelStyle)
+      ops.label("Autosave", style = a.theme.labelStyle)
 
-      koi.nextItemHeight(DlgCheckBoxSize)
-      koi.checkBox(dlg.autosave, style = a.theme.checkBoxStyle)
+      ops.nextItemHeight(DlgCheckBoxSize)
+      ops.checkBox(dlg.autosave, style = a.theme.checkBoxStyle)
 
-      koi.label(
+      ops.label(
         "Autosave frequency (minutes)",
         state = if autosaveDisabled: wsDisabled else: wsNormal,
         style = a.theme.labelStyle,
       )
 
-      koi.nextItemWidth(DlgNumberWidth)
-      koi.textField(
+      ops.nextItemWidth(DlgNumberWidth)
+      ops.textField(
         dlg.autosaveFreqMins,
         activate = dlg.activateFirstTextField,
         disabled = autosaveDisabled,
@@ -4272,60 +4272,60 @@ proc preferencesDialog(dlg: var PreferencesDialogParams, a) =
       )
 
     group:
-      koi.label("Check for updates", style = a.theme.labelStyle)
+      ops.label("Check for updates", style = a.theme.labelStyle)
 
-      koi.nextItemHeight(DlgCheckBoxSize)
-      koi.checkBox(dlg.checkForUpdates, style = a.theme.checkBoxStyle)
+      ops.nextItemHeight(DlgCheckBoxSize)
+      ops.checkBox(dlg.checkForUpdates, style = a.theme.checkBoxStyle)
   elif dlg.activeTab == 1: # Editing
     group:
-      koi.label("Movement wraparound", style = a.theme.labelStyle)
-      koi.nextItemHeight(DlgCheckBoxSize)
-      koi.checkBox(dlg.movementWraparound, style = a.theme.checkBoxStyle)
+      ops.label("Movement wraparound", style = a.theme.labelStyle)
+      ops.nextItemHeight(DlgCheckBoxSize)
+      ops.checkBox(dlg.movementWraparound, style = a.theme.checkBoxStyle)
 
-      koi.label("YUBN diagonal movement", style = a.theme.labelStyle)
-      koi.nextItemHeight(DlgCheckBoxSize)
-      koi.checkBox(dlg.yubnMovementKeys, style = a.theme.checkBoxStyle)
+      ops.label("YUBN diagonal movement", style = a.theme.labelStyle)
+      ops.nextItemHeight(DlgCheckBoxSize)
+      ops.checkBox(dlg.yubnMovementKeys, style = a.theme.checkBoxStyle)
 
-      koi.label("Walk mode Left/Right keys", style = a.theme.labelStyle)
-      koi.nextItemWidth(70)
-      koi.dropDown(dlg.walkCursorMode, style = a.theme.dropDownStyle)
-
-    group:
-      koi.label("Show link lines", style = a.theme.labelStyle)
-      koi.nextItemWidth(120)
-      koi.dropDown(dlg.linkLinesMode, style = a.theme.dropDownStyle)
+      ops.label("Walk mode Left/Right keys", style = a.theme.labelStyle)
+      ops.nextItemWidth(70)
+      ops.dropDown(dlg.walkCursorMode, style = a.theme.dropDownStyle)
 
     group:
-      koi.label("Open-ended exacavate", style = a.theme.labelStyle)
-      koi.nextItemHeight(DlgCheckBoxSize)
-      koi.checkBox(dlg.openEndedExcavate, style = a.theme.checkBoxStyle)
+      ops.label("Show link lines", style = a.theme.labelStyle)
+      ops.nextItemWidth(120)
+      ops.dropDown(dlg.linkLinesMode, style = a.theme.dropDownStyle)
+
+    group:
+      ops.label("Open-ended exacavate", style = a.theme.labelStyle)
+      ops.nextItemHeight(DlgCheckBoxSize)
+      ops.checkBox(dlg.openEndedExcavate, style = a.theme.checkBoxStyle)
   elif dlg.activeTab == 2: # Interface
     group:
-      koi.label("Show splash image", style = a.theme.labelStyle)
-      koi.nextItemHeight(DlgCheckBoxSize)
-      koi.checkBox(dlg.showSplash, style = a.theme.checkBoxStyle)
+      ops.label("Show splash image", style = a.theme.labelStyle)
+      ops.nextItemHeight(DlgCheckBoxSize)
+      ops.checkBox(dlg.showSplash, style = a.theme.checkBoxStyle)
 
       var disabled = not dlg.showSplash
-      koi.label(
+      ops.label(
         "Auto-close splash",
         state = (if disabled: wsDisabled else: wsNormal),
         style = a.theme.labelStyle,
       )
 
-      koi.nextItemHeight(DlgCheckBoxSize)
-      koi.checkBox(
+      ops.nextItemHeight(DlgCheckBoxSize)
+      ops.checkBox(
         dlg.autoCloseSplash, disabled = disabled, style = a.theme.checkBoxStyle
       )
 
       disabled = not (dlg.showSplash and dlg.autoCloseSplash)
-      koi.label(
+      ops.label(
         "Auto-close timeout (seconds)",
         state = (if disabled: wsDisabled else: wsNormal),
         style = a.theme.labelStyle,
       )
 
-      koi.nextItemWidth(DlgNumberWidth)
-      koi.textField(
+      ops.nextItemWidth(DlgNumberWidth)
+      ops.textField(
         dlg.splashTimeoutSecs,
         activate = dlg.activateFirstTextField,
         disabled = disabled,
@@ -4339,41 +4339,41 @@ proc preferencesDialog(dlg: var PreferencesDialogParams, a) =
       )
 
     group:
-      koi.label("Vertical sync", style = a.theme.labelStyle)
+      ops.label("Vertical sync", style = a.theme.labelStyle)
 
-      koi.nextItemHeight(DlgCheckBoxSize)
-      koi.checkBox(dlg.vsync, style = a.theme.checkBoxStyle)
+      ops.nextItemHeight(DlgCheckBoxSize)
+      ops.checkBox(dlg.vsync, style = a.theme.checkBoxStyle)
 
-      koi.label("Interface scaling", style = a.theme.labelStyle)
+      ops.label("Interface scaling", style = a.theme.labelStyle)
 
       var st = a.theme.sliderStyle
       st.valuePrecision = 0
       st.valueSuffix = "%"
 
-      koi.nextItemWidth(135)
-      koi.horizSlider(
+      ops.nextItemWidth(135)
+      ops.horizSlider(
         startVal = UIScaleFactorLimits.minInt,
         endVal = UIScaleFactorLimits.maxInt,
         dlg.scalePercentage,
         style = st,
       )
 
-      koi.label("")
-      koi.nextItemWidth(170)
-      koi.label(
+      ops.label("")
+      ops.nextItemWidth(170)
+      ops.label(
         fmt"{scResetUIScaling.toStr(a)} resets scaling", style = a.theme.labelStyle
       )
 
     group:
       when defined(macosx):
-        koi.label("Shortcut modifier keys", style = a.theme.labelStyle)
-        koi.nextItemWidth(135)
+        ops.label("Shortcut modifier keys", style = a.theme.labelStyle)
+        ops.nextItemWidth(135)
 
         var items =
           @[fmt"Ctrl, Ctrl{HairSp}+{HairSp}Alt", fmt"Cmd, Cmd{HairSp}+{HairSp}Shift"]
-        koi.dropDown(items, dlg.modifierKeyMode, style = a.theme.dropDownStyle)
+        ops.dropDown(items, dlg.modifierKeyMode, style = a.theme.dropDownStyle)
 
-  koi.endView()
+  ops.endView()
 
   proc okAction(dlg: PreferencesDialogParams, a) =
     # General
@@ -4438,7 +4438,7 @@ proc preferencesDialog(dlg: var PreferencesDialogParams, a) =
 
   (x, y) = dialogButtonsStartPos(DlgWidth, DlgHeight, 2)
 
-  if koi.button(
+  if ops.button(
     x,
     y,
     DlgButtonWidth,
@@ -4449,7 +4449,7 @@ proc preferencesDialog(dlg: var PreferencesDialogParams, a) =
     okAction(dlg, a)
 
   x += DlgButtonWidth + DlgButtonPad
-  if koi.button(
+  if ops.button(
     x,
     y,
     DlgButtonWidth,
@@ -4462,7 +4462,7 @@ proc preferencesDialog(dlg: var PreferencesDialogParams, a) =
   dlg.activateFirstTextField = false
 
   if hasKeyEvent():
-    let ke = koi.currEvent()
+    let ke = ops.currEvent()
     var eventHandled = true
 
     dlg.activeTab = handleTabNavigation(ke, dlg.activeTab, tabLabels.high, a)
@@ -4479,7 +4479,7 @@ proc preferencesDialog(dlg: var PreferencesDialogParams, a) =
     if eventHandled:
       setEventHandled()
 
-  koi.endDialog()
+  ops.endDialog()
 
 # }}}
 # {{{ Save/discard map changes dialog
@@ -4498,7 +4498,7 @@ proc saveDiscardMapDialog(dlg: var SaveDiscardMapDialogParams, a) =
 
   let h = DlgItemHeight
 
-  koi.beginDialog(
+  ops.beginDialog(
     DlgWidth,
     DlgHeight,
     fmt"{IconFloppy}  Save Map?",
@@ -4511,12 +4511,12 @@ proc saveDiscardMapDialog(dlg: var SaveDiscardMapDialogParams, a) =
   var x = DlgLeftPad
   var y = DlgTopPad
 
-  koi.label(
+  ops.label(
     x, y, DlgWidth, h, "You have made change to the map.", style = a.theme.labelStyle
   )
 
   y += h
-  koi.label(
+  ops.label(
     x, y, DlgWidth, h, "Do you want to save the map?", style = a.theme.labelStyle
   )
 
@@ -4538,25 +4538,25 @@ proc saveDiscardMapDialog(dlg: var SaveDiscardMapDialogParams, a) =
 
   (x, y) = dialogButtonsStartPos(DlgWidth, DlgHeight, 3)
 
-  if koi.button(
+  if ops.button(
     x, y, DlgButtonWidth, h, fmt"{IconCheck} Save", style = a.theme.buttonStyle
   ):
     okAction(dlg, a)
 
   x += DlgButtonWidth + DlgButtonPad
-  if koi.button(
+  if ops.button(
     x, y, DlgButtonWidth, h, fmt"{IconTrash} Discard", style = a.theme.buttonStyle
   ):
     discardAction(dlg, a)
 
   x += DlgButtonWidth + DlgButtonPad
-  if koi.button(
+  if ops.button(
     x, y, DlgButtonWidth, h, fmt"{IconClose} Cancel", style = a.theme.buttonStyle
   ):
     cancelAction(a)
 
   if hasKeyEvent():
-    let ke = koi.currEvent()
+    let ke = ops.currEvent()
     var eventHandled = true
 
     if ke.isShortcutDown(scCancel, a):
@@ -4571,7 +4571,7 @@ proc saveDiscardMapDialog(dlg: var SaveDiscardMapDialogParams, a) =
     if eventHandled:
       setEventHandled()
 
-  koi.endDialog()
+  ops.endDialog()
 
 # }}}
 
@@ -4603,7 +4603,7 @@ proc newMapDialog(dlg: var NewMapDialogParams, a) =
     DlgHeight = 382.0
     TabWidth = 370.0
 
-  koi.beginDialog(
+  ops.beginDialog(
     DlgWidth,
     DlgHeight,
     fmt"{IconNewFile}  New Map",
@@ -4618,7 +4618,7 @@ proc newMapDialog(dlg: var NewMapDialogParams, a) =
 
   let tabLabels = @["General", "Coordinates", "Notes"]
 
-  koi.radioButtons(
+  ops.radioButtons(
     (DlgWidth - TabWidth) * 0.5,
     y,
     TabWidth,
@@ -4630,12 +4630,12 @@ proc newMapDialog(dlg: var NewMapDialogParams, a) =
 
   y += DlgTabBottomPad
 
-  koi.beginView(x, y, w = 1000, h = 1000)
+  ops.beginView(x, y, w = 1000, h = 1000)
 
   var lp = DialogLayoutParams
   lp.labelWidth = 120
   lp.rowWidth = DlgWidth - 90
-  koi.initAutoLayout(lp)
+  ops.initAutoLayout(lp)
 
   if dlg.activeTab == 0: # General
     commonGeneralMapFields(a.doc.map, displayCreationTime = false)
@@ -4644,13 +4644,13 @@ proc newMapDialog(dlg: var NewMapDialogParams, a) =
   elif dlg.activeTab == 2: # Notes
     noteFields(DlgWidth)
 
-  koi.endView()
+  ops.endView()
 
   # Validation
   var validationError = validateCommonGeneralMapFields(dlg)
 
   if validationError != "":
-    koi.label(
+    ops.label(
       x,
       DlgHeight - 76,
       DlgWidth,
@@ -4697,7 +4697,7 @@ proc newMapDialog(dlg: var NewMapDialogParams, a) =
 
   (x, y) = dialogButtonsStartPos(DlgWidth, DlgHeight, 2)
 
-  if koi.button(
+  if ops.button(
     x,
     y,
     DlgButtonWidth,
@@ -4709,7 +4709,7 @@ proc newMapDialog(dlg: var NewMapDialogParams, a) =
     okAction(dlg, a)
 
   x += DlgButtonWidth + DlgButtonPad
-  if koi.button(
+  if ops.button(
     x,
     y,
     DlgButtonWidth,
@@ -4722,7 +4722,7 @@ proc newMapDialog(dlg: var NewMapDialogParams, a) =
   dlg.activateFirstTextField = false
 
   if hasKeyEvent():
-    let ke = koi.currEvent()
+    let ke = ops.currEvent()
     var eventHandled = true
 
     dlg.activeTab = handleTabNavigation(ke, dlg.activeTab, tabLabels.high, a)
@@ -4739,7 +4739,7 @@ proc newMapDialog(dlg: var NewMapDialogParams, a) =
     if eventHandled:
       setEventHandled()
 
-  koi.endDialog()
+  ops.endDialog()
 
 # }}}
 # {{{ Edit map properties dialog
@@ -4769,7 +4769,7 @@ proc editMapPropsDialog(dlg: var EditMapPropsDialogParams, a) =
     DlgHeight = 382.0
     TabWidth = 370.0
 
-  koi.beginDialog(
+  ops.beginDialog(
     DlgWidth,
     DlgHeight,
     fmt"{IconNewFile}  Edit Map Properties",
@@ -4784,7 +4784,7 @@ proc editMapPropsDialog(dlg: var EditMapPropsDialogParams, a) =
 
   let tabLabels = @["General", "Coordinates", "Notes"]
 
-  koi.radioButtons(
+  ops.radioButtons(
     (DlgWidth - TabWidth) * 0.5,
     y,
     TabWidth,
@@ -4796,12 +4796,12 @@ proc editMapPropsDialog(dlg: var EditMapPropsDialogParams, a) =
 
   y += DlgTabBottomPad
 
-  koi.beginView(x, y, w = 1000, h = 1000)
+  ops.beginView(x, y, w = 1000, h = 1000)
 
   var lp = DialogLayoutParams
   lp.labelWidth = 120
   lp.rowWidth = DlgWidth - 90
-  koi.initAutoLayout(lp)
+  ops.initAutoLayout(lp)
 
   if dlg.activeTab == 0: # General
     commonGeneralMapFields(a.doc.map, displayCreationTime = true)
@@ -4810,13 +4810,13 @@ proc editMapPropsDialog(dlg: var EditMapPropsDialogParams, a) =
   elif dlg.activeTab == 2: # Notes
     noteFields(DlgWidth)
 
-  koi.endView()
+  ops.endView()
 
   # Validation
   var validationError = validateCommonGeneralMapFields(dlg)
 
   if validationError != "":
-    koi.label(
+    ops.label(
       x,
       DlgHeight - 76,
       DlgWidth,
@@ -4850,7 +4850,7 @@ proc editMapPropsDialog(dlg: var EditMapPropsDialogParams, a) =
 
   (x, y) = dialogButtonsStartPos(DlgWidth, DlgHeight, 2)
 
-  if koi.button(
+  if ops.button(
     x,
     y,
     DlgButtonWidth,
@@ -4862,7 +4862,7 @@ proc editMapPropsDialog(dlg: var EditMapPropsDialogParams, a) =
     okAction(dlg, a)
 
   x += DlgButtonWidth + DlgButtonPad
-  if koi.button(
+  if ops.button(
     x,
     y,
     DlgButtonWidth,
@@ -4875,7 +4875,7 @@ proc editMapPropsDialog(dlg: var EditMapPropsDialogParams, a) =
   dlg.activateFirstTextField = false
 
   if hasKeyEvent():
-    let ke = koi.currEvent()
+    let ke = ops.currEvent()
     var eventHandled = true
 
     dlg.activeTab = handleTabNavigation(ke, dlg.activeTab, tabLabels.high, a)
@@ -4892,7 +4892,7 @@ proc editMapPropsDialog(dlg: var EditMapPropsDialogParams, a) =
     if eventHandled:
       setEventHandled()
 
-  koi.endDialog()
+  ops.endDialog()
 
 # }}}
 
@@ -4951,7 +4951,7 @@ proc newLevelDialog(dlg: var LevelPropertiesDialogParams, a) =
     DlgHeight = 436.0
     TabWidth = 400.0
 
-  koi.beginDialog(
+  ops.beginDialog(
     DlgWidth,
     DlgHeight,
     fmt"{IconNewFile}  New Level",
@@ -4966,7 +4966,7 @@ proc newLevelDialog(dlg: var LevelPropertiesDialogParams, a) =
 
   let tabLabels = @["General", "Coordinates", "Regions", "Notes"]
 
-  koi.radioButtons(
+  ops.radioButtons(
     (DlgWidth - TabWidth) * 0.5,
     y,
     TabWidth,
@@ -4978,26 +4978,26 @@ proc newLevelDialog(dlg: var LevelPropertiesDialogParams, a) =
 
   y += DlgTabBottomPad
 
-  koi.beginView(x, y, w = 1000, h = 1000)
+  ops.beginView(x, y, w = 1000, h = 1000)
 
   var lp = DialogLayoutParams
   lp.rowWidth = DlgWidth - 80
-  koi.initAutoLayout(lp)
+  ops.initAutoLayout(lp)
 
   if dlg.activeTab == 0: # General
     commonLevelFields(dimensionsDisabled = false)
 
     group:
-      koi.label("Fill with empty floors", style = a.theme.labelStyle)
+      ops.label("Fill with empty floors", style = a.theme.labelStyle)
 
-      koi.nextItemHeight(DlgCheckBoxSize)
-      koi.checkBox(dlg.fillWithEmptyFloors, style = a.theme.checkBoxStyle)
+      ops.nextItemHeight(DlgCheckBoxSize)
+      ops.checkBox(dlg.fillWithEmptyFloors, style = a.theme.checkBoxStyle)
   elif dlg.activeTab == 1: # Coordinates
     group:
-      koi.label("Override map settings", style = a.theme.labelStyle)
+      ops.label("Override map settings", style = a.theme.labelStyle)
 
-      koi.nextItemHeight(DlgCheckBoxSize)
-      koi.checkBox(dlg.overrideCoordOpts, style = a.theme.checkBoxStyle)
+      ops.nextItemHeight(DlgCheckBoxSize)
+      ops.checkBox(dlg.overrideCoordOpts, style = a.theme.checkBoxStyle)
 
       if dlg.overrideCoordOpts:
         coordinateFields()
@@ -5006,14 +5006,14 @@ proc newLevelDialog(dlg: var LevelPropertiesDialogParams, a) =
   elif dlg.activeTab == 3: # Notes
     noteFields(DlgWidth)
 
-  koi.endView()
+  ops.endView()
 
   # Validation
   var validationError = ""
   validateLevelFields(dlg, map, validationError)
 
   if validationError != "":
-    koi.label(
+    ops.label(
       x,
       DlgHeight - 115,
       DlgWidth - 60,
@@ -5071,7 +5071,7 @@ proc newLevelDialog(dlg: var LevelPropertiesDialogParams, a) =
 
   (x, y) = dialogButtonsStartPos(DlgWidth, DlgHeight, 2)
 
-  if koi.button(
+  if ops.button(
     x,
     y,
     DlgButtonWidth,
@@ -5083,7 +5083,7 @@ proc newLevelDialog(dlg: var LevelPropertiesDialogParams, a) =
     okAction(dlg, a)
 
   x += DlgButtonWidth + DlgButtonPad
-  if koi.button(
+  if ops.button(
     x,
     y,
     DlgButtonWidth,
@@ -5096,7 +5096,7 @@ proc newLevelDialog(dlg: var LevelPropertiesDialogParams, a) =
   dlg.activateFirstTextField = false
 
   if hasKeyEvent():
-    let ke = koi.currEvent()
+    let ke = ops.currEvent()
     var eventHandled = true
 
     dlg.activeTab = handleTabNavigation(ke, dlg.activeTab, tabLabels.high, a)
@@ -5113,7 +5113,7 @@ proc newLevelDialog(dlg: var LevelPropertiesDialogParams, a) =
     if eventHandled:
       setEventHandled()
 
-  koi.endDialog()
+  ops.endDialog()
 
 # }}}
 # {{{ Edit level properties dialog
@@ -5155,7 +5155,7 @@ proc editLevelPropsDialog(dlg: var LevelPropertiesDialogParams, a) =
     DlgHeight = 436.0
     TabWidth = 400.0
 
-  koi.beginDialog(
+  ops.beginDialog(
     DlgWidth,
     DlgHeight,
     fmt"{IconNewFile}  Edit Level Properties",
@@ -5170,7 +5170,7 @@ proc editLevelPropsDialog(dlg: var LevelPropertiesDialogParams, a) =
 
   let tabLabels = @["General", "Coordinates", "Regions", "Notes"]
 
-  koi.radioButtons(
+  ops.radioButtons(
     (DlgWidth - TabWidth) * 0.5,
     y,
     TabWidth,
@@ -5182,19 +5182,19 @@ proc editLevelPropsDialog(dlg: var LevelPropertiesDialogParams, a) =
 
   y += DlgTabBottomPad
 
-  koi.beginView(x, y, w = 1000, h = 1000)
+  ops.beginView(x, y, w = 1000, h = 1000)
 
   var lp = DialogLayoutParams
   lp.rowWidth = DlgWidth - 80
-  koi.initAutoLayout(lp)
+  ops.initAutoLayout(lp)
 
   if dlg.activeTab == 0: # General
     commonLevelFields(dimensionsDisabled = true)
   elif dlg.activeTab == 1: # Coordinates
-    koi.label("Override map settings", style = a.theme.labelStyle)
+    ops.label("Override map settings", style = a.theme.labelStyle)
 
-    koi.nextItemHeight(DlgCheckBoxSize)
-    koi.checkBox(dlg.overrideCoordOpts, style = a.theme.checkBoxStyle)
+    ops.nextItemHeight(DlgCheckBoxSize)
+    ops.checkBox(dlg.overrideCoordOpts, style = a.theme.checkBoxStyle)
 
     if dlg.overrideCoordOpts:
       coordinateFields()
@@ -5203,7 +5203,7 @@ proc editLevelPropsDialog(dlg: var LevelPropertiesDialogParams, a) =
   elif dlg.activeTab == 3: # Notes
     noteFields(DlgWidth)
 
-  koi.endView()
+  ops.endView()
 
   dlg.activateFirstTextField = false
 
@@ -5216,7 +5216,7 @@ proc editLevelPropsDialog(dlg: var LevelPropertiesDialogParams, a) =
     validateLevelFields(dlg, map, validationError)
 
   if validationError != "":
-    koi.label(
+    ops.label(
       x,
       DlgHeight - 115,
       DlgWidth - 60,
@@ -5259,7 +5259,7 @@ proc editLevelPropsDialog(dlg: var LevelPropertiesDialogParams, a) =
 
   (x, y) = dialogButtonsStartPos(DlgWidth, DlgHeight, 2)
 
-  if koi.button(
+  if ops.button(
     x,
     y,
     DlgButtonWidth,
@@ -5271,7 +5271,7 @@ proc editLevelPropsDialog(dlg: var LevelPropertiesDialogParams, a) =
     okAction(dlg, a)
 
   x += DlgButtonWidth + DlgButtonPad
-  if koi.button(
+  if ops.button(
     x,
     y,
     DlgButtonWidth,
@@ -5282,7 +5282,7 @@ proc editLevelPropsDialog(dlg: var LevelPropertiesDialogParams, a) =
     cancelAction(a)
 
   if hasKeyEvent():
-    let ke = koi.currEvent()
+    let ke = ops.currEvent()
     var eventHandled = true
 
     dlg.activeTab = handleTabNavigation(ke, dlg.activeTab, tabLabels.high, a)
@@ -5299,7 +5299,7 @@ proc editLevelPropsDialog(dlg: var LevelPropertiesDialogParams, a) =
     if eventHandled:
       setEventHandled()
 
-  koi.endDialog()
+  ops.endDialog()
 
 # }}}
 # {{{ Resize level dialog
@@ -5324,7 +5324,7 @@ proc resizeLevelDialog(dlg: var ResizeLevelDialogParams, a) =
 
   let h = DlgItemHeight
 
-  koi.beginDialog(
+  ops.beginDialog(
     DlgWidth,
     DlgHeight,
     fmt"{IconEnlarge}  Resize Level",
@@ -5337,8 +5337,8 @@ proc resizeLevelDialog(dlg: var ResizeLevelDialogParams, a) =
   var x = DlgLeftPad
   var y = DlgTopNoTabPad
 
-  koi.label(x, y, LabelWidth, h, "Columns", style = a.theme.labelStyle)
-  koi.textField(
+  ops.label(x, y, LabelWidth, h, "Columns", style = a.theme.labelStyle)
+  ops.textField(
     x + LabelWidth,
     y,
     w = DlgNumberWidth,
@@ -5355,8 +5355,8 @@ proc resizeLevelDialog(dlg: var ResizeLevelDialogParams, a) =
   )
 
   y += PadYSmall
-  koi.label(x, y, LabelWidth, h, "Rows", style = a.theme.labelStyle)
-  koi.textField(
+  ops.label(x, y, LabelWidth, h, "Rows", style = a.theme.labelStyle)
+  ops.textField(
     x + LabelWidth,
     y,
     w = DlgNumberWidth,
@@ -5378,8 +5378,8 @@ proc resizeLevelDialog(dlg: var ResizeLevelDialogParams, a) =
     ]
 
   y += PadYLarge
-  koi.label(x, y, LabelWidth, h, "Anchor", style = a.theme.labelStyle)
-  koi.radioButtons(
+  ops.label(x, y, LabelWidth, h, "Anchor", style = a.theme.labelStyle)
+  ops.radioButtons(
     x + LabelWidth,
     y,
     35,
@@ -5440,7 +5440,7 @@ proc resizeLevelDialog(dlg: var ResizeLevelDialogParams, a) =
   except:
     discard
 
-  if koi.button(
+  if ops.button(
     x,
     y,
     DlgButtonWidth,
@@ -5452,13 +5452,13 @@ proc resizeLevelDialog(dlg: var ResizeLevelDialogParams, a) =
     okAction(dlg, a)
 
   x += DlgButtonWidth + DlgButtonPad
-  if koi.button(
+  if ops.button(
     x, y, DlgButtonWidth, h, fmt"{IconClose} Cancel", style = a.theme.buttonStyle
   ):
     cancelAction(a)
 
   if hasKeyEvent():
-    let ke = koi.currEvent()
+    let ke = ops.currEvent()
     var eventHandled = true
 
     dlg.anchor = ResizeAnchor(
@@ -5477,7 +5477,7 @@ proc resizeLevelDialog(dlg: var ResizeLevelDialogParams, a) =
     if eventHandled:
       setEventHandled()
 
-  koi.endDialog()
+  ops.endDialog()
 
 # }}}
 # {{{ Delete level dialog
@@ -5495,7 +5495,7 @@ proc deleteLevelDialog(a) =
 
   let h = DlgItemHeight
 
-  koi.beginDialog(
+  ops.beginDialog(
     DlgWidth,
     DlgHeight,
     fmt"{IconTrash}  Delete level?",
@@ -5508,7 +5508,7 @@ proc deleteLevelDialog(a) =
   var x = DlgLeftPad
   var y = DlgTopPad
 
-  koi.label(
+  ops.label(
     x,
     y,
     DlgWidth,
@@ -5531,19 +5531,19 @@ proc deleteLevelDialog(a) =
 
   (x, y) = dialogButtonsStartPos(DlgWidth, DlgHeight, 2)
 
-  if koi.button(
+  if ops.button(
     x, y, DlgButtonWidth, h, fmt"{IconCheck} Delete", style = a.theme.buttonStyle
   ):
     okAction(a)
 
   x += DlgButtonWidth + DlgButtonPad
-  if koi.button(
+  if ops.button(
     x, y, DlgButtonWidth, h, fmt"{IconClose} Cancel", style = a.theme.buttonStyle
   ):
     cancelAction(a)
 
   if hasKeyEvent():
-    let ke = koi.currEvent()
+    let ke = ops.currEvent()
     var eventHandled = true
 
     if ke.isShortcutDown(scCancel, a):
@@ -5556,7 +5556,7 @@ proc deleteLevelDialog(a) =
     if eventHandled:
       setEventHandled()
 
-  koi.endDialog()
+  ops.endDialog()
 
 # }}}
 
@@ -5607,7 +5607,7 @@ proc editNoteDialog(dlg: var EditNoteDialogParams, a) =
 
   let title = (if dlg.editMode: "Edit" else: "Add") & " Note"
 
-  koi.beginDialog(
+  ops.beginDialog(
     DlgWidth,
     DlgHeight,
     fmt"{IconCommentInv}  {title}",
@@ -5620,8 +5620,8 @@ proc editNoteDialog(dlg: var EditNoteDialogParams, a) =
   var x = DlgLeftPad
   var y = DlgTopPad
 
-  koi.label(x, y, LabelWidth, h, "Marker", style = a.theme.labelStyle)
-  koi.radioButtons(
+  ops.label(x, y, LabelWidth, h, "Marker", style = a.theme.labelStyle)
+  ops.radioButtons(
     x + LabelWidth,
     y,
     w = 296,
@@ -5632,8 +5632,8 @@ proc editNoteDialog(dlg: var EditNoteDialogParams, a) =
   )
 
   y += 40
-  koi.label(x, y, LabelWidth, h, "Text", style = a.theme.labelStyle)
-  koi.textArea(
+  ops.label(x, y, LabelWidth, h, "Text", style = a.theme.labelStyle)
+  ops.textArea(
     x + LabelWidth,
     y,
     w = 346,
@@ -5651,9 +5651,9 @@ proc editNoteDialog(dlg: var EditNoteDialogParams, a) =
 
   case dlg.kind
   of akIndexed:
-    koi.label(x, y, LabelWidth, h, "Color", style = a.theme.labelStyle)
+    ops.label(x, y, LabelWidth, h, "Color", style = a.theme.labelStyle)
 
-    koi.radioButtons(
+    ops.radioButtons(
       x + LabelWidth,
       y,
       28,
@@ -5668,8 +5668,8 @@ proc editNoteDialog(dlg: var EditNoteDialogParams, a) =
       ).some,
     )
   of akCustomId:
-    koi.label(x, y, LabelWidth, h, "ID", style = a.theme.labelStyle)
-    koi.textField(
+    ops.label(x, y, LabelWidth, h, "ID", style = a.theme.labelStyle)
+    ops.textField(
       x + LabelWidth,
       y,
       w = DlgNumberWidth,
@@ -5684,8 +5684,8 @@ proc editNoteDialog(dlg: var EditNoteDialogParams, a) =
       style = a.theme.textFieldStyle,
     )
   of akIcon:
-    koi.label(x, y, LabelWidth, h, "Icon", style = a.theme.labelStyle)
-    koi.radioButtons(
+    ops.label(x, y, LabelWidth, h, "Icon", style = a.theme.labelStyle)
+    ops.radioButtons(
       x + LabelWidth,
       y,
       35,
@@ -5724,7 +5724,7 @@ proc editNoteDialog(dlg: var EditNoteDialogParams, a) =
   y += 45
 
   for err in validationErrors:
-    koi.label(x, y, DlgWidth, h, err, style = a.theme.errorLabelStyle)
+    ops.label(x, y, DlgWidth, h, err, style = a.theme.errorLabelStyle)
     y += h
 
   (x, y) = dialogButtonsStartPos(DlgWidth, DlgHeight, 2)
@@ -5753,7 +5753,7 @@ proc editNoteDialog(dlg: var EditNoteDialogParams, a) =
   proc cancelAction(a) =
     closeDialog(a)
 
-  if koi.button(
+  if ops.button(
     x,
     y,
     DlgButtonWidth,
@@ -5765,13 +5765,13 @@ proc editNoteDialog(dlg: var EditNoteDialogParams, a) =
     okAction(dlg, a)
 
   x += DlgButtonWidth + DlgButtonPad
-  if koi.button(
+  if ops.button(
     x, y, DlgButtonWidth, h, fmt"{IconClose} Cancel", style = a.theme.buttonStyle
   ):
     cancelAction(a)
 
   if hasKeyEvent():
-    let ke = koi.currEvent()
+    let ke = ops.currEvent()
     var eventHandled = true
 
     dlg.kind = AnnotationKind(handleTabNavigation(ke, ord(dlg.kind), ord(akIcon), a))
@@ -5798,7 +5798,7 @@ proc editNoteDialog(dlg: var EditNoteDialogParams, a) =
     if eventHandled:
       setEventHandled()
 
-  koi.endDialog()
+  ops.endDialog()
 
 # }}}
 # {{{ Edit label dialog
@@ -5836,7 +5836,7 @@ proc editLabelDialog(dlg: var EditLabelDialogParams, a) =
 
   let title = (if dlg.editMode: "Edit" else: "Add") & " Label"
 
-  koi.beginDialog(
+  ops.beginDialog(
     DlgWidth,
     DlgHeight,
     fmt"{IconText}  {title}",
@@ -5849,8 +5849,8 @@ proc editLabelDialog(dlg: var EditLabelDialogParams, a) =
   var x = DlgLeftPad
   var y = DlgTopNoTabPad
 
-  koi.label(x, y, LabelWidth, h, "Text", style = a.theme.labelStyle)
-  koi.textArea(
+  ops.label(x, y, LabelWidth, h, "Text", style = a.theme.labelStyle)
+  ops.textArea(
     x + LabelWidth,
     y,
     w = 346,
@@ -5865,8 +5865,8 @@ proc editLabelDialog(dlg: var EditLabelDialogParams, a) =
 
   let NumLabelColors = lt.labelTextColor.len
 
-  koi.label(x, y, LabelWidth, h, "Color", style = a.theme.labelStyle)
-  koi.radioButtons(
+  ops.label(x, y, LabelWidth, h, "Color", style = a.theme.labelStyle)
+  ops.radioButtons(
     x + LabelWidth,
     y,
     w = 28,
@@ -5891,7 +5891,7 @@ proc editLabelDialog(dlg: var EditLabelDialogParams, a) =
   y += 44
 
   if validationError != "":
-    koi.label(x, y, DlgWidth, h, validationError, style = a.theme.errorLabelStyle)
+    ops.label(x, y, DlgWidth, h, validationError, style = a.theme.errorLabelStyle)
     y += h
 
   (x, y) = dialogButtonsStartPos(DlgWidth, DlgHeight, 2)
@@ -5910,7 +5910,7 @@ proc editLabelDialog(dlg: var EditLabelDialogParams, a) =
   proc cancelAction(a) =
     closeDialog(a)
 
-  if koi.button(
+  if ops.button(
     x,
     y,
     DlgButtonWidth,
@@ -5922,13 +5922,13 @@ proc editLabelDialog(dlg: var EditLabelDialogParams, a) =
     okAction(dlg, a)
 
   x += DlgButtonWidth + DlgButtonPad
-  if koi.button(
+  if ops.button(
     x, y, DlgButtonWidth, h, fmt"{IconClose} Cancel", style = a.theme.buttonStyle
   ):
     cancelAction(a)
 
   if hasKeyEvent():
-    let ke = koi.currEvent()
+    let ke = ops.currEvent()
     var eventHandled = true
 
     dlg.color = handleGridRadioButton(
@@ -5947,7 +5947,7 @@ proc editLabelDialog(dlg: var EditLabelDialogParams, a) =
     if eventHandled:
       setEventHandled()
 
-  koi.endDialog()
+  ops.endDialog()
 
 # }}}
 
@@ -5972,7 +5972,7 @@ proc editRegionPropsDialog(dlg: var EditRegionPropsParams, a) =
 
   let l = currLevel(a)
 
-  koi.beginDialog(
+  ops.beginDialog(
     DlgWidth,
     DlgHeight,
     fmt"{IconFile}  Edit Region Properties",
@@ -5985,8 +5985,8 @@ proc editRegionPropsDialog(dlg: var EditRegionPropsParams, a) =
   var x = DlgLeftPad
   var y = DlgTopNoTabPad
 
-  koi.label(x, y, LabelWidth, h, "Name", style = a.theme.labelStyle)
-  koi.textField(
+  ops.label(x, y, LabelWidth, h, "Name", style = a.theme.labelStyle)
+  ops.textField(
     x + LabelWidth,
     y,
     w = 294,
@@ -6003,8 +6003,8 @@ proc editRegionPropsDialog(dlg: var EditRegionPropsParams, a) =
   )
 
   y += 40
-  koi.label(x, y, LabelWidth, h, "Notes", style = a.theme.labelStyle)
-  koi.textArea(
+  ops.label(x, y, LabelWidth, h, "Notes", style = a.theme.labelStyle)
+  ops.textArea(
     x + LabelWidth,
     y,
     w = 346,
@@ -6032,7 +6032,7 @@ proc editRegionPropsDialog(dlg: var EditRegionPropsParams, a) =
   y += 172
 
   if validationError != "":
-    koi.label(x, y, DlgWidth, h, validationError, style = a.theme.errorLabelStyle)
+    ops.label(x, y, DlgWidth, h, validationError, style = a.theme.errorLabelStyle)
     y += h
 
   proc okAction(dlg: EditRegionPropsParams, a) =
@@ -6052,7 +6052,7 @@ proc editRegionPropsDialog(dlg: var EditRegionPropsParams, a) =
 
   (x, y) = dialogButtonsStartPos(DlgWidth, DlgHeight, 2)
 
-  if koi.button(
+  if ops.button(
     x,
     y,
     DlgButtonWidth,
@@ -6064,7 +6064,7 @@ proc editRegionPropsDialog(dlg: var EditRegionPropsParams, a) =
     okAction(dlg, a)
 
   x += DlgButtonWidth + DlgButtonPad
-  if koi.button(
+  if ops.button(
     x,
     y,
     DlgButtonWidth,
@@ -6075,7 +6075,7 @@ proc editRegionPropsDialog(dlg: var EditRegionPropsParams, a) =
     cancelAction(a)
 
   if hasKeyEvent():
-    let ke = koi.currEvent()
+    let ke = ops.currEvent()
     var eventHandled = true
 
     if ke.isShortcutDown(scNextTextField, a):
@@ -6090,7 +6090,7 @@ proc editRegionPropsDialog(dlg: var EditRegionPropsParams, a) =
     if eventHandled:
       setEventHandled()
 
-  koi.endDialog()
+  ops.endDialog()
 
 # }}}
 
@@ -6109,26 +6109,26 @@ proc saveDiscardThemeDialog(dlg: SaveDiscardThemeDialogParams, a) =
 
   let h = DlgItemHeight
 
-  koi.beginDialog(
+  ops.beginDialog(
     DlgWidth,
     DlgHeight,
     fmt"{IconFloppy}  Save Theme?",
     x = calcDialogX(DlgWidth, a).some,
     style = a.theme.dialogStyle,
   )
-  koi.setFocusCaptured(false)
+  ops.setFocusCaptured(false)
 
   clearStatusMessage(a)
 
   var x = DlgLeftPad
   var y = DlgTopPad
 
-  koi.label(
+  ops.label(
     x, y, DlgWidth, h, "You have made changes to the theme.", style = a.theme.labelStyle
   )
 
   y += h
-  koi.label(
+  ops.label(
     x, y, DlgWidth, h, "Do you want to save the theme?", style = a.theme.labelStyle
   )
 
@@ -6148,25 +6148,25 @@ proc saveDiscardThemeDialog(dlg: SaveDiscardThemeDialogParams, a) =
 
   (x, y) = dialogButtonsStartPos(DlgWidth, DlgHeight, 3)
 
-  if koi.button(
+  if ops.button(
     x, y, DlgButtonWidth, h, fmt"{IconCheck} Save", style = a.theme.buttonStyle
   ):
     okAction(dlg, a)
 
   x += DlgButtonWidth + DlgButtonPad
-  if koi.button(
+  if ops.button(
     x, y, DlgButtonWidth, h, fmt"{IconTrash} Discard", style = a.theme.buttonStyle
   ):
     discardAction(dlg, a)
 
   x += DlgButtonWidth + DlgButtonPad
-  if koi.button(
+  if ops.button(
     x, y, DlgButtonWidth, h, fmt"{IconClose} Cancel", style = a.theme.buttonStyle
   ):
     cancelAction(a)
 
   if hasKeyEvent():
-    let ke = koi.currEvent()
+    let ke = ops.currEvent()
     var eventHandled = true
 
     if ke.isShortcutDown(scCancel, a):
@@ -6181,7 +6181,7 @@ proc saveDiscardThemeDialog(dlg: SaveDiscardThemeDialogParams, a) =
     if eventHandled:
       setEventHandled()
 
-  koi.endDialog()
+  ops.endDialog()
 
 # }}}
 # {{{ Overwrite theme dialog
@@ -6203,7 +6203,7 @@ proc overwriteThemeDialog(dlg: OverwriteThemeDialogParams, a) =
 
   let h = DlgItemHeight
 
-  koi.beginDialog(
+  ops.beginDialog(
     DlgWidth,
     DlgHeight,
     fmt"{IconFloppy}  Overwrite Theme?",
@@ -6216,7 +6216,7 @@ proc overwriteThemeDialog(dlg: OverwriteThemeDialogParams, a) =
   var x = DlgLeftPad
   var y = DlgTopPad
 
-  koi.label(
+  ops.label(
     x,
     y,
     DlgWidth,
@@ -6226,7 +6226,7 @@ proc overwriteThemeDialog(dlg: OverwriteThemeDialogParams, a) =
   )
 
   y += h
-  koi.label(
+  ops.label(
     x, y, DlgWidth, h, "Do you want to overwrite it?", style = a.theme.labelStyle
   )
 
@@ -6240,7 +6240,7 @@ proc overwriteThemeDialog(dlg: OverwriteThemeDialogParams, a) =
   (x, y) = dialogButtonsStartPos(DlgWidth, DlgHeight, 2)
 
   x -= 20
-  if koi.button(
+  if ops.button(
     x,
     y,
     DlgButtonWidth + 20,
@@ -6252,13 +6252,13 @@ proc overwriteThemeDialog(dlg: OverwriteThemeDialogParams, a) =
 
   x += 20
   x += DlgButtonWidth + DlgButtonPad
-  if koi.button(
+  if ops.button(
     x, y, DlgButtonWidth, h, fmt"{IconClose} Cancel", style = a.theme.buttonStyle
   ):
     cancelAction(a)
 
   if hasKeyEvent():
-    let ke = koi.currEvent()
+    let ke = ops.currEvent()
     var eventHandled = true
 
     if ke.isShortcutDown(scCancel, a):
@@ -6271,7 +6271,7 @@ proc overwriteThemeDialog(dlg: OverwriteThemeDialogParams, a) =
     if eventHandled:
       setEventHandled()
 
-  koi.endDialog()
+  ops.endDialog()
 
 # }}}
 # {{{ Copy theme dialog
@@ -6289,7 +6289,7 @@ proc copyThemeDialog(dlg: var CopyThemeDialogParams, a) =
 
   let h = DlgItemHeight
 
-  koi.beginDialog(
+  ops.beginDialog(
     DlgWidth,
     DlgHeight,
     fmt"{IconCopy}  Copy Theme",
@@ -6302,8 +6302,8 @@ proc copyThemeDialog(dlg: var CopyThemeDialogParams, a) =
   var x = DlgLeftPad
   var y = DlgTopPad
 
-  koi.label(x, y, LabelWidth, h, "New theme name", style = a.theme.labelStyle)
-  koi.textField(
+  ops.label(x, y, LabelWidth, h, "New theme name", style = a.theme.labelStyle)
+  ops.textField(
     x + LabelWidth,
     y,
     w = 196,
@@ -6331,7 +6331,7 @@ proc copyThemeDialog(dlg: var CopyThemeDialogParams, a) =
       validationWarning = "Built-in theme will be shadowed by this name"
 
   if validationError != "":
-    koi.label(
+    ops.label(
       x,
       DlgHeight - 76,
       DlgWidth,
@@ -6340,7 +6340,7 @@ proc copyThemeDialog(dlg: var CopyThemeDialogParams, a) =
       style = a.theme.errorLabelStyle,
     )
   elif validationWarning != "":
-    koi.label(
+    ops.label(
       x,
       DlgHeight - 76,
       DlgWidth,
@@ -6372,7 +6372,7 @@ proc copyThemeDialog(dlg: var CopyThemeDialogParams, a) =
 
   (x, y) = dialogButtonsStartPos(DlgWidth, DlgHeight, 2)
 
-  if koi.button(
+  if ops.button(
     x,
     y,
     DlgButtonWidth,
@@ -6384,13 +6384,13 @@ proc copyThemeDialog(dlg: var CopyThemeDialogParams, a) =
     okAction(dlg, a)
 
   x += DlgButtonWidth + DlgButtonPad
-  if koi.button(
+  if ops.button(
     x, y, DlgButtonWidth, h, fmt"{IconClose} Cancel", style = a.theme.buttonStyle
   ):
     cancelAction(a)
 
   if hasKeyEvent():
-    let ke = koi.currEvent()
+    let ke = ops.currEvent()
     var eventHandled = true
 
     if ke.isShortcutDown(scNextTextField, a):
@@ -6405,7 +6405,7 @@ proc copyThemeDialog(dlg: var CopyThemeDialogParams, a) =
     if eventHandled:
       setEventHandled()
 
-  koi.endDialog()
+  ops.endDialog()
 
 # }}}
 # {{{ Rename theme dialog
@@ -6423,7 +6423,7 @@ proc renameThemeDialog(dlg: var RenameThemeDialogParams, a) =
 
   let h = DlgItemHeight
 
-  koi.beginDialog(
+  ops.beginDialog(
     DlgWidth,
     DlgHeight,
     fmt"{IconFile}  Rename Theme",
@@ -6436,8 +6436,8 @@ proc renameThemeDialog(dlg: var RenameThemeDialogParams, a) =
   var x = DlgLeftPad
   var y = DlgTopPad
 
-  koi.label(x, y, LabelWidth, h, "New theme name", style = a.theme.labelStyle)
-  koi.textField(
+  ops.label(x, y, LabelWidth, h, "New theme name", style = a.theme.labelStyle)
+  ops.textField(
     x + LabelWidth,
     y,
     w = 196,
@@ -6465,7 +6465,7 @@ proc renameThemeDialog(dlg: var RenameThemeDialogParams, a) =
       validationWarning = "Built-in theme will be shadowed by this name"
 
   if validationError != "":
-    koi.label(
+    ops.label(
       x,
       DlgHeight - 76,
       DlgWidth,
@@ -6474,7 +6474,7 @@ proc renameThemeDialog(dlg: var RenameThemeDialogParams, a) =
       style = a.theme.errorLabelStyle,
     )
   elif validationWarning != "":
-    koi.label(
+    ops.label(
       x,
       DlgHeight - 76,
       DlgWidth,
@@ -6506,7 +6506,7 @@ proc renameThemeDialog(dlg: var RenameThemeDialogParams, a) =
 
   (x, y) = dialogButtonsStartPos(DlgWidth, DlgHeight, 2)
 
-  if koi.button(
+  if ops.button(
     x,
     y,
     DlgButtonWidth,
@@ -6518,13 +6518,13 @@ proc renameThemeDialog(dlg: var RenameThemeDialogParams, a) =
     okAction(dlg, a)
 
   x += DlgButtonWidth + DlgButtonPad
-  if koi.button(
+  if ops.button(
     x, y, DlgButtonWidth, h, fmt"{IconClose} Cancel", style = a.theme.buttonStyle
   ):
     cancelAction(a)
 
   if hasKeyEvent():
-    let ke = koi.currEvent()
+    let ke = ops.currEvent()
     var eventHandled = true
 
     if ke.isShortcutDown(scNextTextField, a):
@@ -6539,7 +6539,7 @@ proc renameThemeDialog(dlg: var RenameThemeDialogParams, a) =
     if eventHandled:
       setEventHandled()
 
-  koi.endDialog()
+  ops.endDialog()
 
 # }}}
 # {{{ Delete theme dialog
@@ -6554,7 +6554,7 @@ proc deleteThemeDialog(a) =
 
   let h = DlgItemHeight
 
-  koi.beginDialog(
+  ops.beginDialog(
     DlgWidth,
     DlgHeight,
     fmt"{IconTrash}  Delete Theme?",
@@ -6567,7 +6567,7 @@ proc deleteThemeDialog(a) =
   var x = DlgLeftPad
   var y = DlgTopPad
 
-  koi.label(
+  ops.label(
     x,
     y,
     DlgWidth,
@@ -6589,19 +6589,19 @@ proc deleteThemeDialog(a) =
 
   (x, y) = dialogButtonsStartPos(DlgWidth, DlgHeight, 2)
 
-  if koi.button(
+  if ops.button(
     x, y, DlgButtonWidth, h, fmt"{IconCheck} Delete", style = a.theme.buttonStyle
   ):
     okAction(a)
 
   x += DlgButtonWidth + DlgButtonPad
-  if koi.button(
+  if ops.button(
     x, y, DlgButtonWidth, h, fmt"{IconClose} Cancel", style = a.theme.buttonStyle
   ):
     cancelAction(a)
 
   if hasKeyEvent():
-    let ke = koi.currEvent()
+    let ke = ops.currEvent()
     var eventHandled = true
 
     if ke.isShortcutDown(scCancel, a):
@@ -6614,7 +6614,7 @@ proc deleteThemeDialog(a) =
     if eventHandled:
       setEventHandled()
 
-  koi.endDialog()
+  ops.endDialog()
 
 # }}}
 
@@ -7042,19 +7042,19 @@ proc handleLevelMouseEvents(a) =
     alias(ui, a.ui)
     ui.prevEditMode = ui.editMode
     ui.editMode = emPanLevel
-    ui.mouseDragStartX = koi.mx()
-    ui.mouseDragStartY = koi.my()
+    ui.mouseDragStartX = ops.mx()
+    ui.mouseDragStartY = ops.my()
     ui.panLevelMode = mode
 
   # }}}
   # {{{ handleMoveCursorOrPanSimple()
   proc handleMoveCursorOrPanSimple(a) =
-    if koi.mbLeftDown():
-      if koi.ctrlDown():
+    if ops.mbLeftDown():
+      if ops.ctrlDown():
         enterPanLevelMode(dlmCtrlLeftButton, a)
       else:
         moveCursorToMousePos(a)
-    elif koi.mbMiddleDown():
+    elif ops.mbMiddleDown():
       enterPanLevelMode(dlmMiddleButton, a)
 
   # }}}
@@ -7063,8 +7063,8 @@ proc handleLevelMouseEvents(a) =
     alias(ui, a.ui)
     alias(dp, a.ui.drawLevelParams)
 
-    let dx = ui.mouseDragStartX - koi.mx()
-    let dy = ui.mouseDragStartY - koi.my()
+    let dx = ui.mouseDragStartX - ops.mx()
+    let dy = ui.mouseDragStartY - ops.my()
 
     const SensitivityMin = 10
     const SensitivityMax = 35
@@ -7082,7 +7082,7 @@ proc handleLevelMouseEvents(a) =
     if colSteps == 0:
       discard
     else:
-      ui.mouseDragStartX = koi.mx()
+      ui.mouseDragStartX = ops.mx()
       if colSteps > 0:
         moveLevelView(East, colSteps, a)
       else:
@@ -7091,7 +7091,7 @@ proc handleLevelMouseEvents(a) =
     if rowSteps == 0:
       discard
     else:
-      ui.mouseDragStartY = koi.my()
+      ui.mouseDragStartY = ops.my()
       if rowSteps > 0:
         moveLevelView(South, rowSteps, a)
       else:
@@ -7107,10 +7107,10 @@ proc handleLevelMouseEvents(a) =
     alias(ui, a.ui)
     case ui.panLevelMode
     of dlmCtrlLeftButton:
-      if not koi.ctrlDown() or not koi.mbLeftDown():
+      if not ops.ctrlDown() or not ops.mbLeftDown():
         ui.editMode = ui.prevEditMode
     of dlmMiddleButton:
-      if not koi.mbMiddleDown():
+      if not ops.mbMiddleDown():
         ui.editMode = ui.prevEditMode
 
   # }}}
@@ -7124,10 +7124,10 @@ proc handleLevelMouseEvents(a) =
   if a.ui.wasdMode:
     case ui.editMode
     of emNormal:
-      if koi.mbLeftDown():
+      if ops.mbLeftDown():
         if ui.mouseCanStartExcavate:
-          if koi.shiftDown():
-            if koi.ctrlDown():
+          if ops.shiftDown():
+            if ops.ctrlDown():
               enterPanLevelMode(dlmCtrlLeftButton, a)
             else:
               moveCursorToMousePos(a)
@@ -7137,10 +7137,10 @@ proc handleLevelMouseEvents(a) =
       else:
         ui.mouseCanStartExcavate = true
 
-      if koi.mbRightDown():
+      if ops.mbRightDown():
         enterDrawWallMode(specialWall = false, a)
-      elif koi.mbMiddleDown():
-        if koi.shiftDown():
+      elif ops.mbMiddleDown():
+        if ops.shiftDown():
           enterPanLevelMode(dlmMiddleButton, a)
         else:
           ui.editMode = emEraseCell
@@ -7148,37 +7148,37 @@ proc handleLevelMouseEvents(a) =
     of emColorFloor, emDrawClearFloor:
       discard
     of emDrawWall:
-      if not koi.mbRightDown():
+      if not ops.mbRightDown():
         ui.editMode = emNormal
         clearStatusMessage(a)
       else:
-        if koi.mbLeftDown():
+        if ops.mbLeftDown():
           enterDrawWallMode(specialWall = true, a)
     of emDrawWallRepeat:
-      if not koi.mbRightDown():
+      if not ops.mbRightDown():
         ui.editMode = emNormal
         clearStatusMessage(a)
     of emDrawSpecialWall:
-      if not koi.mbRightDown():
+      if not ops.mbRightDown():
         ui.editMode = emNormal
         ui.mouseCanStartExcavate = false
         clearStatusMessage(a)
       else:
-        if not koi.mbLeftDown():
+        if not ops.mbLeftDown():
           enterDrawWallMode(specialWall = false, a)
     of emDrawSpecialWallRepeat:
-      if not koi.mbRightDown():
+      if not ops.mbRightDown():
         ui.editMode = emNormal
         ui.mouseCanStartExcavate = false
         clearStatusMessage(a)
     of emEraseCell:
-      if not koi.mbMiddleDown():
+      if not ops.mbMiddleDown():
         ui.editMode = emNormal
         clearStatusMessage(a)
     of emEraseTrail:
       discard
     of emExcavateTunnel:
-      if not koi.mbLeftDown():
+      if not ops.mbLeftDown():
         ui.editMode = emNormal
         clearStatusMessage(a)
     of emNudgePreview:
@@ -7186,7 +7186,7 @@ proc handleLevelMouseEvents(a) =
     of emSelect, emSetCellLink, emPastePreview, emMovePreview:
       handleMoveCursorOrPanSimple(a)
     of emSelectDraw, emSelectErase, emSelectRect:
-      if koi.mbLeftDown():
+      if ops.mbLeftDown():
         moveCursorToMousePos(a)
     of emSelectJumpToLinkSrc:
       discard
@@ -7201,7 +7201,7 @@ proc handleLevelMouseEvents(a) =
     of emNormal, emSelect, emSetCellLink, emPastePreview, emMovePreview:
       handleMoveCursorOrPanSimple(a)
     of emSelectDraw, emSelectErase, emSelectRect:
-      if koi.mbLeftDown():
+      if ops.mbLeftDown():
         moveCursorToMousePos(a)
     of emPanLevel:
       handlePanLevel(a)
@@ -7243,8 +7243,8 @@ proc toggleThemeEditor(a) =
   let closing = a.layout.showThemeEditor
   toggleShowOption(a.layout.showThemeEditor, NoIcon, "Theme editor pane", a)
   if closing:
-    koi.closePopup()
-    koi.setFocusCaptured(false)
+    ops.closePopup()
+    ops.setFocusCaptured(false)
     a.themeEditor.focusCaptured = false
 
 proc showQuickReference(a) =
@@ -7514,7 +7514,7 @@ proc handleGlobalKeyEvents(a) =
   # }}}
 
   if hasKeyEvent():
-    let ke = koi.currEvent()
+    let ke = ops.currEvent()
     # TODO eventHandled is not set here, but it's not actually needed (yet)
 
     case ui.editMode
@@ -7856,8 +7856,8 @@ proc handleGlobalKeyEvents(a) =
             with ui.manualNoteTooltipState:
               show = true
               location = cur
-              mx = koi.mx()
-              my = koi.my()
+              mx = ops.mx()
+              my = ops.my()
       elif ke.isShortcutDown(scShowLinkLines, a):
         ui.momentaryShowLinkLines = true
       elif ke.isShortcutUp(scShowLinkLines, a):
@@ -8626,7 +8626,7 @@ proc handleGlobalKeyEvents_NoLevels(a) =
   let yubnMode = a.prefs.yubnMovementKeys
 
   if hasKeyEvent():
-    let ke = koi.currEvent()
+    let ke = ops.currEvent()
 
     if ke.isShortcutDown(scNewMap, a):
       newMap(a)
@@ -8672,7 +8672,7 @@ let QuickRefTabLabels = @["General", "Editing", "Interface"]
 
 proc handleQuickRefKeyEvents(a) =
   if hasKeyEvent():
-    let ke = koi.currEvent()
+    let ke = ops.currEvent()
 
     a.quickRef.activeTab =
       handleTabNavigation(ke, a.quickRef.activeTab, QuickRefTabLabels.high, a)
@@ -8722,7 +8722,7 @@ proc renderLevelDropdown(a) =
       a.theme.levelDropDownStyle.label.padHoriz * 2 + 8.0
   )
 
-  koi.dropDown(
+  ops.dropDown(
     x = round(mainPane.w - levelDropDownWidth) * 0.5,
     y = 19.0,
     w = levelDropDownWidth,
@@ -8759,7 +8759,7 @@ proc renderRegionDropDown(a) =
         8.0
     )
 
-    koi.dropDown(
+    ops.dropDown(
       x = round(mainPane.w - regionDropDownWidth) * 0.5,
       y = 49.0,
       w = regionDropDownWidth,
@@ -8874,17 +8874,17 @@ proc renderLevel(x, y, w, h: float, levelDrawWidth, levelDrawHeight: float, a) =
   let
     l = currLevel(a)
     i = instantiationInfo(fullPaths = true)
-    id = koi.generateId(i.filename, i.line, "gridmonger-level")
+    id = ops.generateId(i.filename, i.line, "gridmonger-level")
 
   if ui.prevCursor != ui.cursor:
     resetManualNoteTooltip(a)
 
   # Hit testing
-  if koi.isHit(x, y, w, h):
-    koi.setHot(id)
-    if koi.hasNoActiveItem() and
-        (koi.mbLeftDown() or koi.mbRightDown() or koi.mbMiddleDown()):
-      koi.setActive(id)
+  if ops.isHit(x, y, w, h):
+    ops.setHot(id)
+    if ops.hasNoActiveItem() and
+        (ops.mbLeftDown() or ops.mbRightDown() or ops.mbMiddleDown()):
+      ops.setActive(id)
 
   if isActive(id):
     handleLevelMouseEvents(a)
@@ -8956,10 +8956,10 @@ proc renderLevel(x, y, w, h: float, levelDrawWidth, levelDrawHeight: float, a) =
   var mouseOverCellWithNote = false
   var note: Option[Annotation]
 
-  if koi.isHot(id) and ui.editMode == emNormal and not (ui.wasdMode and isActive(id)) and
+  if ops.isHot(id) and ui.editMode == emNormal and not (ui.wasdMode and isActive(id)) and
       (
-        koi.mx() != ui.manualNoteTooltipState.mx or
-        koi.my() != ui.manualNoteTooltipState.my
+        ops.mx() != ui.manualNoteTooltipState.mx or
+        ops.my() != ui.manualNoteTooltipState.my
       ):
     let loc = locationAtMouse(clampToBounds = false, a)
     if loc.isSome:
@@ -8978,8 +8978,8 @@ proc renderLevel(x, y, w, h: float, levelDrawWidth, levelDrawHeight: float, a) =
     var x, y: float
 
     if mouseOverCellWithNote:
-      x = koi.mx() + NoteTooltipXOffs
-      y = koi.my() + NoteTooltipYOffs
+      x = ops.mx() + NoteTooltipXOffs
+      y = ops.my() + NoteTooltipYOffs
     elif ui.manualNoteTooltipState.show:
       x = dp.startX + viewCol(a) * dp.gridSize + NoteTooltipXOffs
       y = dp.startY + viewRow(a) * dp.gridSize + NoteTooltipYOffs
@@ -9011,7 +9011,7 @@ proc specialWallDrawProc(
     lt: LevelTheme, tt: ToolbarPaneTheme, dp: DrawLevelParams
 ): RadioButtonsDrawProc =
   return proc(
-      vg: KoiRenderContext,
+      vg: OpsRenderContext,
       id: ItemId,
       x, y, w, h: float,
       buttonIdx, numButtons: Natural,
@@ -9139,7 +9139,7 @@ proc renderToolsPane(x, y, w, h: float, a) =
     colorY -= 210
 
   # Special walls
-  koi.radioButtons(
+  ops.radioButtons(
     x = toolX,
     y = y,
     w = 36,
@@ -9158,7 +9158,7 @@ proc renderToolsPane(x, y, w, h: float, a) =
     for fc in 0 .. lt.floorBackgroundColor.high:
       calcBlendedFloorColor(fc, lt.floorTransparent, lt)
 
-  koi.radioButtons(
+  ops.radioButtons(
     x = colorX,
     y = colorY,
     w = 30,
@@ -9277,7 +9277,7 @@ proc renderCurrentNotePane(x, y, w, h: float, a) =
 
     var text = note.text
     const TextIndent = 44
-    koi.textArea(
+    ops.textArea(
       x + TextIndent,
       y - 1,
       w - TextIndent,
@@ -9382,13 +9382,13 @@ proc rebuildNotesListCache(textW: float, a) =
       s: var seq[NotesListCacheEntry],
       loc: Location,
       note: Annotation,
-      vg: KoiRenderContext,
+      vg: OpsRenderContext,
   ) =
     if note.kind in annotationKindFilter and
         (searchTerms.len == 0 or searchTerms.anyIt(note.text.toLower.contains(it))):
       let
         idString = fmt"notes-list:{loc.levelId}:{loc.row}:{loc.col}"
-        id = koi.hashId(idString)
+        id = ops.hashId(idString)
         textBounds = vg.textBoxBounds(0, 0, textW, note.text)
         height = textBounds.y2 - textBounds.y1 + NoteVertPad
 
@@ -9464,37 +9464,37 @@ proc noteButton(
   alias(ui, g_app.ui)
   alias(nt, g_app.theme.notesListPaneTheme)
 
-  koi.autoLayoutPre()
+  ops.autoLayoutPre()
 
   let
-    (x, y) = addDrawOffset(x = koi.autoLayoutNextX(), y = koi.autoLayoutNextY())
-    w = koi.autoLayoutNextItemWidth()
-    h = koi.autoLayoutNextItemHeight()
-    slot = koi.layoutSlot(id, rect(x, y, w, h))
+    (x, y) = addDrawOffset(x = ops.autoLayoutNextX(), y = ops.autoLayoutNextY())
+    w = ops.autoLayoutNextItemWidth()
+    h = ops.autoLayoutNextItemHeight()
+    slot = ops.layoutSlot(id, rect(x, y, w, h))
     hitBounds = slot.previousBounds
 
   # Hit testing
   const ScrollBarWidth = 12
 
-  if koi.isHit(
+  if ops.isHit(
     hitBounds.x, hitBounds.y, max(0.0, hitBounds.w - ScrollBarWidth), hitBounds.h
   ):
-    koi.setHot(id)
-    if koi.mbLeftDown() and koi.hasNoActiveItem():
-      koi.setActive(id)
+    ops.setHot(id)
+    if ops.mbLeftDown() and ops.hasNoActiveItem():
+      ops.setActive(id)
 
-  result = not koi.mbLeftDown() and koi.isHot(id) and koi.isActive(id)
+  result = not ops.mbLeftDown() and ops.isHot(id) and ops.isActive(id)
 
-  koi.addLayoutDrawLayer(koi.currentLayer(), slot.nodeId, vg, bounds):
+  ops.addLayoutDrawLayer(ops.currentLayer(), slot.nodeId, vg, bounds):
     let
       x = bounds.x
       y = bounds.y
       w = bounds.w
       h = bounds.h
       state =
-        if koi.isHot(id) and koi.isActive(id):
+        if ops.isHot(id) and ops.isActive(id):
           wsDown
-        elif koi.isHot(id) and koi.hasNoActiveItem():
+        elif ops.isHot(id) and ops.hasNoActiveItem():
           wsHover
         else:
           wsNormal
@@ -9530,7 +9530,7 @@ proc noteButton(
     vg.textLineHeight(1.4)
     vg.textBox(x + textX, y + textY, textW, note.text)
 
-  koi.autoLayoutPost()
+  ops.autoLayoutPost()
 
 # }}}
 # {{{ renderNotesListPane()
@@ -9573,7 +9573,7 @@ proc renderNotesListPane(x, y, w, h: float, a) =
     ButtonWidth = 24
 
   # Scope filter
-  koi.radioButtons(
+  ops.radioButtons(
     wx,
     wy,
     w = w - LeftPad - RightPad - 30,
@@ -9595,7 +9595,7 @@ proc renderNotesListPane(x, y, w, h: float, a) =
 
   nls.prevLinkCursor = nls.linkCursor
 
-  koi.checkBox(
+  ops.checkBox(
     wx + 245,
     wy,
     w = ButtonWidth,
@@ -9606,7 +9606,7 @@ proc renderNotesListPane(x, y, w, h: float, a) =
 
   # Note types filter
   wy += 33
-  if koi.button(
+  if ops.button(
     wx + 245,
     wy,
     w = ButtonWidth,
@@ -9617,7 +9617,7 @@ proc renderNotesListPane(x, y, w, h: float, a) =
   ):
     nls.currFilter.noteType = {ntfNone, ntfNumber, ntfId, ntfIcon}
 
-  koi.multiRadioButtons(
+  ops.multiRadioButtons(
     wx,
     wy,
     w = w - LeftPad - RightPad - 30,
@@ -9628,9 +9628,9 @@ proc renderNotesListPane(x, y, w, h: float, a) =
 
   # Note text filter
   wy += 44
-  koi.label(wx + 1, wy, 60, wh, "Search", style = a.theme.labelStyle)
+  ops.label(wx + 1, wy, 60, wh, "Search", style = a.theme.labelStyle)
 
-  if koi.button(
+  if ops.button(
     wx + 245,
     wy,
     w = ButtonWidth,
@@ -9642,7 +9642,7 @@ proc renderNotesListPane(x, y, w, h: float, a) =
   ):
     nls.currFilter.searchTerm = ""
 
-  koi.textField(
+  ops.textField(
     wx + 64,
     wy,
     w = 174,
@@ -9660,9 +9660,9 @@ proc renderNotesListPane(x, y, w, h: float, a) =
   # Ordering
   wy += 33
 
-  koi.label(wx + 1, wy, 60, wh, "Order by", style = a.theme.labelStyle)
+  ops.label(wx + 1, wy, 60, wh, "Order by", style = a.theme.labelStyle)
 
-  koi.dropDown(
+  ops.dropDown(
     wx + 64, wy, w = 65, wh, nls.currFilter.orderBy, style = a.theme.dropDownStyle
   )
 
@@ -9691,7 +9691,7 @@ proc renderNotesListPane(x, y, w, h: float, a) =
     of nsfRegion:
       true
 
-  if koi.button(
+  if ops.button(
     wx + 214,
     wy,
     w = ButtonWidth,
@@ -9703,7 +9703,7 @@ proc renderNotesListPane(x, y, w, h: float, a) =
   ):
     setExpandedStates(expanded = true, a)
 
-  if koi.button(
+  if ops.button(
     wx + 245,
     wy,
     w = ButtonWidth,
@@ -9762,20 +9762,20 @@ proc renderNotesListPane(x, y, w, h: float, a) =
     l.dirty = false
 
   # Scroll view with notes
-  const ScrollViewId = koi.hashId("notes-panel:scroll-view")
+  const ScrollViewId = ops.hashId("notes-panel:scroll-view")
 
   let scrollViewHeight = h - FilterPanelHeight - 1
 
   if nls.newActiveId.isSome and nls.newViewStartY.isSome:
     # We'll get here in the next frame syncToCursor was triggered in.
     # This one frame delay is necessary to completely eliminate flicker.
-    koi.setScrollViewStartY(ScrollViewId, nls.newViewStartY.get)
+    ops.setScrollViewStartY(ScrollViewId, nls.newViewStartY.get)
     nls.activeId = nls.newActiveId
 
     nls.newActiveId = ItemId.none
     nls.newViewStartY = float.none
 
-  koi.beginScrollView(
+  ops.beginScrollView(
     ScrollViewId,
     x,
     y + FilterPanelHeight + 1,
@@ -9836,7 +9836,7 @@ proc renderNotesListPane(x, y, w, h: float, a) =
     case e.kind
     of nckLevel:
       currLevel = map.levels[e.levelId]
-      addNote = koi.sectionHeader(
+      addNote = ops.sectionHeader(
         currLevel.getDetailedName(short = true),
         nls.levelSections[currLevel.id],
         style = a.theme.notesListLevelSectionStyle,
@@ -9845,7 +9845,7 @@ proc renderNotesListPane(x, y, w, h: float, a) =
       if nls.currFilter.scope == nsfLevel or nls.levelSections[currLevel.id]:
         let region = currLevel.regions[e.regionCoords].get
 
-        addNote = koi.subsectionHeader(
+        addNote = ops.subsectionHeader(
           region.name,
           nls.regionSections[(currLevel.id, e.regionCoords)],
           style = a.theme.notesListRegionSectionStyle,
@@ -9859,11 +9859,11 @@ proc renderNotesListPane(x, y, w, h: float, a) =
         note = map.getNote(e.location).get
         height = max(MinHeight, e.height)
 
-      koi.nextRowHeight(height)
-      koi.nextItemHeight(height)
+      ops.nextRowHeight(height)
+      ops.nextItemHeight(height)
 
       if syncToCursor and ui.cursor == e.location:
-        startY = koi.autoLayoutNextY()
+        startY = ops.autoLayoutNextY()
         itemHeight = height
         # We'll set the new active item in the next frame to eliminate flicker
         nls.newActiveId = e.id.some
@@ -9881,10 +9881,10 @@ proc renderNotesListPane(x, y, w, h: float, a) =
         if nls.linkCursor:
           nls.activeId = e.id.some
 
-  koi.endScrollView()
+  ops.endScrollView()
 
   if nls.restoreViewStartY:
-    koi.setScrollViewStartY(ScrollViewId, nls.viewStartY)
+    ops.setScrollViewStartY(ScrollViewId, nls.viewStartY)
     nls.restoreViewStartY = false
 
   if syncToCursor and currNoteInCache:
@@ -9892,7 +9892,7 @@ proc renderNotesListPane(x, y, w, h: float, a) =
     nls.newViewStartY = (startY - scrollViewHeight * 0.45 + itemHeight).some
 
   # Needed to save the scroll view position into the map file
-  nls.viewStartY = koi.getScrollViewStartY(ScrollViewId)
+  nls.viewStartY = ops.getScrollViewStartY(ScrollViewId)
 
 # }}}
 # }}}
@@ -9900,12 +9900,12 @@ proc renderNotesListPane(x, y, w, h: float, a) =
 # }}}
 # {{{ Theme editor
 
-var ThemeEditorScrollViewStyle = koi.getDefaultScrollViewStyle()
+var ThemeEditorScrollViewStyle = ops.getDefaultScrollViewStyle()
 with ThemeEditorScrollViewStyle:
   vertScrollBarWidth = 14.0
   scrollBarStyle.thumbPad = 4.0
 
-var ThemeEditorSliderStyle = koi.getDefaultSliderStyle()
+var ThemeEditorSliderStyle = ops.getDefaultSliderStyle()
 with ThemeEditorSliderStyle:
   trackCornerRadius = 8.0
   valueCornerRadius = 6.0
@@ -9923,8 +9923,8 @@ proc renderThemeEditorProps(x, y, w, h: float, a) =
 
   template prop(label: string, path: string, body: untyped) =
     block:
-      koi.label(label)
-      koi.setNextId(path)
+      ops.label(label)
+      ops.setNextId(path)
       body
       if a.theme.prevConfig.getOpt(path) != cfg.getOpt(path):
         te.modified = true
@@ -9932,25 +9932,25 @@ proc renderThemeEditorProps(x, y, w, h: float, a) =
   template stringProp(label: string, path: string) =
     prop(label, path):
       var val = cfg.getStringOrDefault(path)
-      koi.textfield(val)
+      ops.textfield(val)
       hocon.set(cfg, path, $val)
 
   template colorProp(label: string, path: string) =
     prop(label, path):
       var val = cfg.getColorOrDefault(path)
-      koi.colorPicker(val)
+      ops.colorPicker(val)
       hocon.set(cfg, path, $val)
 
   template boolProp(label: string, path: string) =
     prop(label, path):
       var val = cfg.getBoolOrDefault(path)
-      koi.checkBox(val)
+      ops.checkBox(val)
       hocon.set(cfg, path, val)
 
   template floatProp(label: string, path: string, limits: FieldLimits) =
     prop(label, path):
       var val = cfg.getFloatOrDefault(path)
-      koi.horizSlider(
+      ops.horizSlider(
         startVal = limits.minFloat,
         endVal = limits.maxFloat,
         val,
@@ -9961,10 +9961,10 @@ proc renderThemeEditorProps(x, y, w, h: float, a) =
   template enumProp(label: string, path: string, T: typedesc[enum]) =
     prop(label, path):
       var val = cfg.getEnumOrDefault(path, T)
-      koi.dropDown(val)
+      ops.dropDown(val)
       hocon.set(cfg, path, enumToDashCase($val))
 
-  koi.beginScrollView(x, y, w, h, style = ThemeEditorScrollViewStyle)
+  ops.beginScrollView(x, y, w, h, style = ThemeEditorScrollViewStyle)
 
   ThemeEditorAutoLayoutParams.rowWidth = w
   initAutoLayout(ThemeEditorAutoLayoutParams)
@@ -9972,8 +9972,8 @@ proc renderThemeEditorProps(x, y, w, h: float, a) =
   var p: string
 
   # {{{ User interface section
-  if koi.sectionHeader("User Interface", te.sectionUserInterface):
-    if koi.subSectionHeader("Window", te.sectionTitleBar):
+  if ops.sectionHeader("User Interface", te.sectionUserInterface):
+    if ops.subSectionHeader("Window", te.sectionTitleBar):
       p = "ui.window."
       group:
         colorProp("Border", p & "border.color")
@@ -9983,8 +9983,8 @@ proc renderThemeEditorProps(x, y, w, h: float, a) =
         let path = p & "background.image"
         stringProp("Background Image", path)
 
-        koi.nextLayoutColumn()
-        if koi.button("Reload", disabled = cfg.getString(path) == ""):
+        ops.nextLayoutColumn()
+        if ops.button("Reload", disabled = cfg.getString(path) == ""):
           a.theme.loadBackgroundImage = true
 
       group:
@@ -10006,7 +10006,7 @@ proc renderThemeEditorProps(x, y, w, h: float, a) =
         colorProp("Button Down", p & "down")
         colorProp("Button Inactive", p & "inactive")
 
-    if koi.subSectionHeader("Dialog", te.sectionDialog):
+    if ops.subSectionHeader("Dialog", te.sectionDialog):
       p = "ui.dialog."
       group:
         let CRLimits = DialogCornerRadiusLimits
@@ -10036,7 +10036,7 @@ proc renderThemeEditorProps(x, y, w, h: float, a) =
         floatProp("Shadow X Offset", p & "shadow.x-offset", ShadowOffsetLimits)
         floatProp("Shadow Y Offset", p & "shadow.y-offset", ShadowOffsetLimits)
 
-    if koi.subSectionHeader("Widget", te.sectionWidget):
+    if ops.subSectionHeader("Widget", te.sectionWidget):
       p = "ui.widget."
       group:
         let WCRLimits = WidgetCornerRadiusLimits
@@ -10051,12 +10051,12 @@ proc renderThemeEditorProps(x, y, w, h: float, a) =
         colorProp("Foreground Active", p & "foreground.active")
         colorProp("Foreground Disabled", p & "foreground.disabled")
 
-    if koi.subSectionHeader("Drop Down", te.sectionDropdown):
+    if ops.subSectionHeader("Drop Down", te.sectionDropdown):
       p = "ui.drop-down."
       group:
         colorProp("Item List Background", p & "item-list-background")
 
-    if koi.subSectionHeader("Text Field", te.sectionTextField):
+    if ops.subSectionHeader("Text Field", te.sectionTextField):
       p = "ui.text-field."
       group:
         colorProp("Cursor", p & "cursor")
@@ -10068,7 +10068,7 @@ proc renderThemeEditorProps(x, y, w, h: float, a) =
         colorProp("Scroll Bar Normal", p & "scroll-bar.normal")
         colorProp("Scroll Bar Edit", p & "scroll-bar.edit")
 
-    if koi.subSectionHeader("Status Bar", te.sectionStatusBar):
+    if ops.subSectionHeader("Status Bar", te.sectionStatusBar):
       p = "ui.status-bar."
       group:
         colorProp("Background", p & "background")
@@ -10082,19 +10082,19 @@ proc renderThemeEditorProps(x, y, w, h: float, a) =
         colorProp("Command Background", p & "command.background")
         colorProp("Command", p & "command.text")
 
-    if koi.subSectionHeader("About Button", te.sectionAboutButton):
+    if ops.subSectionHeader("About Button", te.sectionAboutButton):
       p = "ui.about-button."
       colorProp("Label Normal", p & "label.normal")
       colorProp("Label Hover", p & "label.hover")
       colorProp("Label Down", p & "label.down")
 
-    if koi.subSectionHeader("About Dialog", te.sectionAboutDialog):
+    if ops.subSectionHeader("About Dialog", te.sectionAboutDialog):
       let path = "ui.about-dialog.logo"
       colorProp("Logo", path)
       if cfg.getOpt(path) != a.theme.prevConfig.getOpt(path):
         a.dialogs.about.aboutLogo.updateLogoImage = true
 
-    if koi.subSectionHeader("Quick Help", te.sectionQuickHelp):
+    if ops.subSectionHeader("Quick Help", te.sectionQuickHelp):
       p = "ui.quick-help."
       group:
         colorProp("Background", p & "background")
@@ -10104,7 +10104,7 @@ proc renderThemeEditorProps(x, y, w, h: float, a) =
         colorProp("Command Background", p & "command.background")
         colorProp("Command", p & "command.text")
 
-    if koi.subSectionHeader("Splash Image", te.sectionSplashImage):
+    if ops.subSectionHeader("Splash Image", te.sectionSplashImage):
       group:
         p = "ui.splash-image."
         var path = p & "logo"
@@ -10123,13 +10123,13 @@ proc renderThemeEditorProps(x, y, w, h: float, a) =
           a.splash.updateShadowImage = true
 
       group:
-        koi.label("Show Splash")
-        koi.checkBox(a.splash.show)
+        ops.label("Show Splash")
+        ops.checkBox(a.splash.show)
 
   # }}}
   # {{{ Level section
-  if koi.sectionHeader("Level", te.sectionLevel):
-    if koi.subSectionHeader("General", te.sectionLevelGeneral):
+  if ops.sectionHeader("Level", te.sectionLevel):
+    if ops.subSectionHeader("General", te.sectionLevelGeneral):
       p = "level.general."
       group:
         colorProp("Background", p & "background")
@@ -10159,7 +10159,7 @@ proc renderThemeEditorProps(x, y, w, h: float, a) =
         colorProp("Region Border Normal", p & "region-border.normal")
         colorProp("Region Border Empty", p & "region-border.empty")
 
-    if koi.subSectionHeader("Background Hatch", te.sectionBackgroundHatch):
+    if ops.subSectionHeader("Background Hatch", te.sectionBackgroundHatch):
       let WidthLimits = BackgroundHatchWidthLimits
       let SpacingLimits = BackgroundHatchSpacingFactorLimits
 
@@ -10171,7 +10171,7 @@ proc renderThemeEditorProps(x, y, w, h: float, a) =
         floatProp("Hatch Stroke Width", p & "width", WidthLimits)
         floatProp("Hatch Spacing Factor", p & "spacing-factor", SpacingLimits)
 
-    if koi.subSectionHeader("Grid", te.sectionGrid):
+    if ops.subSectionHeader("Grid", te.sectionGrid):
       p = "level.grid."
       group:
         enumProp("Background Grid Style", p & "background.style", GridStyle)
@@ -10182,7 +10182,7 @@ proc renderThemeEditorProps(x, y, w, h: float, a) =
         # TODO enabled if style != None
         colorProp("Floor Grid", p & "floor.grid")
 
-    if koi.subSectionHeader("Outline", te.sectionOutline):
+    if ops.subSectionHeader("Outline", te.sectionOutline):
       p = "level.outline."
       enumProp("Style", p & "style", OutlineStyle)
       # TODO enabled if Style!=None
@@ -10193,7 +10193,7 @@ proc renderThemeEditorProps(x, y, w, h: float, a) =
       floatProp("Width", p & "width-factor", OutlineWidthFactorLimits)
       boolProp("Overscan", p & "overscan")
 
-    if koi.subSectionHeader("Shadow", te.sectionShadow):
+    if ops.subSectionHeader("Shadow", te.sectionShadow):
       let SWLimits = ShadowWidthFactorLimits
       p = "level.shadow."
       group:
@@ -10203,7 +10203,7 @@ proc renderThemeEditorProps(x, y, w, h: float, a) =
         colorProp("Outer Shadow", p & "outer.color")
         floatProp("Outer Shadow Width", p & "outer.width-factor", SWLimits)
 
-    if koi.subSectionHeader("Floor Colours", te.sectionFloorColors):
+    if ops.subSectionHeader("Floor Colours", te.sectionFloorColors):
       p = "level.floor."
       group:
         boolProp("Transparent?", p & "transparent")
@@ -10220,7 +10220,7 @@ proc renderThemeEditorProps(x, y, w, h: float, a) =
         colorProp("Colour 9", p & "background.8")
         colorProp("Colour 10", p & "background.9")
 
-    if koi.subSectionHeader("Notes", te.sectionNotes):
+    if ops.subSectionHeader("Notes", te.sectionNotes):
       p = "level.note."
       group:
         colorProp("Marker Normal", p & "marker.normal")
@@ -10245,7 +10245,7 @@ proc renderThemeEditorProps(x, y, w, h: float, a) =
         )
         colorProp("Tooltip Shadow", p & "tooltip.shadow.color")
 
-    if koi.subSectionHeader("Labels", te.sectionLabels):
+    if ops.subSectionHeader("Labels", te.sectionLabels):
       p = "level.label."
       group:
         colorProp("Label 1", p & "text.0")
@@ -10253,7 +10253,7 @@ proc renderThemeEditorProps(x, y, w, h: float, a) =
         colorProp("Label 3", p & "text.2")
         colorProp("Label 4", p & "text.3")
 
-    if koi.subSectionHeader("Level Drop Down", te.sectionLevelDropDown):
+    if ops.subSectionHeader("Level Drop Down", te.sectionLevelDropDown):
       p = "level.level-drop-down."
       group:
         colorProp("Button Normal", p & "button.normal")
@@ -10272,8 +10272,8 @@ proc renderThemeEditorProps(x, y, w, h: float, a) =
   # }}}
   # {{{ Panes section
 
-  if koi.sectionHeader("Panes", te.sectionPanes):
-    if koi.subSectionHeader("Current Note Pane", te.sectionCurrentNotePane):
+  if ops.sectionHeader("Panes", te.sectionPanes):
+    if ops.subSectionHeader("Current Note Pane", te.sectionCurrentNotePane):
       p = "pane.current-note."
       group:
         colorProp("Text", p & "text")
@@ -10286,7 +10286,7 @@ proc renderThemeEditorProps(x, y, w, h: float, a) =
       group:
         colorProp("Scroll Bar", p & "scroll-bar")
 
-    if koi.subSectionHeader("Notes List Pane", te.sectionNotesListPane):
+    if ops.subSectionHeader("Notes List Pane", te.sectionNotesListPane):
       p = "pane.notes-list."
       group:
         colorProp("Controls Background", p & "controls-background")
@@ -10309,14 +10309,14 @@ proc renderThemeEditorProps(x, y, w, h: float, a) =
       group:
         colorProp("Scroll Bar", p & "scroll-bar")
 
-    if koi.subSectionHeader("Toolbar Pane", te.sectionToolbarPane):
+    if ops.subSectionHeader("Toolbar Pane", te.sectionToolbarPane):
       p = "pane.toolbar."
       colorProp("Button", p & "button.normal")
       colorProp("Button Hover", p & "button.hover")
 
   # }}}
 
-  koi.endScrollView()
+  ops.endScrollView()
 
   a.theme.prevConfig = cfg.deepCopy
 
@@ -10361,11 +10361,11 @@ proc renderThemeEditorPane(x, y, w, h: float, a) =
   vg.fillColor(gray(0.25))
   vg.fill
 
-  let titleStyle = koi.getDefaultLabelStyle()
+  let titleStyle = ops.getDefaultLabelStyle()
   titleStyle.align = haCenter
 
   cy += 6.0
-  koi.label(cx, cy, w, wh, "T  H  E  M  E       E  D  I  T  O  R", style = titleStyle)
+  ops.label(cx, cy, w, wh, "T  H  E  M  E       E  D  I  T  O  R", style = titleStyle)
 
   # Theme name & action buttons
   vg.beginPath
@@ -10375,9 +10375,9 @@ proc renderThemeEditorPane(x, y, w, h: float, a) =
 
   cx = x + 17
   cy += 45.0
-  koi.label(cx, cy, w, wh, "Theme")
+  ops.label(cx, cy, w, wh, "Theme")
 
-  let buttonsDisabled = koi.isDialogOpen()
+  let buttonsDisabled = ops.isDialogOpen()
 
   let themeNames = collect:
     for t in a.theme.themeNames:
@@ -10386,7 +10386,7 @@ proc renderThemeEditorPane(x, y, w, h: float, a) =
   var themeIndex = a.theme.currThemeIndex
 
   cx += 55.0
-  koi.dropDown(
+  ops.dropDown(
     cx,
     cy,
     w = 189.0,
@@ -10408,41 +10408,41 @@ proc renderThemeEditorPane(x, y, w, h: float, a) =
 
   # User theme indicator
   cx += 195
-  var labelStyle = koi.getDefaultLabelStyle()
+  var labelStyle = ops.getDefaultLabelStyle()
 
   if not a.currThemeName.userTheme:
     labelStyle.color = labelStyle.color.withAlpha(0.3)
 
-  koi.label(cx, cy, 20, wh, "U", style = labelStyle)
+  ops.label(cx, cy, 20, wh, "U", style = labelStyle)
 
   # User theme override indicator
   cx += 13
-  labelStyle = koi.getDefaultLabelStyle()
+  labelStyle = ops.getDefaultLabelStyle()
 
   if not a.currThemeName.override:
     labelStyle.color = labelStyle.color.withAlpha(0.3)
 
-  koi.label(cx, cy, 20, wh, "O", style = labelStyle)
+  ops.label(cx, cy, 20, wh, "O", style = labelStyle)
 
   # Theme modified indicator
   cx += 16
 
   if a.themeEditor.modified:
-    koi.label(cx, cy, 20, wh, IconAsterisk, style = koi.getDefaultLabelStyle())
+    ops.label(cx, cy, 20, wh, IconAsterisk, style = ops.getDefaultLabelStyle())
 
   # Theme action buttons
   cx = x + 15
   cy += 40.0
 
-  if koi.button(cx, cy, w = bw, h = wh, "Save", disabled = buttonsDisabled):
+  if ops.button(cx, cy, w = bw, h = wh, "Save", disabled = buttonsDisabled):
     saveTheme(a)
 
   cx += bw + bp
-  if koi.button(cx, cy, w = bw, h = wh, "Copy", disabled = buttonsDisabled):
+  if ops.button(cx, cy, w = bw, h = wh, "Copy", disabled = buttonsDisabled):
     openCopyThemeDialog(a)
 
   cx += bw + bp
-  if koi.button(
+  if ops.button(
     cx,
     cy,
     w = bw,
@@ -10453,7 +10453,7 @@ proc renderThemeEditorPane(x, y, w, h: float, a) =
     openRenameThemeDialog(a)
 
   cx += bw + bp
-  if koi.button(
+  if ops.button(
     cx,
     cy,
     w = bw,
@@ -10557,7 +10557,7 @@ proc renderStatusBar(x, y, w, h: float, a) =
       if not status.warning.keepMessage:
         clearStatusMessage(a)
     else:
-      koi.setFramesLeft()
+      ops.setFramesLeft()
 
   # Display message
   if status.warning.message == "":
@@ -10663,11 +10663,11 @@ proc renderQuickReference(x, y, w, h: float, a) =
 
   let yOffs = ((h - 840) * 0.5).clampMin(0)
 
-  koi.addDrawLayer(koi.currentLayer(), vg):
+  ops.addDrawLayer(ops.currentLayer(), vg):
     vg.save
     vg.intersectScissor(x, y, w, h)
 
-  koi.addDrawLayer(koi.currentLayer(), vg):
+  ops.addDrawLayer(ops.currentLayer(), vg):
     # Background
     vg.beginPath
     vg.rect(x, y, w, h)
@@ -10688,7 +10688,7 @@ proc renderQuickReference(x, y, w, h: float, a) =
 
   let radioButtonX = x + (w - tabWidth) * 0.5
 
-  koi.radioButtons(
+  ops.radioButtons(
     radioButtonX,
     92 + yOffs,
     tabWidth,
@@ -10698,7 +10698,7 @@ proc renderQuickReference(x, y, w, h: float, a) =
     style = a.theme.radioButtonStyle,
   )
 
-  koi.beginScrollView(
+  ops.beginScrollView(
     x = x + (w - viewWidth) * 0.5 + 20,
     y = y + 130 + yOffs,
     w = viewWidth,
@@ -10719,16 +10719,16 @@ proc renderQuickReference(x, y, w, h: float, a) =
     else:
       (300.0, DefaultColWidth, DefaultColWidth)
 
-  koi.addDrawLayer(koi.currentLayer(), vg):
+  ops.addDrawLayer(ops.currentLayer(), vg):
     let itemColumns = a.keys.quickRefShortcuts[a.quickRef.activeTab]
     assert(itemColumns.len == 2)
     renderSection(sx, sy, itemColumns[0], col1Width, a)
     sx += columnWidth
     renderSection(sx, sy, itemColumns[1], col2Width, a)
 
-  koi.endScrollView(viewHeight)
+  ops.endScrollView(viewHeight)
 
-  koi.addDrawLayer(koi.currentLayer(), vg):
+  ops.addDrawLayer(ops.currentLayer(), vg):
     vg.restore
 
 # }}}
@@ -10800,7 +10800,7 @@ proc renderUI(a) =
   vg.fill
 
   if a.ui.showQuickReference:
-    var w = koi.winWidth()
+    var w = ops.winWidth()
     if a.layout.showThemeEditor:
       w -= ThemePaneWidth
 
@@ -10809,7 +10809,7 @@ proc renderUI(a) =
     if not map.hasLevels:
       renderEmptyMap(a)
     else:
-      koi.beginView(x = mainPane.x1, y = mainPane.y1, w = mainPane.w, h = mainPane.h)
+      ops.beginView(x = mainPane.x1, y = mainPane.y1, w = mainPane.w, h = mainPane.h)
 
       # About button
       if button(
@@ -10857,7 +10857,7 @@ proc renderUI(a) =
           a,
         )
 
-      koi.endView()
+      ops.endView()
 
     if map.hasLevels:
       if a.layout.showCurrentNotePane:
@@ -10884,7 +10884,7 @@ proc renderUI(a) =
 
   # Status bar
   let statusBarY = mainPane.y1 + mainPane.h
-  renderStatusBar(0, statusBarY, koi.winWidth(), StatusBarHeight, a)
+  renderStatusBar(0, statusBarY, ops.winWidth(), StatusBarHeight, a)
 
   # Theme editor pane
   # XXX hack, we need to render the theme editor before the dialogs, so
@@ -10900,7 +10900,7 @@ proc renderUI(a) =
 
     renderThemeEditorPane(x, y, w, h, a)
     if a.dialogs.activeDialog == dlgNone:
-      a.themeEditor.focusCaptured = koi.focusCaptured()
+      a.themeEditor.focusCaptured = ops.focusCaptured()
 
   renderDialogs(a)
 
@@ -10988,8 +10988,8 @@ proc renderMainWindowSplash(a) =
     s.updateLogoImage = false
 
   let
-    canvasWidth = koi.winWidth()
-    canvasHeight = koi.winHeight()
+    canvasWidth = ops.winWidth()
+    canvasHeight = ops.winHeight()
     scale = min(canvasWidth / s.logo.width, canvasHeight / s.logo.height)
     splashWidth = s.logo.width * scale
     splashHeight = s.logo.height * scale
@@ -11001,7 +11001,7 @@ proc renderMainWindowSplash(a) =
   var logoImage = s.logoImage
   let logoPaint = createPattern(vg, logoImage, xoffs = x, yoffs = y, scale = scale)
 
-  koi.addDrawLayer(layerGlobalOverlay, vg):
+  ops.addDrawLayer(layerGlobalOverlay, vg):
     vg.save()
     vg.resetTransform()
     vg.resetScissor()
@@ -11024,20 +11024,20 @@ proc shouldCloseMainWindowSplash(a): bool =
   let autoClose =
     if a.prefs.autoCloseSplash:
       let dt = getMonoTime() - a.splash.t0
-      koi.setFramesLeft()
+      ops.setFramesLeft()
       dt > initDuration(seconds = a.prefs.splashTimeoutSecs)
     else:
       false
 
   var inputDismiss = false
-  if a.splash.mainWindowFrames > 0 and koi.hasEvent():
-    let ev = koi.currEvent()
+  if a.splash.mainWindowFrames > 0 and ops.hasEvent():
+    let ev = ops.currEvent()
     inputDismiss =
       (ev.kind == ekKey and ev.action != kaUp) or
       (ev.kind == ekMouseButton and ev.pressed)
 
     if inputDismiss:
-      koi.markEventHandled()
+      ops.markEventHandled()
 
   a.splash.dismissRequested or inputDismiss or autoClose
 
@@ -11077,7 +11077,7 @@ proc renderFrameCb(a) =
         handleMapModified(a)
 
   if a.dialogs.activeDialog == dlgNone and hasKeyEvent():
-    let ke = koi.currEvent()
+    let ke = ops.currEvent()
     if ke.isShortcutDown(scQuit, a):
       setEventHandled()
       releaseThemeEditorModalState(a)
@@ -11087,13 +11087,13 @@ proc renderFrameCb(a) =
   # the global shortcuts, so widget-specific shorcuts can take precedence
   let
     themeEditorShown = a.layout.showThemeEditor
-    savedFocusCaptured = koi.focusCaptured()
+    savedFocusCaptured = ops.focusCaptured()
 
   if themeEditorShown:
     if a.dialogs.activeDialog == dlgNone:
-      koi.setFocusCaptured(a.themeEditor.focusCaptured)
+      ops.setFocusCaptured(a.themeEditor.focusCaptured)
     else:
-      koi.setFocusCaptured(true)
+      ops.setFocusCaptured(true)
 
   var uiRendered = false
   if themeEditorShown:
@@ -11127,7 +11127,7 @@ proc renderFrameCb(a) =
     handleWindowClose(a)
 
   if themeEditorShown:
-    koi.setFocusCaptured(savedFocusCaptured)
+    ops.setFocusCaptured(savedFocusCaptured)
 
 # }}}
 # {{{ renderFrameSplash()
@@ -11237,7 +11237,7 @@ proc renderFrameSplash(a) =
       let autoClose =
         if not a.layout.showThemeEditor and a.prefs.autoCloseSplash:
           let dt = getMonoTime() - a.splash.t0
-          koi.setFramesLeft()
+          ops.setFramesLeft()
           dt > initDuration(seconds = a.prefs.splashTimeoutSecs)
         else:
           false
@@ -11303,10 +11303,10 @@ else:
     ) =
       if action != glfwLib.kaUp:
         g_app.splash.dismissRequested = true
-        koi.setFramesLeft()
+        ops.setFramesLeft()
     s.win.charCb = proc(window: glfwLib.Window, codePoint: Rune) =
       g_app.splash.dismissRequested = true
-      koi.setFramesLeft()
+      ops.setFramesLeft()
     s.win.mouseButtonCb = proc(
         window: glfwLib.Window,
         button: glfwLib.MouseButton,
@@ -11315,15 +11315,15 @@ else:
     ) =
       if pressed:
         g_app.splash.dismissRequested = true
-        koi.setFramesLeft()
+        ops.setFramesLeft()
     s.win.windowCloseCb = proc(window: glfwLib.Window) =
       g_app.splash.dismissRequested = true
       glfwLib.`shouldClose=`(window, false)
-      koi.setFramesLeft()
+      ops.setFramesLeft()
     s.win.windowSizeCb = proc(window: glfwLib.Window, size: tuple[w, h: int32]) =
-      koi.setFramesLeft()
+      ops.setFramesLeft()
     s.win.framebufferSizeCb = proc(window: glfwLib.Window, size: tuple[w, h: int32]) =
-      koi.setFramesLeft()
+      ops.setFramesLeft()
 
 # }}}
 # {{{ showSplash()
@@ -11356,7 +11356,7 @@ else:
       glfwLib.pollEvents()
 
     if not a.layout.showThemeEditor:
-      koi.setFocusCaptured(true)
+      ops.setFocusCaptured(true)
 
 # }}}
 # {{{ closeSplash()
@@ -11392,7 +11392,7 @@ proc closeSplash(a) =
   s.mainWindowFrames = 0
 
   if not a.layout.showThemeEditor:
-    koi.setFocusCaptured(false)
+    ops.setFocusCaptured(false)
 
 # }}}
 
@@ -11494,11 +11494,11 @@ proc initGfx(a) =
   let vg = createHostedRenderContext(a.backend, {rifSparseStrip, rifAntialias})
 
   when defined(gridmongerBackendWayland):
-    koi.init(vg, noGlfwProcAddress)
+    ops.init(vg, noGlfwProcAddress)
   else:
     useWindow(win.glfwWin)
-    koi.init(vg, glfwLib.getProcAddress)
-  log.info("GPU info: Koi native Vulkan backend initialised")
+    ops.init(vg, glfwLib.getProcAddress)
+  log.info("GPU info: Ops native Vulkan backend initialised")
 
   a.win = win
   a.vg = vg
@@ -11803,7 +11803,7 @@ proc initApp(
   when not defined(gridmongerBackendWayland):
     a.win.glfwWin.windowCloseCb = proc(window: Window) =
       g_app.win.shouldClose = true
-      koi.setFramesLeft()
+      ops.setFramesLeft()
 
   restoreLayoutsFromConfig(cfg, a)
   applyWindowConfigOverrides(winCfg, a)
@@ -11817,7 +11817,7 @@ proc initApp(
 proc cleanup(a) =
   log.info("Exiting app...")
 
-  koi.deinit()
+  ops.deinit()
 
   deleteRenderContext(a.vg)
   if a.splash.vg != nil:
@@ -12036,14 +12036,14 @@ proc main() =
         of aeVersionUpdate:
           handleVersionUpdateEvent(event, a)
 
-        koi.setFramesLeft()
+        ops.setFramesLeft()
 
       # Poll/wait for events
       when defined(gridmongerBackendWayland):
-        if not koi.shouldRenderNextFrame():
+        if not ops.shouldRenderNextFrame():
           a.win.glfwWin.pollEvents()
       else:
-        if koi.shouldRenderNextFrame():
+        if ops.shouldRenderNextFrame():
           glfwLib.pollEvents()
         else:
           glfwLib.waitEvents()

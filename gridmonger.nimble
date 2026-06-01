@@ -91,18 +91,18 @@ proc packageSrcPath(pkg: string): string =
 proc glfwIncludePath(): string =
   packageRootPath("glfw") / "glfw" / "include"
 
-proc koiSrcPath(): string =
-  let envPath = getEnv("KOI_PATH")
+proc opsarionSrcPath(): string =
+  let envPath = getEnv("OPSARION_PATH")
   if envPath.len > 0:
     return envPath
-  result = parentDir(getCurrentDir()) / "koi-webgpu"
+  result = parentDir(getCurrentDir()) / "opsarion"
 
 proc okysSrcPath(): string =
-  parentDir(koiSrcPath()) / "okys"
+  parentDir(opsarionSrcPath()) / "okys"
 
-proc koiWaylandLinkFlags(): string =
-  let waylandDir = koiSrcPath() / "koi" / "wayland"
-  " --passL:\"-L" & waylandDir / "zig-out" / "lib" & " -lkoi_wayland\" " &
+proc opsWaylandLinkFlags(): string =
+  let waylandDir = opsarionSrcPath() / "ops" / "wayland"
+  " --passL:\"-L" & waylandDir / "zig-out" / "lib" & " -lops_wayland\" " &
     "--passL:\"-lwayland-client -lxkbcommon\" --passC:-I" & quoteShell(waylandDir)
 
 proc detectedLinuxBackend(): string =
@@ -148,7 +148,7 @@ proc backendFlags(backend: string): string =
   case backend
   of "wayland":
     "-d:wayland -d:waylandBackend -d:glfwJustCdecl -d:gridmongerBackendWayland" &
-      koiWaylandLinkFlags()
+      opsWaylandLinkFlags()
   of "x11":
     "-d:gridmongerBackendX11"
   of "mac":
@@ -162,9 +162,9 @@ proc commonFlags(backend: string): string =
   validateBackend(backend)
   result =
     "--mm:orc --threads:on --deepcopy:on -d:ssl " &
-    "-d:nimPreviewFloatRoundtrip -d:NoGLFW -d:koiVulkan " &
+    "-d:nimPreviewFloatRoundtrip -d:NoGLFW -d:opsVulkan " &
     "--passC:-Wno-incompatible-pointer-types --passC:-D_GNU_SOURCE " & "--passC:-I" &
-    quoteShell(glfwIncludePath()) & " " & "--path:" & quoteShell(koiSrcPath()) & " " &
+    quoteShell(glfwIncludePath()) & " " & "--path:" & quoteShell(opsarionSrcPath()) & " " &
     "--nimcache:" & quoteShell("/tmp/gridmonger_nimcache_" & backend) &
     " --hint:Name:off " & backendFlags(backend)
 
@@ -209,7 +209,7 @@ proc compileGridmonger(
   buildOkysVulkan(mode)
   if backend == "wayland":
     sh "zig build -Doptimize=" & zigOptimizeMode(mode) & " --build-file " &
-      quoteShell(koiSrcPath() / "koi" / "wayland" / "build.zig")
+      quoteShell(opsarionSrcPath() / "ops" / "wayland" / "build.zig")
   let flags = commonFlags(backend) & " " & modeFlags(mode) & " " & extraFlags
   echo "Building " & outPath & " (" & backend & ")"
   sh "nim c " & flags & " --out:" & quoteShell(outPath) & " " & quoteShell("src/main")

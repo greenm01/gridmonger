@@ -16,7 +16,7 @@ Requires [Nim](https://nim-lang.org/) 2.2.4
 
 ### Dependencies
 
-* [koi](https://github.com/johnnovak/koi) (local checkout)
+* Opsarion / `ops` (local checkout)
 * [nim-osdialog](https://github.com/johnnovak/nim-osdialog)
 * [nim-riff](https://github.com/johnnovak/nim-riff)
 * [semver](https://github.com/euantorano/semver.nim)
@@ -29,7 +29,7 @@ You can install the dependencies with [Nimble](https://github.com/nim-lang/nimbl
 nimble install osdialog riff semver winim with
 ```
 
-The Koi checkout is expected at `../koi-webgpu` by default; set `KOI_PATH` to
+The Ops checkout is expected at `../opsarion` by default; set `OPSARION_PATH` to
 use another location. `winim` is only needed for the Windows builds.
 
 

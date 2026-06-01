@@ -3,8 +3,8 @@ import std/streams
 import std/strformat
 import std/strutils
 
-import koi
-import koi/okys
+import ops
+import ops/okys
 
 import cfghelper
 import common
@@ -137,7 +137,7 @@ proc toLevelTheme*(cfg: HoconNode): LevelTheme =
   let cr = cfg.getFloatOrDefault(p & "tooltip.corner-radius")
   s.noteTooltipCornerRadius = cr
 
-  var ss = koi.getDefaultShadowStyle()
+  var ss = ops.getDefaultShadowStyle()
   ss.color = cfg.getColorOrDefault(p & "tooltip.shadow.color")
   ss.cornerRadius = cr * 1.6
   s.noteTooltipShadowStyle = ss

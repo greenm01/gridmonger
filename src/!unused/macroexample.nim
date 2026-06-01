@@ -36,14 +36,14 @@ macro prop(label: static[string], path: untyped): untyped =
 
   result = nnkStmtList.newTree
   result.add quote do:
-    koi.label(`label`)
-    koi.setNextId(`pathStr`)
+    ops.label(`label`)
+    ops.setNextId(`pathStr`)
 
   if propType == Color.getTypeInst or
       # a bit hacky; all arrays are of type Color
       propType.getTypeImpl.kind == nnkBracketExpr:
     result.add quote do:
-      koi.color(`fullPath`)
+      ops.color(`fullPath`)
   elif propType == float.getTypeInst:
     let limitSym = newIdentNode(
       sectionName.capitalizeAscii & subsectionName.capitalizeAscii &
@@ -52,7 +52,7 @@ macro prop(label: static[string], path: untyped): untyped =
 
     result.add quote do:
       # TODO limits
-      koi.horizSlider(
+      ops.horizSlider(
         startVal = `limitSym`.minFloat,
         endVal = `limitSym`.maxFloat,
         `fullPath`,
@@ -60,10 +60,10 @@ macro prop(label: static[string], path: untyped): untyped =
       )
   elif propType == bool.getTypeInst:
     result.add quote do:
-      koi.checkBox(`fullPath`)
+      ops.checkBox(`fullPath`)
   elif propType.getTypeImpl.kind == nnkEnumTy:
     result.add quote do:
-      koi.dropDown(`fullPath`)
+      ops.dropDown(`fullPath`)
   else:
     echo propType.treeRepr
     error("Unknown type: " & propType.strVal)

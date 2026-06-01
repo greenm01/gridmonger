@@ -6,13 +6,13 @@ when not defined(gridmongerBackendWayland):
   import std/sugar
 
 import icons
-import koi
+import ops
 when defined(gridmongerBackendWayland):
-  import koi/backends/wayland_app
+  import ops/backends/wayland_app
 else:
   import glfw
-  import koi/backends/glfw_wgpu
-import koi/okys
+  import ops/backends/glfw_wgpu
+import ops/okys
 import with
 
 import common
@@ -39,13 +39,13 @@ const
 #  {{{ CSDWindow
 when defined(gridmongerBackendWayland):
   type
-    BackendWindow = KoiWaylandApp
+    BackendWindow = OpsWaylandApp
     Monitor = object
       name: string
       workArea: tuple[x, y, w, h: int]
 
 else:
-  type BackendWindow = koi.Window
+  type BackendWindow = ops.Window
 
 type
   CSDWindow* = ref object
@@ -143,7 +143,7 @@ proc contentScale*(win): tuple[xScale, yScale: float] =
   win.w.contentScale
 
 proc canvasSize*(win): tuple[w, h: float] =
-  (koi.winWidth(), koi.winHeight())
+  (ops.winWidth(), ops.winHeight())
 
 proc `size=`*(win; size: tuple[w, h: int]) =
   win.w.size = size
@@ -296,7 +296,7 @@ proc snapWindowToVisibleArea*(win) =
 proc setTheme(win; s: WindowTheme) =
   win.theme = s
 
-  win.buttonActiveStyle = koi.getDefaultButtonStyle()
+  win.buttonActiveStyle = ops.getDefaultButtonStyle()
   with win.buttonActiveStyle:
     strokeWidth = 0
     fillColor = black().withAlpha(0)
@@ -308,7 +308,7 @@ proc setTheme(win; s: WindowTheme) =
     label.colorHover = s.buttonHoverColor
     label.colorDown = s.buttonDownColor
 
-  win.buttonInactiveStyle = koi.getDefaultButtonStyle()
+  win.buttonInactiveStyle = ops.getDefaultButtonStyle()
   with win.buttonInactiveStyle:
     strokeWidth = 0
     fillColor = black().withAlpha(0)
@@ -331,7 +331,7 @@ proc newCSDWindow*(): CSDWindow =
   result = new CSDWindow
 
   when defined(gridmongerBackendWayland):
-    result.w = newKoiWaylandApp("Gridmonger", DefaultWindowWidth, DefaultWindowHeight)
+    result.w = newOpsWaylandApp("Gridmonger", DefaultWindowWidth, DefaultWindowHeight)
     result.w.setAppId("gridmonger")
     result.w.setFixedSize(true)
   else:
@@ -432,7 +432,7 @@ proc snapToRight*(win) =
 # }}}
 
 # {{{ renderTitleBar()
-proc renderTitleBar(win; vg: KoiRenderContext, canvasWidth: float) =
+proc renderTitleBar(win; vg: OpsRenderContext, canvasWidth: float) =
   alias(s, win.theme)
 
   let (bgColor, textColor, modifiedFlagColor, buttonStyle) =
@@ -450,7 +450,7 @@ proc renderTitleBar(win; vg: KoiRenderContext, canvasWidth: float) =
     by = (TitleBarHeight - bh) / 2
     ty = TitleBarHeight * TextVertAlignFactor
 
-  koi.addDrawLayer(layerWindowDecoration, vg):
+  ops.addDrawLayer(layerWindowDecoration, vg):
     vg.beginPath
     vg.rect(0, 0, canvasWidth, TitleBarHeight)
     vg.fillColor(bgColor)
@@ -468,29 +468,29 @@ proc renderTitleBar(win; vg: KoiRenderContext, canvasWidth: float) =
       discard vg.text(tx + 10, ty, IconAsterisk)
 
   # TODO hacky, shouldn't set the current layer from the outside
-  let oldCurrLayer = koi.currentLayer()
-  koi.setCurrentLayer(layerWindowDecoration)
+  let oldCurrLayer = ops.currentLayer()
+  ops.setCurrentLayer(layerWindowDecoration)
 
   # Minimise/maximise/close window buttons
   var x = (canvasWidth - TitleBarWindowButtonsTotalWidth).float
 
-  if koi.button(
+  if ops.button(
     x, by, bw.float, bh, IconWindowLeft, tooltip = "Snap to left", style = buttonStyle
   ):
     win.snapToLeft
 
   x += bw
-  if koi.button(
+  if ops.button(
     x, by, bw, bh, IconWindowRight, tooltip = "Snap to right", style = buttonStyle
   ):
     win.snapToRight
 
   x += bw + TitleBarWindowStandardButtonsLeftPad
-  if koi.button(x, by, bw, bh, IconWindowMinimise, style = buttonStyle):
+  if ops.button(x, by, bw, bh, IconWindowMinimise, style = buttonStyle):
     win.w.iconify
 
   x += bw
-  if koi.button(
+  if ops.button(
     x,
     by,
     bw,
@@ -502,10 +502,10 @@ proc renderTitleBar(win; vg: KoiRenderContext, canvasWidth: float) =
       if win.maximized: win.unmaximize else: win.maximize
 
   x += bw
-  let closeClicked = koi.button(x, by, bw, bh, IconWindowClose, style = buttonStyle)
+  let closeClicked = ops.button(x, by, bw, bh, IconWindowClose, style = buttonStyle)
   let closePressed =
-    if koi.hasEvent():
-      let ev = koi.currEvent()
+    if ops.hasEvent():
+      let ev = ops.currEvent()
       ev.kind == ekMouseButton and ev.button == mbLeft and ev.pressed and ev.x >= x and
         ev.x < x + bw and ev.y >= by and ev.y < by + bh
     else:
@@ -513,9 +513,9 @@ proc renderTitleBar(win; vg: KoiRenderContext, canvasWidth: float) =
 
   if closePressed or closeClicked:
     win.w.shouldClose = true
-    koi.setEventHandled()
+    ops.setEventHandled()
 
-  koi.setCurrentLayer(oldCurrLayer)
+  ops.setCurrentLayer(oldCurrLayer)
 
 # }}}
 # {{{ handleWindowDragEvents()
@@ -524,17 +524,17 @@ proc handleWindowDragEvents(win) =
     (winWidth, winHeight) = win.size
 
     # It's simpler to do the resizing using scaled mouse coordinates
-    mx = koi.mx() * koi.getScale()
-    my = koi.my() * koi.getScale()
+    mx = ops.mx() * ops.getScale()
+    my = ops.my() * ops.getScale()
 
     mouseScreenX = mx + win.w.pos.x
     mouseScreenY = my + win.w.pos.y
 
   case win.dragState
   of wdsNone:
-    if win.showTitleBar and koi.hasNoActiveItem() and koi.mbLeftDown():
-      if my < (TitleBarHeight * koi.getScale()) and mx > 0 and
-          mx < (winWidth - TitleBarWindowButtonsTotalWidth * koi.getScale()):
+    if win.showTitleBar and ops.hasNoActiveItem() and ops.mbLeftDown():
+      if my < (TitleBarHeight * ops.getScale()) and mx > 0 and
+          mx < (winWidth - TitleBarWindowButtonsTotalWidth * ops.getScale()):
         win.mouseStartDragX = mx
         win.mouseStartDragY = my
 
@@ -549,7 +549,7 @@ proc handleWindowDragEvents(win) =
         win.dragState = wdsMoving
 
     if not win.maximized:
-      if not koi.hasHotItem() and koi.hasNoActiveItem():
+      if not ops.hasHotItem() and ops.hasNoActiveItem():
         let ew = WindowResizeEdgeWidth
         let cs = WindowResizeCornerSize
         let d =
@@ -585,7 +585,7 @@ proc handleWindowDragEvents(win) =
           else:
             setCursorShape(csArrow)
 
-          if koi.mbLeftDown():
+          if ops.mbLeftDown():
             win.mouseStartDragX = mx
             win.mouseStartDragY = my
 
@@ -599,7 +599,7 @@ proc handleWindowDragEvents(win) =
       else:
         setCursorShape(csArrow)
   of wdsMoving:
-    if koi.mbLeftDown():
+    if ops.mbLeftDown():
       let
         dx = (mouseScreenX - win.mouseStartDragScreenX).int
         dy = (mouseScreenY - win.mouseStartDragScreenY).int
@@ -644,7 +644,7 @@ proc handleWindowDragEvents(win) =
     else:
       win.dragState = wdsNone
   of wdsResizing:
-    if koi.mbLeftDown():
+    if ops.mbLeftDown():
       let
         dx = (mx - win.mouseStartDragX).int
         dy = (my - win.mouseStartDragY).int
@@ -698,7 +698,7 @@ proc handleWindowDragEvents(win) =
         win.size0.h = newHeight
     else:
       win.dragState = wdsNone
-      koi.showCursor()
+      ops.showCursor()
 
 # }}}
 
@@ -710,14 +710,14 @@ type RenderFrameProc = proc(win: CSDWindow)
 var g_renderFramePreProc: RenderFramePreProc
 var g_renderFrameProc: RenderFrameProc
 
-proc renderFrame*(win: CSDWindow, vg: KoiRenderContext) =
+proc renderFrame*(win: CSDWindow, vg: OpsRenderContext) =
   if win.w.iconified:
     return
 
   # For pre-rendering stuff into FBOs before the main frame starts
   g_renderFramePreProc(win)
 
-  koi.beginFrame()
+  ops.beginFrame()
 
   let (canvasWidth, canvasHeight) = win.canvasSize
 
@@ -729,15 +729,15 @@ proc renderFrame*(win: CSDWindow, vg: KoiRenderContext) =
   handleWindowDragEvents(win)
 
   if win.dragState == wdsResizing:
-    koi.setFocusCaptured(true)
+    ops.setFocusCaptured(true)
 
   g_renderFrameProc(win)
 
   if win.dragState == wdsResizing:
-    koi.setFocusCaptured(false)
+    ops.setFocusCaptured(false)
 
   # Window border
-  koi.addDrawLayer(layerWindowDecoration, vg):
+  ops.addDrawLayer(layerWindowDecoration, vg):
     vg.beginPath
     vg.rect(0.5, 0.5, canvasWidth - 1, canvasHeight - 1)
     vg.strokeColor(win.theme.borderColor)
@@ -745,7 +745,7 @@ proc renderFrame*(win: CSDWindow, vg: KoiRenderContext) =
     vg.stroke
 
   # Main frame drawing ends
-  koi.endFrame()
+  ops.endFrame()
 
 # }}}
 # {{{ renderFramePreCb=*

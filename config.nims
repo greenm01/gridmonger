@@ -77,10 +77,10 @@ proc setCommonCompileParams(useWayland = false) =
   --d:
     NoGLFW
   --d:
-    koiVulkan
+    opsVulkan
   switch "passC", "-Wno-incompatible-pointer-types"
   switch "passC", "-D_GNU_SOURCE"
-  switch "path", "../koi-webgpu"
+  switch "path", "../opsarion"
   switch "path", packageSrcPath("webgpu")
   switch "nimcache", "/tmp/gridmonger_nimcache"
   --hint:
