@@ -10990,28 +10990,33 @@ proc renderMainWindowSplash(a) =
   let
     canvasWidth = koi.winWidth()
     canvasHeight = koi.winHeight()
-    scale = min(canvasWidth * 0.58 / s.logo.width, canvasHeight * 0.48 / s.logo.height)
+    scale = min(canvasWidth / s.logo.width, canvasHeight / s.logo.height)
     splashWidth = s.logo.width * scale
     splashHeight = s.logo.height * scale
     x = (canvasWidth - splashWidth) / 2
-    y = (canvasHeight - splashHeight) / 2 - canvasHeight * 0.07
+    y = (canvasHeight - splashHeight) / 2
 
-  let
-    backgroundColor = a.theme.windowTheme.backgroundColor
-    textColor = cfg.getColorOrDefault("ui.splash-image.outline")
-    logoImage = s.logoImage
+  let backgroundColor = a.theme.windowTheme.backgroundColor
+
+  var logoImage = s.logoImage
+  let logoPaint = createPattern(vg, logoImage, xoffs = x, yoffs = y, scale = scale)
 
   koi.addDrawLayer(layerGlobalOverlay, vg):
+    vg.save()
+    vg.resetTransform()
+    vg.resetScissor()
+
     vg.beginPath
     vg.rect(0, 0, canvasWidth, canvasHeight)
     vg.fillColor(backgroundColor)
     vg.fill
 
-    vg.drawImage(logoImage, x, y, splashWidth, splashHeight)
+    vg.beginPath
+    vg.rect(x, y, splashWidth, splashHeight)
+    vg.fillPaint(logoPaint)
+    vg.fill
 
-    vg.fillColor(textColor)
-    vg.setFont(24, "sans-black", horizAlign = haCenter, vertAlign = vaMiddle)
-    discard vg.text(canvasWidth * 0.5, y + splashHeight + 46, "GRIDMONGER")
+    vg.restore()
 
   inc s.mainWindowFrames
 
